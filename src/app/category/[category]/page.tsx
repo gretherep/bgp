@@ -1,0 +1,297 @@
+"use client";
+
+import { getAllMedia } from "@/app/actions/media.actions"; 
+import { Media } from "@/app/models/media";
+import MediaCard from "@/components/MediaCard";
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+
+// =================================================================
+// DATOS MOCK PARA FILTROS
+// =================================================================
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => (2025 - i).toString());
+
+const GENRE_OPTIONS = [
+  "Acción", "Comedia", "Drama", "Terror", "Sci-Fi", "Documental", "Animación"
+];
+
+// =================================================================
+// TIPO
+// =================================================================
+type MediaWithRating = Media & {
+  avg_rating: number;
+}
+
+// =================================================================
+// CARRUSEL SIMPLIFICADO (estilo Top 10 de la home)
+// =================================================================
+const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
+  <section className="mb-10">
+    <div className="flex items-center mb-5">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-7 w-7 text-amber-400 mr-2"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 10l4.55-4.55a.8.8 0 011.12 0l.33.33a.8.8 0 010 1.12L16.4 11.4l-4.7 4.7a.8.8 0 01-1.12 0l-.33-.33a.8.8 0 010-1.12L13.6 11.4l1.4-1.4zM3 15v5a2 2 0 002 2h14a2 2 0 002-2v-5M3 9V4a2 2 0 012-2h14a2 2 0 012 2v5"
+        />
+      </svg>
+      <h2 className="text-xl sm:text-2xl font-bold">Más Recientes</h2>
+    </div>
+
+    {media.length === 0 ? (
+      <p className="text-gray-400 italic">No hay títulos recientes en esta categoría.</p>
+    ) : (
+      <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+        {media.map((m) => (
+          <div key={m.id} className="flex-shrink-0 w-36 sm:w-40">
+            <div className="overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer group">
+              <img
+                src={m.poster_url || "https://placehold.co/150x230/1f2937/FFF?text=No+Poster"}
+                alt={m.title}
+                className="w-full h-52 object-cover transition-opacity duration-300 group-hover:opacity-90"
+                onError={(e) => { e.currentTarget.src = "https://placehold.co/150x230/1f2937/FFF?text=No+Poster"; }}
+              />
+            </div>
+            <div className="mt-2 flex flex-col items-center">
+              <div className="flex items-center space-x-0.5">
+                {"★".repeat(Math.round(m.avg_rating || 0))}
+                {"☆".repeat(5 - Math.round(m.avg_rating || 0))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                ({m.avg_rating ? m.avg_rating.toFixed(1) : "–"})
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
+);
+
+// =================================================================
+// FILTROS (estilo Amazon, igual que en HomePage)
+// =================================================================
+const FilterSidebar = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialYear = searchParams.get('year') || '';
+  const initialGenre = searchParams.get('genre') || '';
+
+  const [currentYear, setCurrentYear] = useState(initialYear);
+  const [currentGenre, setCurrentGenre] = useState(initialGenre);
+
+  const handleApplyFilters = useCallback(() => {
+    const newParams = new URLSearchParams();
+    if (currentYear) newParams.set('year', currentYear);
+    if (currentGenre) newParams.set('genre', currentGenre);
+    router.push(`${pathname}?${newParams.toString()}`);
+  }, [currentYear, currentGenre, router, pathname]);
+
+  useEffect(() => {
+    setCurrentYear(searchParams.get('year') || '');
+    setCurrentGenre(searchParams.get('genre') || '');
+  }, [searchParams]);
+
+  return (
+    <aside className="lg:w-64 flex-shrink-0">
+      <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
+        <h3 className="text-lg font-bold text-amber-400 mb-4 flex items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-1.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z"
+            />
+          </svg>
+          Filtros
+        </h3>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Año</label>
+            <select
+              value={currentYear}
+              onChange={(e) => setCurrentYear(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="">Todos los años</option>
+              {YEAR_OPTIONS.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Género</label>
+            <select
+              value={currentGenre}
+              onChange={(e) => setCurrentGenre(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="">Todos los géneros</option>
+              {GENRE_OPTIONS.map(genre => (
+                <option key={genre} value={normalizeText(genre)}>{genre}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleApplyFilters}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-2 px-4 rounded-lg transition"
+          >
+            Aplicar Filtros
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+// =================================================================
+// FUNCIÓN DE UTILIDAD
+// =================================================================
+function normalizeText(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+// =================================================================
+// COMPONENTE PRINCIPAL
+// =================================================================
+interface CategoryPageProps {
+  params: { category: string };
+}
+
+export default function CategoryPage({ params }: CategoryPageProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Extraer categoría del pathname (más seguro que params en algunos casos)
+  const categoryParam = pathname.split('/').pop() || '';
+
+  const [allMedia, setAllMedia] = useState<MediaWithRating[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!categoryParam) return;
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllMedia();
+        setAllMedia(data as MediaWithRating[]);
+      } catch (error) {
+        console.error("Error al cargar medios:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [categoryParam]);
+
+  const categoryMedia = useMemo(() => {
+    if (loading || !categoryParam) return [];
+    
+    let filtered = allMedia.filter(
+      m => normalizeText(m.category) === normalizeText(categoryParam)
+    );
+
+    const filterYear = searchParams.get('year');
+    const filterGenre = searchParams.get('genre');
+
+    if (filterYear) {
+      filtered = filtered.filter(m => m.year?.toString() === filterYear);
+    }
+    if (filterGenre) {
+      filtered = filtered.filter(m => normalizeText(m.genre).includes(normalizeText(filterGenre)));
+    }
+
+    return filtered;
+  }, [allMedia, loading, categoryParam, searchParams]);
+
+  const top5Recent = useMemo(() => {
+    return categoryMedia
+      .filter(m => m.created_at)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5);
+  }, [categoryMedia]);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-900 min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="animate-pulse h-8 w-64 bg-gray-800 rounded mb-10"></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="bg-gray-800 aspect-[2/3] rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!categoryParam) {
+    return <div className="text-red-500 p-4">Error: Categoría no especificada</div>;
+  }
+
+  return (
+    <div className="bg-gray-900 text-white min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        {/* Encabezado simple y legible */}
+        <h1 className="text-2xl sm:text-3xl font-bold capitalize mb-2">
+          {categoryParam.replace(/-/g, ' ')}
+        </h1>
+        <p className="text-gray-400 mb-8">
+          {categoryMedia.length} títulos disponibles
+        </p>
+
+        <hr className="border-gray-800 my-6" />
+
+        {/* Carrusel de recientes */}
+        {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
+
+        <hr className="border-gray-800 my-6" />
+
+        {/* Contenido con filtros */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          <FilterSidebar />
+          
+          <main className="flex-1">
+            {categoryMedia.length === 0 ? (
+              <p className="text-gray-400 text-lg bg-gray-800 p-6 rounded-lg">
+                No se encontraron títulos en esta categoría con los filtros aplicados.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+                {categoryMedia.map((item) => (
+                  <MediaCard key={item.id} media={item} />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
