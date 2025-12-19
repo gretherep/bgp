@@ -22,44 +22,61 @@ export default function FilterSidebar({
   availableGenres,
 }: FilterSidebarProps) {
   return (
-    <aside className="lg:w-64 p-4 bg-gray-800 rounded-xl shadow-xl lg:sticky lg:top-8 h-fit border border-gray-700/70 transition duration-300">
-      <h3 className="text-xl font-bold text-white mb-4 border-b pb-2 border-purple-500/50">🔍 Filtros</h3>
+    <aside 
+      className="lg:w-64 p-4 bg-[var(color-secondary)]/10 rounded-xl shadow-lg lg:sticky lg:top-8 h-fit border border-[var(color-secondary)]/30 transition duration-300"
+      style={{ backdropFilter: 'blur(10px)' }}
+    >
+      <h3 className="text-lg font-bold text-[var(--color-primary)] mb-4 pb-2 border-b border-[var(--color-accent)]/30 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
+        </svg>
+        Filtros
+      </h3>
+      
       <div className="space-y-4">
         {/* Año */}
         <div>
-          <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">Año</label>
+          <label htmlFor="year" className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">
+            Año
+          </label>
           <select
             id="year"
-            className="w-full bg-gray-700 text-white rounded-md p-2 focus:ring-purple-500 focus:border-purple-500 border border-transparent hover:border-purple-500 transition duration-150"
+            className="w-full bg-[var(--color-accent)]/20 text-[var(--color-secondary)] rounded-lg py-2 px-3 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] border border-[var(--color-accent)]/30 outline-none transition"
             value={year}
             onChange={(e) => setYear(e.target.value ? Number(e.target.value) : "")}
           >
-            <option value="">Todos</option>
+            <option value="" className="bg-[var(--color-background)]">Todos</option>
             {availableYears.map((y) => (
-              <option key={y} value={y}>{y}</option>
+              <option key={y} value={y} className="bg-[var(--color-background)]">
+                {y}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Género */}
         <div>
-          <label htmlFor="genre" className="block text-sm font-medium text-gray-300 mb-1">Género</label>
+          <label htmlFor="genre" className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">
+            Género
+          </label>
           <select
             id="genre"
-            className="w-full bg-gray-700 text-white rounded-md p-2 focus:ring-purple-500 focus:border-purple-500 border border-transparent hover:border-purple-500 transition duration-150"
+            className="w-full bg-[var(--color-accent)]/20 text-[var(--color-secondary)] rounded-lg py-2 px-3 focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] border border-[var(--color-accent)]/30 outline-none transition"
             value={genre}
             onChange={(e) => setGenre(e.target.value)}
           >
-            <option value="">Todos</option>
+            <option value="" className="bg-[var(--color-background)]">Todos</option>
             {availableGenres.map((g) => (
-              <option key={g} value={g}>{g}</option>
+              <option key={g} value={g} className="bg-[var(--color-background)]">
+                {g}
+              </option>
             ))}
           </select>
         </div>
 
         <button
           onClick={resetFilters}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md hover:shadow-purple-500/50 mt-4"
+          className="w-full bg-[var(--color-primary)] hover:bg-[#e8b293] text-[var(--color-background)] font-medium py-2 px-4 rounded-lg transition duration-200 shadow-md"
         >
           Limpiar filtros
         </button>

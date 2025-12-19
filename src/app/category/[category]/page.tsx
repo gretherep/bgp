@@ -3,7 +3,6 @@
 import { getAllMedia } from "@/app/actions/media.actions"; 
 import { Media } from "@/app/models/media";
 import MediaCard from "@/components/MediaCard";
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
@@ -24,14 +23,14 @@ type MediaWithRating = Media & {
 }
 
 // =================================================================
-// CARRUSEL SIMPLIFICADO (estilo Top 10 de la home)
+// CARRUSEL SIMPLIFICADO
 // =================================================================
 const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
   <section className="mb-10">
     <div className="flex items-center mb-5">
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-7 w-7 text-amber-400 mr-2"
+        className="h-7 w-7 text-[var(--color-primary)] mr-2"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -43,11 +42,11 @@ const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
           d="M15 10l4.55-4.55a.8.8 0 011.12 0l.33.33a.8.8 0 010 1.12L16.4 11.4l-4.7 4.7a.8.8 0 01-1.12 0l-.33-.33a.8.8 0 010-1.12L13.6 11.4l1.4-1.4zM3 15v5a2 2 0 002 2h14a2 2 0 002-2v-5M3 9V4a2 2 0 012-2h14a2 2 0 012 2v5"
         />
       </svg>
-      <h2 className="text-xl sm:text-2xl font-bold">Más Recientes</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-secondary)]">Más Recientes</h2>
     </div>
 
     {media.length === 0 ? (
-      <p className="text-gray-400 italic">No hay títulos recientes en esta categoría.</p>
+      <p className="text-[var(--color-accent)] italic">No hay títulos recientes en esta categoría.</p>
     ) : (
       <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
         {media.map((m) => (
@@ -65,7 +64,7 @@ const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
                 {"★".repeat(Math.round(m.avg_rating || 0))}
                 {"☆".repeat(5 - Math.round(m.avg_rating || 0))}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-[var(--color-accent)] mt-1">
                 ({m.avg_rating ? m.avg_rating.toFixed(1) : "–"})
               </p>
             </div>
@@ -77,7 +76,7 @@ const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
 );
 
 // =================================================================
-// FILTROS (estilo Amazon, igual que en HomePage)
+// FILTROS
 // =================================================================
 const FilterSidebar = () => {
   const router = useRouter();
@@ -104,8 +103,15 @@ const FilterSidebar = () => {
 
   return (
     <aside className="lg:w-64 flex-shrink-0">
-      <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
-        <h3 className="text-lg font-bold text-amber-400 mb-4 flex items-center">
+      <div 
+        className="p-5 rounded-xl shadow-lg"
+        style={{ 
+          backgroundColor: 'rgba(149, 153, 158, 0.1)',
+          border: '1px solid rgba(149, 153, 158, 0.3)',
+          backdropFilter: 'blur(10px)'
+        }}
+      >
+        <h3 className="text-lg font-bold text-[var(--color-primary)] mb-4 flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 mr-1.5"
@@ -125,36 +131,36 @@ const FilterSidebar = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Año</label>
+            <label className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">Año</label>
             <select
               value={currentYear}
               onChange={(e) => setCurrentYear(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 rounded-lg px-3 py-2 text-[var(--color-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             >
-              <option value="">Todos los años</option>
+              <option value="" className="bg-[var(--color-background)]">Todos los años</option>
               {YEAR_OPTIONS.map(year => (
-                <option key={year} value={year}>{year}</option>
+                <option key={year} value={year} className="bg-[var(--color-background)]">{year}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Género</label>
+            <label className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">Género</label>
             <select
               value={currentGenre}
               onChange={(e) => setCurrentGenre(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 rounded-lg px-3 py-2 text-[var(--color-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             >
-              <option value="">Todos los géneros</option>
+              <option value="" className="bg-[var(--color-background)]">Todos los géneros</option>
               {GENRE_OPTIONS.map(genre => (
-                <option key={genre} value={normalizeText(genre)}>{genre}</option>
+                <option key={genre} value={normalizeText(genre)} className="bg-[var(--color-background)]">{genre}</option>
               ))}
             </select>
           </div>
 
           <button
             onClick={handleApplyFilters}
-            className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-2 px-4 rounded-lg transition"
+            className="w-full bg-[var(--color-primary)] hover:bg-[#e8b293] text-[var(--color-background)] font-semibold py-2 px-4 rounded-lg transition"
           >
             Aplicar Filtros
           </button>
@@ -185,8 +191,6 @@ interface CategoryPageProps {
 export default function CategoryPage({ params }: CategoryPageProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // Extraer categoría del pathname (más seguro que params en algunos casos)
   const categoryParam = pathname.split('/').pop() || '';
 
   const [allMedia, setAllMedia] = useState<MediaWithRating[]>([]);
@@ -237,12 +241,19 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 min-h-screen">
+      <div className="min-h-screen bg-[var(--color-background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="animate-pulse h-8 w-64 bg-gray-800 rounded mb-10"></div>
+          <div 
+            className="animate-pulse h-8 w-64 rounded mb-10"
+            style={{ backgroundColor: 'rgba(149, 153, 158, 0.2)' }}
+          ></div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {[...Array(12)].map((_, i) => (
-              <div key={i} className="bg-gray-800 aspect-[2/3] rounded-lg"></div>
+              <div 
+                key={i} 
+                className="aspect-[2/3] rounded-lg"
+                style={{ backgroundColor: 'rgba(149, 153, 158, 0.2)' }}
+              ></div>
             ))}
           </div>
         </div>
@@ -251,35 +262,56 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   }
 
   if (!categoryParam) {
-    return <div className="text-red-500 p-4">Error: Categoría no especificada</div>;
+    return (
+      <div 
+        className="p-4 rounded-lg"
+        style={{ 
+          backgroundColor: 'rgba(249, 195, 164, 0.1)',
+          color: 'var(--color-primary)',
+          border: '1px solid rgba(249, 195, 164, 0.3)'
+        }}
+      >
+        Error: Categoría no especificada
+      </div>
+    );
   }
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)] mt-19">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* Encabezado simple y legible */}
-        <h1 className="text-2xl sm:text-3xl font-bold capitalize mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold capitalize mb-2 mt-12">
           {categoryParam.replace(/-/g, ' ')}
         </h1>
-        <p className="text-gray-400 mb-8">
+        {/* <p className="text-[var(--color-accent)] mb-8">
           {categoryMedia.length} títulos disponibles
         </p>
 
-        <hr className="border-gray-800 my-6" />
+        <hr 
+          className="my-6"
+          style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}
+        /> */}
 
-        {/* Carrusel de recientes */}
         {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
 
-        <hr className="border-gray-800 my-6" />
+        <hr 
+          className="my-6"
+          style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}
+        />
 
-        {/* Contenido con filtros */}
         <div className="flex flex-col lg:flex-row gap-8">
           <FilterSidebar />
           
           <main className="flex-1">
             {categoryMedia.length === 0 ? (
-              <p className="text-gray-400 text-lg bg-gray-800 p-6 rounded-lg">
+              <p 
+                className="text-lg p-6 rounded-lg"
+                style={{ 
+                  backgroundColor: 'rgba(149, 153, 158, 0.1)',
+                  color: 'var(--color-accent)',
+                  border: '1px solid rgba(149, 153, 158, 0.2)'
+                }}
+              >
                 No se encontraron títulos en esta categoría con los filtros aplicados.
               </p>
             ) : (

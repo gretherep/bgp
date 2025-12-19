@@ -76,16 +76,28 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+      className="fixed inset-0 flex items-center justify-center z-50 p-4"
       onClick={onClose}
+      style={{ 
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(4px)'
+      }}
     >
       <div 
-        className="bg-gray-800 text-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-700"
+        className="text-[var(--color-secondary)] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        style={{ 
+          backgroundColor: 'rgba(22, 18, 20, 0.95)',
+          border: '1px solid rgba(149, 153, 158, 0.3)',
+          backdropFilter: 'blur(12px)'
+        }}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-700/50">
-          <h2 className="text-xl font-bold text-white">
+        <div 
+          className="px-6 py-5"
+          style={{ borderBottom: '1px solid rgba(149, 153, 158, 0.2)' }}
+        >
+          <h2 className="text-xl font-bold"> 
             {isRegister ? "Crear cuenta" : "Iniciar sesión"}
           </h2>
         </div>
@@ -96,23 +108,45 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Nombre</label>
+                  <label 
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    Nombre
+                  </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 rounded-lg transition"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(e) => setFirstName(e.target.value)} 
                     required
+                    style={{
+                      backgroundColor: 'rgba(149, 153, 158, 0.15)',
+                      border: '1px solid rgba(149, 153, 158, 0.3)',
+                      color: 'var(--color-secondary)',
+                    
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Apellidos</label>
+                  <label 
+                    className="block text-sm font-medium mb-1.5"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    Apellidos
+                  </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 rounded-lg transition"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
+                    style={{
+                      backgroundColor: 'rgba(149, 153, 158, 0.15)',
+                      border: '1px solid rgba(149, 153, 158, 0.3)',
+                      color: 'var(--color-secondary)',
+                      
+                    }}
                   />
                 </div>
               </div>
@@ -120,41 +154,66 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Correo electrónico</label>
+            <label 
+              className="block text-sm font-medium mb-1.5"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              Correo electrónico
+            </label>
             <input
               type="email"
-              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-2.5 rounded-lg transition"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              style={{
+                backgroundColor: 'rgba(149, 153, 158, 0.15)',
+                border: '1px solid rgba(149, 153, 158, 0.3)',
+                color: 'var(--color-secondary)',
+                
+              }}
             />
           </div>
 
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Contraseña</label>
+            <label 
+              className="block text-sm font-medium mb-1.5"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              Contraseña
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-10"
+                className="w-full px-4 py-2.5 rounded-lg transition pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                style={{
+                  backgroundColor: 'rgba(149, 153, 158, 0.15)',
+                  border: '1px solid rgba(149, 153, 158, 0.3)',
+                  color: 'var(--color-secondary)',
+                  
+                }}
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-200 transition-colors"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                style={{ color: 'rgba(149, 153, 158, 0.8)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(149, 153, 158, 0.8)'}
               >
                 {showPassword ? (
-                  // Ojo abierto (mostrando)
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 ) : (
-                  // Ojo tachado (oculto)
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="#fff" fill-rule="evenodd" d="m18.67 16.973l2.755 2.755l-.849.848L3.85 3.85L4.697 3l2.855 2.855C8.932 5.303 10.432 5 12 5c4.808 0 8.972 2.848 11 7a12.65 12.65 0 0 1-4.33 4.973M8.486 6.79l1.664 1.664a4 4 0 0 1 5.398 5.398l2.255 2.255c1.574-1 2.904-2.403 3.845-4.106C19.686 8.45 16.034 6.2 12 6.2a10.8 10.8 0 0 0-3.514.59m6.152 6.152a2.8 2.8 0 0 0-3.579-3.579zm1.81 5.204c-1.38.552-2.88.855-4.448.855c-4.808 0-8.972-2.848-11-7a12.65 12.65 0 0 1 4.33-4.973l.867.867A11.36 11.36 0 0 0 2.352 12c1.962 3.55 5.614 5.8 9.648 5.8a10.8 10.8 0 0 0 3.514-.59l.934.935zM8.453 10.15l.909.91a2.8 2.8 0 0 0 3.579 3.579l.91.908a4 4 0 0 1-5.398-5.398z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path fill="currentColor" fillRule="evenodd" d="m18.67 16.973l2.755 2.755l-.849.848L3.85 3.85L4.697 3l2.855 2.855C8.932 5.303 10.432 5 12 5c4.808 0 8.972 2.848 11 7a12.65 12.65 0 0 1-4.33 4.973M8.486 6.79l1.664 1.664a4 4 0 0 1 5.398 5.398l2.255 2.255c1.574-1 2.904-2.403 3.845-4.106C19.686 8.45 16.034 6.2 12 6.2a10.8 10.8 0 0 0-3.514.59m6.152 6.152a2.8 2.8 0 0 0-3.579-3.579zm1.81 5.204c-1.38.552-2.88.855-4.448.855c-4.808 0-8.972-2.848-11-7a12.65 12.65 0 0 1 4.33-4.973l.867.867A11.36 11.36 0 0 0 2.352 12c1.962 3.55 5.614 5.8 9.648 5.8a10.8 10.8 0 0 0 3.514-.59l.934.935zM8.453 10.15l.909.91a2.8 2.8 0 0 0 3.579 3.579l.91.908a4 4 0 0 1-5.398-5.398z"/>
+                  </svg>
                 )}
               </button>
             </div>
@@ -163,7 +222,18 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-gray-800"
+            className="w-full py-2.5 px-4 font-medium rounded-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: loading ? 'rgba(249, 195, 164, 0.7)' : 'var(--color-primary)',
+              color: 'var(--color-background)',
+              border: 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) e.currentTarget.style.backgroundColor = '#e8b293';
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+            }}
           >
             {loading ? "Procesando..." : isRegister ? "Crear cuenta" : "Iniciar sesión"}
           </button>
@@ -173,8 +243,15 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
         <div className="px-6 pb-5 text-center">
           <button
             type="button"
-            className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+            className="text-sm font-medium transition-colors"
             onClick={() => setIsRegister(!isRegister)}
+            style={{ 
+              color: 'var(--color-primary)',
+              backgroundColor: 'transparent',
+              border: 'none'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#e8b293'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
           >
             {isRegister
               ? "¿Ya tienes cuenta? Inicia sesión"
@@ -182,12 +259,18 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
           </button>
         </div>
 
-        {/* Close button (opcional, ya se cierra al hacer click fuera) */}
         <div className="px-6 pb-5 text-center">
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            className="text-xs transition-colors"
+            style={{ 
+              color: 'var(--color-accent)',
+              backgroundColor: 'transparent',
+              border: 'none'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-accent)'}
           >
             Cancelar
           </button>

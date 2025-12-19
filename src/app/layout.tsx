@@ -1,4 +1,4 @@
-// app/layout.tsx (Modificado)
+// app/layout.tsx
 "use client";
 
 import { useState } from "react";
@@ -10,10 +10,7 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/autoplay";
 import { MediaModalProvider } from "./context/MediaModalContext";
-import MediaModal from "@/components/MediaModal";
 import { ToastProvider } from "./context/ToastContext";
-
-
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -22,28 +19,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className={`antialiased ${isAdminRoute ? "" : "pt-16"} bg-gray-950`}>
-        
-        {/* 2. ENVOLVER TODA LA LÓGICA DE LA APLICACIÓN CON ToastProvider */}
-        <ToastProvider> 
-          <MediaModalProvider>
-            
-            {/* Componentes de la app */}
-            {!isAdminRoute && <Navbar onOpenLogin={() => setIsLoginOpen(true)} />}
-
-            <LoginModal
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-            />
-
-
-
-            {/* Contenido principal */}
-            <main>{children}</main>
-            
-          </MediaModalProvider>
-        </ToastProvider> 
-        
+      <body
+        className="min-h-screen"
+        style={{
+          "--color-primary": "#F9C3A4",
+          "--color-secondary": "#DCDAD9",
+          "--color-accent": "#95999E",
+          "--color-background": "rgba(0, 0, 0, 0.9)",
+        } as React.CSSProperties}
+      >
+        <div className="bg-[var(--color-background)] text-[var(--color-secondary)] min-h-screen">
+          <ToastProvider>
+            <MediaModalProvider>
+              {!isAdminRoute && <Navbar onOpenLogin={() => setIsLoginOpen(true)} />}
+              <LoginModal
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+              />
+              <main>{children}</main>
+            </MediaModalProvider>
+          </ToastProvider>
+        </div>
       </body>
     </html>
   );

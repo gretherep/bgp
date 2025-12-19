@@ -7,8 +7,6 @@ import { useMediaModal } from "@/app/context/MediaModalContext";
 import { supabase } from "@/utils/supabaseClient";
 import { useToast } from "@/app/context/ToastContext";
 
-
-
 interface MediaCardProps {
   media: Media;
 }
@@ -20,19 +18,20 @@ const MediaCard: React.FC<MediaCardProps> = ({ media }) => {
   const [currentRating, setCurrentRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isOpening, setIsOpening] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
-  // ✅ 1️⃣ Cargar promedio inicial desde BD
+  // Cargar promedio inicial
   useEffect(() => {
     const loadAvg = async () => {
       const res = await fetch(`/api/ratings/avg?mediaId=${media.id}`);
       const data = await res.json();
-      setCurrentRating(data.avg);
+      setCurrentRating(data.avg || 0);
     };
-
     loadAvg();
   }, [media.id]);
 
-  // ✅ 2️⃣ Realtime: escuchar cambios en ratings
+  // Realtime updates
   useEffect(() => {
     const channel = supabase
       .channel(`ratings-media-${media.id}`)
@@ -47,7 +46,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ media }) => {
         async () => {
           const res = await fetch(`/api/ratings/avg?mediaId=${media.id}`);
           const data = await res.json();
-          setCurrentRating(data.avg);
+          setCurrentRating(data.avg || 0);
         }
       )
       .subscribe();
@@ -57,38 +56,35 @@ const MediaCard: React.FC<MediaCardProps> = ({ media }) => {
     };
   }, [media.id]);
 
-const handleRating = async (value: number) => {
-  if (!user) {
-    showToast("Debes iniciar sesión para calificar", true);
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/ratings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mediaId: media.id,
-        rating: value,
-        userId: user.id,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      showToast(data.error || "Error al registrar el voto", true);
+  const handleRating = async (value: number) => {
+    if (!user) {
+      showToast("Debes iniciar sesión para calificar", true);
       return;
     }
 
-    // ✅ TOAST DE ÉXITO
-    showToast("✅ ¡Gracias por tu voto!", false);
+    try {
+      const res = await fetch("/api/ratings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mediaId: media.id,
+          rating: value,
+          userId: user.id,
+        }),
+      });
 
-  } catch (error) {
-    console.error(error);
-    showToast("❌ Error de conexión", true);
-  }
-};
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Error al registrar el voto", true);
+        return;
+      }
+
+      showToast("✅ ¡Gracias por tu voto!", false);
+    } catch (error) {
+      console.error(error);
+      showToast("❌ Error de conexión", true);
+    }
+  };
 
   const handleCardClick = () => {
     if (isOpening) return;
@@ -97,33 +93,72 @@ const handleRating = async (value: number) => {
     setTimeout(() => setIsOpening(false), 300);
   };
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoaded(false);
+    setImageError(true);
+  };
+
+  // ✅ Determinar si hay una URL válida de póster
+  const hasValidPosterUrl = media.poster_url && media.poster_url.trim() !== '';
+
+  // ✅ src solo puede ser string o undefined (nunca null)
+  const posterSrc = hasValidPosterUrl ? media.poster_url : undefined;
+
   return (
     <div
       onClick={handleCardClick}
-      className="group bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5"
+      className="group rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(249,195,164,0.3)]"
+      style={{ 
+        backgroundColor: hasValidPosterUrl && !imageError
+          ? 'rgba(149, 153, 158, 0.08)' 
+          : '#0e0e0e'
+      }}
     >
-      {/* Poster */}
-      <div className="relative pb-[150%] sm:pb-[140%] bg-gray-800">
-        <img
-          src={media.poster_url || "https://placehold.co/150x230/1f2937/FFF?text=No+Poster"}
-          alt={media.title}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
-          onError={(e) => {
-            e.currentTarget.src =
-              "https://placehold.co/150x230/1f2937/FFF?text=No+Poster";
-          }}
-        />
+      {/* Poster container */}
+      <div className="relative pb-[150%] sm:pb-[140%]">
+        {/* Solo renderizamos la imagen si hay URL válida */}
+        {posterSrc && (
+          <img
+            src={posterSrc} // ✅ Ahora es string | undefined (válido)
+            alt={media.title}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        )}
+        
+        {/* Overlay para "Sin póster" */}
+        {(!posterSrc || imageError) && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[var(--color-accent)] text-xs text-center px-2 opacity-70">
+              Sin póster
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Info */}
       <div className="p-3">
-        <h3 className="font-semibold text-white text-sm sm:text-base line-clamp-2 leading-tight mb-1">
+        <h3 className="font-semibold text-[var(--color-secondary)] text-sm sm:text-base line-clamp-2 leading-tight mb-1">
           {media.title}
         </h3>
 
-        <div className="flex justify-between items-center text-xs text-gray-400 mb-1.5">
+        <div className="flex justify-between items-center text-xs text-[var(--color-accent)] mb-1.5">
           <span>{media.year}</span>
-          <span className="bg-gray-800 px-1.5 py-0.5 rounded">
+          <span 
+            className="px-1.5 py-0.5 rounded"
+            style={{ 
+              backgroundColor: 'rgba(149, 153, 158, 0.15)',
+              color: 'var(--color-secondary)'
+            }}
+          >
             {media.category}
           </span>
         </div>
@@ -148,10 +183,12 @@ const handleRating = async (value: number) => {
                   e.stopPropagation();
                   handleRating(ratingValue);
                 }}
+                className="focus:outline-none"
+                aria-label={`Calificar con ${ratingValue} estrellas`}
               >
                 <svg
                   className={`w-4 h-4 ${
-                    showFilled ? "text-amber-400" : "text-gray-600"
+                    showFilled ? "text-[#FBBF24]" : "text-[var(--color-accent)]"
                   }`}
                   fill={showFilled ? "currentColor" : "none"}
                   stroke="currentColor"
@@ -168,7 +205,7 @@ const handleRating = async (value: number) => {
             );
           })}
 
-          <span className="text-gray-500 text-xs ml-1">
+          <span className="text-[var(--color-accent)] text-xs ml-1">
             {currentRating ? currentRating.toFixed(1) : "–"}
           </span>
         </div>

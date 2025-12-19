@@ -40,33 +40,50 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white">
+    <div 
+      className="min-h-screen"
+      style={{ 
+        backgroundColor: 'var(--color-background)',
+        color: 'var(--color-secondary)'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         {/* Encabezado de búsqueda */}
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">
           Resultados para:{" "}
-          <span className="text-amber-400">"{query}"</span>
+          <span style={{ color: 'var(--color-primary)' }}>"{query}"</span>
         </h1>
-        <p className="text-gray-400 mb-8">
+        <p 
+          className="mb-8"
+          style={{ color: 'var(--color-accent)' }}
+        >
           {loading ? "Buscando..." : `${results.length} títulos encontrados`}
         </p>
 
-        <hr className="border-gray-800 my-6" />
+        <hr 
+          className="my-6"
+          style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}
+        />
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {[...Array(12)].map((_, i) => (
-              <div key={i} className="bg-gray-800 aspect-[2/3] rounded-lg animate-pulse"></div>
+              <div 
+                key={i} 
+                className="aspect-[2/3] rounded-lg animate-pulse"
+                style={{ backgroundColor: 'rgba(149, 153, 158, 0.2)' }}
+              ></div>
             ))}
           </div>
         ) : results.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🔍</div>
-            <p className="text-xl text-gray-400">
-              No se encontraron títulos con <span className="text-amber-400 font-medium">"{query}"</span>.
+            <p className="text-xl mb-2" style={{ color: 'var(--color-accent)' }}>
+              No se encontraron títulos con{" "}
+              <span style={{ color: 'var(--color-primary)', fontWeight: '500' }}>"{query}"</span>.
             </p>
-            <p className="text-gray-500 mt-2">
+            <p style={{ color: 'rgba(149, 153, 158, 0.7)' }}>
               Intenta con otro término o revisa la ortografía.
             </p>
           </div>

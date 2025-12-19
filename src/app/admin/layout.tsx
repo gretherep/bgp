@@ -4,16 +4,27 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
-import { LogOut } from "lucide-react"; // Añadimos un ícono para mejor UX
+import { 
+  LogOut, 
+  LayoutDashboard, 
+  Film, 
+  Users,       // ✅ Cambiado: User → Users
+  FileText,    // ✅ Nuevo: para "Descripción"
+  CreditCard,  // ✅ Nuevo: para "Precios"
+  Menu, 
+  X 
+} from "lucide-react";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 const navItems = [
-  { name: "Dashboard", href: "/admin/dashboard" },
-  { name: "Media", href: "/admin/media" },
-   { name: "Perfiles", href: "/admin/profiles" },
+  { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
+  { name: "Media", href: "/admin/media", icon: <Film className="w-5 h-5" /> },
+  { name: "Descripción", href: "/admin/descripcion", icon: <FileText className="w-5 h-5" /> },
+  { name: "Precios", href: "/admin/pricing-categories", icon: <CreditCard className="w-5 h-5" /> },
+  { name: "Perfiles", href: "/admin/profiles", icon: <Users className="w-5 h-5" /> },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -49,30 +60,32 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
       >
-        {/* Close button for mobile */}
-        <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="md:hidden self-end p-2 hover:bg-gray-700 rounded"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        {/* Header del sidebar */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
+            <LayoutDashboard className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-amber-400 bg-clip-text text-transparent">
+            Admin
+          </h2>
+        </div>
 
-        <h2 className="text-2xl font-bold text-indigo-400">Admin Panel</h2>
-
-        {/* NAV: flex-grow asegura que este ocupe el espacio restante y empuje el botón al final */}
-        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto">
+        {/* Navegación */}
+        <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setIsSidebarOpen(false)}
-              className={`p-3 rounded-lg hover:bg-gray-700 transition-colors ${
-                pathname.startsWith(item.href) ? "bg-indigo-600 font-semibold" : ""
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                ${
+                  pathname.startsWith(item.href)
+                    ? "bg-indigo-600/30 text-indigo-200 border-l-2 border-indigo-400"
+                    : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
               }`}
             >
-              {item.name}
+              {item.icon}
+              <span className="font-medium">{item.name}</span>
             </Link>
           ))}
         </nav>
@@ -80,10 +93,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Logout button: mt-auto lo ancla al fondo del h-screen */}
         <button
           onClick={handleLogout}
-          className="p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-medium mt-auto flex items-center justify-center"
+          className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-red-200 hover:bg-red-900/30 transition-all duration-200 font-medium"
         >
-          <LogOut className="w-5 h-5 mr-2" />
-          Cerrar Sesión
+          <LogOut className="w-5 h-5" />
+          Cerrar sesión
         </button>
       </aside>
 

@@ -17,7 +17,6 @@ export default function MediaModal() {
     });
   };
 
-  // Si tienes avg_rating, lo mostramos con estrellas
   const renderRating = () => {
     if (selectedMedia.avg_rating == null) return null;
     const rating = Number(selectedMedia.avg_rating.toFixed(1));
@@ -36,7 +35,11 @@ export default function MediaModal() {
             return (
               <svg
                 key={i}
-                className={`w-4 h-4 ${variant === "full" ? "text-amber-400" : variant === "half" ? "text-amber-400" : "text-gray-600"}`}
+                className={`w-4 h-4 ${
+                  variant === "full" || variant === "half"
+                    ? "text-[var(--color-primary)]"
+                    : "text-[var(--color-accent)]"
+                }`}
                 fill={variant === "full" ? "currentColor" : "none"}
                 stroke="currentColor"
                 strokeWidth="1"
@@ -56,36 +59,36 @@ export default function MediaModal() {
             );
           })}
         </div>
-        <span className="text-amber-400 font-medium text-sm">{rating}</span>
+        <span className="text-[var(--color-primary)] font-medium text-sm">{rating}</span>
       </div>
     );
   };
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:p-6 animate-fade-in"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:p-6"
       onClick={closeModal}
     >
       <div
-        className="bg-gray-800 border border-gray-700 text-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+        className="text-[var(--color-secondary)] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
+        style={{ 
+          backgroundColor: 'rgba(22, 18, 20, 0.95)',
+          border: '1px solid rgba(149, 153, 158, 0.3)',
+          backdropFilter: 'blur(12px)'
+        }}
       >
-        {/* Header con botón de cerrar */}
-        <div className="relative">
-          <button
-            onClick={closeModal}
-            className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-sm z-10"
-            aria-label="Cerrar modal"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <button
+          onClick={closeModal}
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-[var(--color-accent)] hover:text-[var(--color-secondary)] transition-all duration-200 backdrop-blur-sm z-10"
+          aria-label="Cerrar modal"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-        {/* Contenido principal */}
         <div className="p-5 sm:p-6 flex flex-col md:flex-row gap-6 max-h-[80vh] overflow-y-auto">
-          {/* Poster */}
           <div className="md:w-1/3 flex-shrink-0">
             <div className="relative group">
               <img
@@ -100,13 +103,12 @@ export default function MediaModal() {
             </div>
           </div>
 
-          {/* Info */}
           <div className="flex-1 flex flex-col gap-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
               {selectedMedia.title}
             </h2>
 
-            {/* Tags */}
+            {/* 👇 Tags con colores ORIGINALES (indigo, emerald, amber) */}
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1.5 bg-indigo-900/40 text-indigo-300 rounded-full text-xs font-medium border border-indigo-800/50">
                 {selectedMedia.category}
@@ -119,23 +121,22 @@ export default function MediaModal() {
               </span>
             </div>
 
-            {/* Rating (si existe) */}
             {renderRating()}
 
-            {/* Sinopsis */}
             <div className="mt-3">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider mb-2">
                 Sinopsis
               </h3>
-              <p className="text-gray-300 text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-[var(--color-secondary)]">
                 {selectedMedia.synopsis || "Sinopsis no disponible."}
               </p>
             </div>
 
-            {/* Metadata */}
-            <div className="mt-auto pt-3 border-t border-gray-700/50">
-              <p className="text-xs text-gray-500">
-                Agregado el <time dateTime={selectedMedia.created_at}>{selectedMedia.created_at ? formatDate(selectedMedia.created_at) : "—"}</time>
+            <div className="mt-auto pt-3 border-t" style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}>
+              <p className="text-xs text-[var(--color-accent)]">
+                Agregado el <time dateTime={selectedMedia.created_at}>
+                  {selectedMedia.created_at ? formatDate(selectedMedia.created_at) : "—"}
+                </time>
               </p>
             </div>
           </div>

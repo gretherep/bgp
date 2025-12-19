@@ -3,14 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
-import Image from "next/image"; // Usaremos el componente Image de Next.js
-import { Upload, Image as ImageIcon, Loader2, X , ArrowLeft} from "lucide-react"; // Iconos
+import Image from "next/image";
+import { Upload, ImageIcon, Loader2, X, ArrowLeft } from "lucide-react";
 
-// Define el bucket de Supabase donde se guardarán las imágenes
-const POSTER_BUCKET = "posters"; 
+const POSTER_BUCKET = "posters";
 
 const categories = [
-  "Películas", "Series", "Novelas", "Reality Shows", "MiniSeries", 
+  "Películas", "Series", "Novelas", "Reality Shows", "MiniSeries",
   "Series Animadas", "Películas Animadas", "Anime", "Películas Anime",
 ];
 
@@ -21,20 +20,18 @@ export default function EditMediaPage() {
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
     synopsis: "",
-    poster_url: "", 
+    poster_url: "",
     genre: "",
     year: "",
     category: "",
   });
 
-  // --- Lógica de Carga Inicial ---
   useEffect(() => {
     fetchMedia();
   }, [id]);
@@ -66,12 +63,8 @@ export default function EditMediaPage() {
     }
   };
 
-  // --- Manejadores de Estado ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,14 +78,13 @@ export default function EditMediaPage() {
       setImagePreviewUrl(formData.poster_url || null);
     }
   };
-  
+
   const handleRemoveImage = () => {
     setPosterFile(null);
     setImagePreviewUrl(null);
     setFormData((prev) => ({ ...prev, poster_url: "" }));
   };
 
-  // --- Lógica de Supabase Storage ---
   const uploadPoster = async (file: File): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${id}-${Date.now()}.${fileExt}`;
@@ -112,11 +104,10 @@ export default function EditMediaPage() {
     const { data: publicUrlData } = supabase.storage
       .from(POSTER_BUCKET)
       .getPublicUrl(filePath);
-      
+
     return publicUrlData.publicUrl;
   };
-  
-  // --- Manejador de Submit ---
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -125,15 +116,14 @@ export default function EditMediaPage() {
     try {
       if (posterFile) {
         finalPosterUrl = await uploadPoster(posterFile);
-        console.log("Nueva URL del póster:", finalPosterUrl);
       }
-      
+
       const { error } = await supabase
         .from("media")
         .update({
           title: formData.title,
           synopsis: formData.synopsis,
-          poster_url: finalPosterUrl || null, 
+          poster_url: finalPosterUrl || null,
           genre: formData.genre,
           year: parseInt(formData.year),
           category: formData.category,
@@ -150,80 +140,93 @@ export default function EditMediaPage() {
     }
   };
 
-  if (fetchLoading) return <div className="text-center py-8 text-indigo-400"><Loader2 className="w-6 h-6 animate-spin inline-block mr-2" />Cargando datos...</div>;
+  if (fetchLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 animate-spin text-indigo-500 mx-auto mb-2" />
+          <p className="text-gray-400">Cargando contenido...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    // CAMBIO 1: Ajustar el padding principal en móvil a p-4 y usar max-w-3xl para limitar el ancho en escritorio
-    <div className="max-w-3xl mx-auto space-y-8 p-4 md:p-6 bg-gray-950 min-h-screen mt-5">
-         <button
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 min-h-screen bg-gray-950">
+      {/* Botón de volver */}
+      <div className="mb-8 mt-6">
+        <button
           onClick={() => router.back()}
-          className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-white transition-colors flex items-center justify-center shrink-0 mt-4 mb-8"
-          title="Volver atrás"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-medium"
         >
           <ArrowLeft className="w-5 h-5" />
+          Volver a Media
         </button>
-      <h1 className="text-3xl md:text-4xl font-bold text-white border-b border-gray-700 pb-4 mt-4 mb-8">
-        Editar Media: {formData.title} 📝
-      </h1>
+      </div>
 
-      <form onSubmit={handleSubmit} className="bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl space-y-6">
-        
-        {/* Sección de Imagen y Preview */}
-        {/* CAMBIO 2: Usar flex-col en móvil y md:grid-cols-2 en escritorio. */}
-        {/* Esto apila el preview y el input en móvil. */}
-        <div className="flex flex-col md:grid md:grid-cols-2 gap-6">
-          
-          {/* Columna de Preview de Imagen */}
-          {/* CAMBIO 3: Ajustar alineación en móvil */}
-          <div className="bg-gray-700/50 p-4 rounded-lg flex flex-col items-center justify-center border border-gray-700 order-2 md:order-none">
-            <label className="block text-white text-lg font-semibold mb-3">Preview del Póster</label>
-            <div className="relative w-48 h-64 bg-gray-600 rounded-lg overflow-hidden border-2 border-indigo-500/50 shadow-lg">
-              {imagePreviewUrl ? (
-                <Image
-                  src={imagePreviewUrl}
-                  alt="Poster Preview"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                  className="transition-opacity duration-300"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                  <ImageIcon className="w-10 h-10 mb-2" />
-                  No hay póster
-                </div>
-              )}
-              {imagePreviewUrl && (
-                <button 
-                  type="button" 
-                  onClick={handleRemoveImage} 
-                  title="Eliminar imagen"
-                  className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 p-1 rounded-full text-white shadow-lg transition-transform hover:scale-110 z-10"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+      {/* Título */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
+          <Upload className="w-7 h-7 text-indigo-400" />
+          Editar Contenido
+        </h1>
+        <p className="text-gray-500 mt-1 text-sm">Actualiza los detalles de <span className="font-medium text-white">{formData.title}</span></p>
+      </div>
+
+      {/* Formulario */}
+      <form onSubmit={handleSubmit} className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 sm:p-6 md:p-8 shadow-xl">
+        {/* Sección de imagen */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Preview */}
+          <div className="flex flex-col">
+            <label className="block text-white font-medium mb-3 flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-indigo-400" />
+              Vista previa del póster
+            </label>
+            <div className="relative w-full max-w-xs mx-auto">
+              <div className="relative w-full aspect-[2/3] bg-gray-700 rounded-xl overflow-hidden border-2 border-dashed border-gray-600 flex items-center justify-center">
+                {imagePreviewUrl ? (
+                  <div className="w-full h-full relative">
+                    <Image
+                      src={imagePreviewUrl}
+                      alt="Poster Preview"
+                      fill
+                      className="object-cover transition-opacity duration-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-lg transition-all duration-200 z-10"
+                      title="Eliminar imagen"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-400">
+                    <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-60" />
+                    <p className="text-sm">Sin imagen</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-          
-          {/* Columna de Input de Archivo */}
-          <div className="space-y-4 order-1 md:order-none">
+
+          {/* Upload / URL */}
+          <div className="space-y-5">
             <div>
-              <label className="block text-white mb-2 font-medium">Subir Nuevo Póster (Archivo)</label>
-              <div className="flex items-center space-x-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    // CAMBIO 4: Ajustar el file input para que no fuerce un ancho fijo
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-600 transition-colors bg-gray-700 text-white rounded-lg p-1 w-full"
-                  />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Selecciona una imagen si deseas reemplazar el póster.</p>
+              <label className="block text-white font-medium mb-2">Subir nueva imagen</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full text-sm text-gray-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:transition-colors bg-gray-700 rounded-lg px-3 py-2.5 cursor-pointer"
+              />
+              <p className="text-xs text-gray-500 mt-1">Reemplaza el póster actual (JPG, PNG, WEBP)</p>
             </div>
-            
-            {/* Input URL del Póster */}
-            <div className="border-t border-gray-700 pt-4">
-              <label className="block text-white mb-2 font-medium">O usar URL externa (Opción Manual)</label>
+
+            <div className="border-t border-gray-700/50 pt-5">
+              <label className="block text-white font-medium mb-2">O usar URL externa</label>
               <input
                 type="url"
                 name="poster_url"
@@ -233,101 +236,112 @@ export default function EditMediaPage() {
                   setPosterFile(null);
                   setImagePreviewUrl(e.target.value);
                 }}
-                disabled={!!posterFile} 
-                className={`w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 ${!!posterFile ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!!posterFile}
+                className={`w-full px-4 py-2.5 bg-gray-700 border ${
+                  posterFile
+                    ? "border-gray-600 text-gray-500 bg-gray-800 cursor-not-allowed"
+                    : "border-gray-600 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                } rounded-lg transition-colors`}
                 placeholder="https://ejemplo.com/poster.jpg"
               />
-               <p className="text-xs text-gray-400 mt-1">Este campo se deshabilita si seleccionas un archivo local.</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {posterFile ? "Deshabilitado al subir archivo" : "Opcional si no subes una imagen"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Campos de Texto, Selección, etc. */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
-            {/* Los inputs ya son w-full, así que en móvil se apilan bien. */}
-            <div>
-              <label className="block text-white mb-2">Título</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-white mb-2">Género</label>
-              <input
-                type="text"
-                name="genre"
-                value={formData.genre}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                required
-              />
-            </div>
-            
-            {/* Otros campos... (año, categoría) */}
-            <div>
-              <label className="block text-white mb-2">Año</label>
-              <input
-                type="number"
-                name="year"
-                value={formData.year}
-                onChange={handleChange}
-                min="1900"
-                max={new Date().getFullYear() + 1}
-                className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-white mb-2">Categoría</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                required
-              >
-                <option value="">Seleccionar categoría</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Campos de texto */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div>
+            <label className="block text-white font-medium mb-2">Título</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white font-medium mb-2">Género</label>
+            <input
+              type="text"
+              name="genre"
+              value={formData.genre}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white font-medium mb-2">Año</label>
+            <input
+              type="number"
+              name="year"
+              min="1900"
+              max={new Date().getFullYear() + 1}
+              value={formData.year}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white font-medium mb-2">Categoría</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors appearance-none"
+            >
+              <option value="" disabled>Seleccionar</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat} className="bg-gray-800">
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-white mb-2">Sinopsis</label>
+        <div className="mb-8">
+          <label className="block text-white font-medium mb-2">Sinopsis</label>
           <textarea
             name="synopsis"
             value={formData.synopsis}
             onChange={handleChange}
             rows={4}
-            className="w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             required
+            className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
           />
         </div>
 
-        {/* Botones de Acción */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-4"> {/* CAMBIO 5: Apilar botones en móvil (flex-col) */}
+        {/* Botones */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 font-semibold shadow-lg w-full sm:w-auto" // CAMBIO 6: Ancho completo en móvil
+            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-lg disabled:opacity-60 w-full sm:w-auto"
           >
-            {loading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Actualizando...</> : <><Upload className="w-5 h-5 mr-2" /> Actualizar Media</>}
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Actualizando...
+              </>
+            ) : (
+              <>
+                <Upload className="w-5 h-5" />
+                Actualizar Contenido
+              </>
+            )}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors font-semibold w-full sm:w-auto" // CAMBIO 6: Ancho completo en móvil
+            className="flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors w-full sm:w-auto"
           >
             Cancelar
           </button>

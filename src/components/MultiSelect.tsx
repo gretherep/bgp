@@ -37,7 +37,6 @@ export default function MultiSelect({
     }
   };
 
-  // Mostrar resumen más limpio
   const displayText = selected.length === 0
     ? "Seleccionar..."
     : selected.length === 1
@@ -46,39 +45,42 @@ export default function MultiSelect({
 
   return (
     <div className="relative w-full" ref={ref}>
-      <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+      <label className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">
         {label}
       </label>
 
-      {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded-lg flex justify-between items-center hover:bg-gray-600 transition text-left"
+        className="w-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 text-[var(--color-secondary)] px-3 py-2 rounded-lg flex justify-between items-center hover:bg-[var(--color-accent)]/30 transition text-left"
       >
         <span className="truncate text-sm">{displayText}</span>
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${
-            open ? "rotate-180" : ""
+            open ? "rotate-180 text-[var(--color-primary)]" : "text-[var(--color-accent)]"
           }`}
         />
       </button>
 
-      {/* Dropdown */}
       {open && (
-        <div className="absolute left-0 right-0 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+        <div 
+          className="absolute left-0 right-0 mt-1 w-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
+          style={{ backdropFilter: 'blur(10px)' }}
+        >
           {options.map((option) => (
             <button
               key={option}
               type="button"
               onClick={() => toggleOption(option)}
-              className={`w-full flex justify-between items-center px-3 py-2 text-sm text-left hover:bg-gray-700 transition ${
-                selected.includes(option) ? "bg-gray-700" : ""
+              className={`w-full flex justify-between items-center px-3 py-2 text-sm text-left transition ${
+                selected.includes(option) 
+                  ? 'bg-[var(--color-primary)]/10 text-[var(--color-secondary)]' 
+                  : 'text-[var(--color-secondary)] hover:bg-[var(--color-accent)]/20'
               }`}
             >
-              <span className="text-white">{option}</span>
+              <span>{option}</span>
               {selected.includes(option) && (
-                <Check className="w-4 h-4 text-amber-400" />
+                <Check className="w-4 h-4 text-[var(--color-primary)]" />
               )}
             </button>
           ))}

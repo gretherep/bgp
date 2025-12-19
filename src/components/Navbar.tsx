@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { usePathname } from "next/navigation"; // ✅ Nuevo hook
 import { supabase } from "@/utils/supabaseClient";
 import { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
-// SVG Icons
+// SVG Icons (sin cambios)
 interface IconProps { size?: number; className?: string; }
 
 const MenuIcon: React.FC<IconProps> = ({ size = 24 }) => (
@@ -48,6 +50,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onOpenLogin }: NavbarProps) {
+  const pathname = usePathname(); // ✅ Obtiene la ruta actual
   const [session, setSession] = useState<Session | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -59,6 +62,7 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
     { name: "Anime", href: "/category/anime" },
     { name: "Novelas", href: "/category/novelas" },
     { name: "Reality", href: "/category/reality" },
+    { name: "Descripcion", href: "/descripcion" },
   ];
 
   // ---------- Supabase Auth ----------
@@ -90,26 +94,69 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
     setIsSearchVisible(false);
   };
 
+  // ✅ Función para verificar si un ítem está activo
+  const isActive = (href: string) => {
+    // Para rutas de categoría: "/category/peliculas" debe coincidir con pathname "/category/peliculas"
+    if (href.startsWith('/category/')) {
+      return pathname === href;
+    }
+    // Para "/descripcion"
+    if (href === '/descripcion') {
+      return pathname === href;
+    }
+    return false;
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-md text-white border-b border-gray-700 z-50 shadow-lg">
+    <nav 
+      className="fixed top-0 left-0 right-0 z-50 shadow-lg"
+      style={{ 
+        backgroundColor: '#0e0e0eff',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        color: 'var(--color-secondary)'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
+        {/* Logo */}
         {!isSearchVisible && (
-          <a href="/" className="text-3xl font-extrabold text-indigo-500 hover:text-indigo-400 transition">
-            STREAM
+          <a href="/" className="flex items-center">
+            <Image
+              src="/images/Logo.png"
+              alt="Logo"
+              width={80}
+              height={22}
+              className="object-contain"
+            />
           </a>
         )}
 
+        {/* Menú Desktop */}
         <div className="hidden md:flex items-center space-x-6 text-sm">
           {navItems.map((item) => (
-            <a key={item.name} href={item.href} className="hover:text-indigo-400 transition">
+            <a
+              key={item.name}
+              href={item.href}
+              className={`transition-colors relative ${
+                isActive(item.href) 
+                  ? 'text-[var(--color-primary)] font-semibold' 
+                  : 'hover:text-[var(--color-primary)]'
+              }`}
+            >
               {item.name}
+              {isActive(item.href) && (
+                <div 
+                  className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                ></div>
+              )}
             </a>
           ))}
         </div>
 
+        {/* Acciones: búsqueda, login/logout, menú móvil */}
         <div className="flex items-center gap-3 sm:gap-4">
-
           {/* Search */}
           <form
             onSubmit={handleSearchSubmit}
@@ -118,50 +165,78 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
             <input
               type="text"
               placeholder="Buscar..."
-              className="w-full h-10 pl-10 pr-10 rounded-full bg-gray-800/70 border border-gray-600 text-sm text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+              className="w-full h-10 pl-10 pr-10 rounded-full transition"
+              style={{
+                backgroundColor: 'rgba(220, 218, 217, 0.1)',
+                border: '1px solid rgba(149, 153, 158, 0.3)',
+                color: 'var(--color-secondary)',
+              }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button type="submit" className="absolute top-0 left-3 h-full flex items-center text-gray-400 hover:text-indigo-400 transition">
+            <button 
+              type="submit" 
+              className="absolute top-0 left-3 h-full flex items-center"
+              style={{ color: 'var(--color-accent)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-accent)'}
+            >
               <SearchIcon size={18} />
             </button>
             {isSearchVisible && (
-              <button type="button" onClick={() => setIsSearchVisible(false)} className="absolute top-0 right-3 h-full flex items-center text-gray-400 hover:text-red-400 transition md:hidden">
+              <button
+                type="button"
+                onClick={() => setIsSearchVisible(false)}
+                className="absolute top-0 right-3 h-full flex items-center md:hidden"
+                style={{ color: 'var(--color-accent)' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-accent)'}
+              >
                 <XIcon size={18} />
               </button>
             )}
           </form>
 
           {!isSearchVisible && (
-            <button onClick={() => setIsSearchVisible(true)} className="md:hidden p-2 rounded-full hover:bg-gray-700 transition">
+            <button
+              onClick={() => setIsSearchVisible(true)}
+              className="md:hidden p-2 rounded-full transition"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(149, 153, 158, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
               <SearchIcon />
             </button>
           )}
 
-          {/* Login / Logout Desktop */}
+          {/* Login / Logout */}
           {session ? (
-            <button onClick={handleLogout} className="hidden sm:flex p-2 rounded-full hover:bg-gray-700 transition">
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-full transition md:ml-2"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(149, 153, 158, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
               <LogoutIcon size={24} />
             </button>
           ) : (
-            <button onClick={onOpenLogin} className="hidden sm:flex p-2 rounded-full hover:bg-gray-700 transition">
+            <button
+              onClick={onOpenLogin}
+              className="p-2 rounded-full transition md:ml-2"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(149, 153, 158, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
               <UserIcon size={24} />
             </button>
           )}
 
-          {/* Login / Logout Mobile */}
-          {session ? (
-            <button onClick={handleLogout} className="sm:hidden p-2 rounded-full hover:bg-gray-700 transition">
-              <LogoutIcon size={24} />
-            </button>
-          ) : (
-            <button onClick={onOpenLogin} className="sm:hidden p-2 rounded-full hover:bg-gray-700 transition">
-              <UserIcon size={24} />
-            </button>
-          )}
-
+          {/* Menu Móvil */}
           {!isSearchVisible && (
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-full hover:bg-gray-700 transition">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-full transition"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(149, 153, 158, 0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
               {isMenuOpen ? <XIcon /> : <MenuIcon />}
             </button>
           )}
@@ -169,20 +244,50 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
       </div>
 
       {/* Mobile Menu */}
-      <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? "max-h-screen py-2" : "max-h-0"}`}>
+      <div 
+        className={`md:hidden transition-all duration-300 overflow-hidden ${isMenuOpen ? "max-h-screen py-2" : "max-h-0"}`}
+        style={{ backgroundColor: 'rgba(22, 18, 20, 0.95)' }}
+      >
         <div className="px-3 space-y-1">
           {navItems.map((item) => (
-            <a key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+            <a
+              key={item.name}
+              href={item.href}
+              onClick={() => setIsMenuOpen(false)}
+              className={`block px-3 py-2 rounded-md transition-colors ${
+                isActive(item.href)
+                  ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)] font-medium'
+                  : 'text-[var(--color-secondary)] hover:bg-[var(--color-accent)]/20 hover:text-[var(--color-primary)]'
+              }`}
+            >
               {item.name}
             </a>
           ))}
 
           {session ? (
-            <button onClick={() => { setIsMenuOpen(false); handleLogout(); }} className="w-full mt-2 px-3 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white flex justify-center">
+            <button
+              onClick={() => { setIsMenuOpen(false); handleLogout(); }}
+              className="w-full mt-2 px-3 py-2 rounded-md transition-colors flex justify-center"
+              style={{ 
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-background)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e8b293'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+            >
               <LogoutIcon size={20} />
             </button>
           ) : (
-            <button onClick={() => { onOpenLogin(); setIsMenuOpen(false); }} className="w-full mt-2 px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white flex justify-center">
+            <button
+              onClick={() => { onOpenLogin(); setIsMenuOpen(false); }}
+              className="w-full mt-2 px-3 py-2 rounded-md transition-colors flex justify-center"
+              style={{ 
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-background)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e8b293'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+            >
               <UserIcon size={20} />
             </button>
           )}
