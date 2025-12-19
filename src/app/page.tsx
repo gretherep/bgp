@@ -6,8 +6,15 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
 import MediaCard from "@/components/MediaCard";
 import { Media } from "@/app/models/media";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import FilterSidebar from "@/components/FilterSidebar";
+import 'swiper/css';
+import 'swiper/css/autoplay';
+
+// Importar estilos de Swiper para asegurar funcionamiento
+import 'swiper/css';
+import 'swiper/css/free-mode';
+import Link from "next/link";
 
 type MediaItem = Media & { avg_rating?: number | null };
 
@@ -32,19 +39,17 @@ export default function HomePage() {
   }, [page, filterTitle, filterYear, filterCategory, filterGenre]);
 
   /** ⭐ TOP 10 MEJOR VALORADAS */
-async function fetchTopRated() {
-  setLoadingTop(true);
+  async function fetchTopRated() {
+    setLoadingTop(true);
+    const { data: ratingsData, error: ratingsError } = await supabase
+      .from("ratings")
+      .select("media_id, rating");
 
-  // 1️⃣ Obtener promedios reales desde ratings
-  const { data: ratingsData, error: ratingsError } = await supabase
-    .from("ratings")
-    .select("media_id, rating");
-
-  if (ratingsError) {
-    console.error("Error ratings:", ratingsError);
-    setLoadingTop(false);
-    return;
-  }
+    if (ratingsError) {
+      console.error("Error ratings:", ratingsError);
+      setLoadingTop(false);
+      return;
+    }
 
     const avgMap: Record<string, number> = {};
     const countMap: Record<string, number> = {};
@@ -69,7 +74,7 @@ async function fetchTopRated() {
       return;
     }
 
-    const {  data:mediaData, error: mediaError } = await supabase
+    const { data: mediaData, error: mediaError } = await supabase
       .from("media")
       .select(`
         id,
@@ -97,7 +102,6 @@ async function fetchTopRated() {
     }));
 
     finalTop.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
-
     setTopRated(finalTop);
     setLoadingTop(false);
   }
@@ -105,7 +109,6 @@ async function fetchTopRated() {
   /** ⭐ RECIENTES PAGINADOS CON FILTROS MULTI */
   async function fetchRecent() {
     setLoadingRecent(true);
-
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -132,22 +135,15 @@ async function fetchTopRated() {
     setLoadingRecent(false);
   }
 
-  // ✅ Generar opciones de años (2000 - actual)
-const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from(
+    { length: currentYear - 1999 },
+    (_, i) => {
+      const year = 2000 + i;
+      return { value: year.toString(), label: year.toString() };
+    }
+  ).reverse();
 
-const yearOptions = Array.from(
-  { length: currentYear - 1999 },
-  (_, i) => {
-    const year = 2000 + i;
-    return {
-      value: year.toString(),
-      label: year.toString(),
-    };
-  }
-).reverse();
-
-
-  // ✅ HANDLERS PARA EL COMPONENTE FILTROS
   const handleApplyFilters = (filters: Record<string, string | string[]>) => {
     setFilterTitle(filters.title as string || "");
     setFilterYear(filters.year ? Number(filters.year) : "");
@@ -167,159 +163,159 @@ const yearOptions = Array.from(
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        
-        {/* 🌟 TOP 10 MEJOR VALORADAS - CARRUSEL ANIMADO */}
-        <section className="mb-12 mt-20">
-          {loadingTop ? (
-            <div className="flex space-x-6 overflow-x-auto pb-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-40 h-56 bg-[var(--color-accent)]/15 rounded-2xl animate-pulse"></div>
-              ))}
-            </div>
-          ) : topRated.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-3 opacity-60">🎬</div>
-              <p className="text-[var(--color-accent)] text-sm">Sin valoraciones aún</p>
-            </div>
-          ) : (
-            <Swiper
-              modules={[Autoplay, FreeMode]}
-              autoplay={{ 
-                delay: 2500, 
-                disableOnInteraction: false,
-                pauseOnMouseEnter: true
-              }}
-              freeMode={true}
-              slidesPerView={2.8}
-              breakpoints={{
-                320: { slidesPerView: 2.2, spaceBetween: 12 },
-                375: { slidesPerView: 2.5, spaceBetween: 14 },
-                480: { slidesPerView: 3.2, spaceBetween: 16 },
-                768: { slidesPerView: 3.8, spaceBetween: 20 },
-                1024: { slidesPerView: 4.5, spaceBetween: 24 },
-                1280: { slidesPerView: 5.5, spaceBetween: 28 },
-              }}
-              spaceBetween={16}
-              className="pb-4"
-            >
-              {topRated.map((media) => (
-                <SwiperSlide key={media.id} className="!flex !justify-center">
-                  <motion.div
-                    className="w-full max-w-[160px] cursor-pointer"
-                    whileHover={{ y: -12, scale: 1.03 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    onClick={() => {
-                      console.log("Abrir modal para:", media.title);
-                    }}
-                  >
-                    <div className="relative rounded-2xl overflow-hidden shadow-xl group transition-all duration-500">
-                      <div className="pb-[140%] relative">
-                        {media.poster_url ? (
-                          <motion.img
-                            src={media.poster_url}
-                            alt={media.title}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            initial={{ scale: 1 }}
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.3 }}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-[#0e0e0e] flex items-center justify-center">
-                            <span className="text-[var(--color-accent)] text-[9px] px-1 text-center">Sin póster</span>
-                          </div>
-                        )}
-                        <motion.div 
-                          className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          initial={{ opacity: 0 }}
-                          whileHover={{ opacity: 1 }}
-                        />
-                      </div>
+    // CAMBIO: overflow-x-hidden para evitar que los efectos de glow rompan el scroll
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)] overflow-x-hidden">
+      
+      <section className="relative w-full pt-28 pb-12 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[var(--color-primary)] blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[50%] rounded-full bg-indigo-600 blur-[100px] opacity-20" />
+        </div>
 
-                      <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-black/90 to-transparent">
-                        <h3 className="text-white text-[11px] font-semibold line-clamp-2 mb-1.5">
-                          {media.title}
-                        </h3>
-                        <div className="flex items-center justify-between">
-                          <div className="flex space-x-0.5">
-                            {Array.from({ length: 5 }, (_, i) => {
-                              const ratingValue = i + 1;
-                              const isFilled = ratingValue <= Math.round(media.avg_rating || 0);
-                              return (
-                                <svg
-                                  key={i}
-                                  className="w-2.5 h-2.5"
-                                  fill={isFilled ? "#FBBF24" : "none"}
-                                  stroke={isFilled ? "#FBBF24" : "rgba(255, 255, 255, 0.7)"}
-                                  strokeWidth="1"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                              );
-                            })}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <motion.span 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20"
+            >
+              Explora • Califica • Disfruta
+            </motion.span>
+            
+            <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tighter leading-none">
+              Bienvenido a <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
+                Tu Catálogo Favorito
+              </span>
+            </h1>
+
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="max-w-2xl mx-auto text-base md:text-lg text-[var(--color-accent)] font-medium leading-relaxed mb-8 px-4"
+            >
+              Descubre las producciones mejor valoradas por la comunidad y mantente al día con los estrenos más recientes.
+            </motion.p>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* 🌟 TOP 10 - CORREGIDO PARA MÓVIL */}
+        <section className="mb-14 mt-8 relative z-10">
+          <div className="flex items-center justify-between mb-6 px-2 sm:px-0">
+            <div>
+              <h2 className="text-xl md:text-2xl font-black text-white tracking-tighter flex items-center gap-2">
+                <span className="bg-[var(--color-primary)] text-black px-2 py-0.5 rounded-md transform -rotate-2">TOP 10</span>
+                LO MÁS VISTO
+              </h2>
+              <p className="text-[var(--color-accent)] text-[10px] md:text-xs font-medium ml-1">Actualizado hace instantes</p>
+            </div>
+          </div>
+
+          {/* Contenedor del Swiper con overflow controlado */}
+          <div className="relative w-full overflow-visible">
+            {loadingTop ? (
+              <div className="flex gap-4 overflow-hidden">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="min-w-[180px] h-[280px] bg-white/5 rounded-[2rem] animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <Swiper
+                modules={[FreeMode,Autoplay]}
+                grabCursor={true}
+                slidesPerView={1.3} // Se ve una tarjeta y parte de la otra para invitar al scroll
+                spaceBetween={16}
+                freeMode={false}
+                loop={true}
+                autoplay={{
+                delay: 2500,
+                disableOnInteraction: false,
+                }}
+                speed={800}
+                breakpoints={{
+                  480: { slidesPerView: 2.2, spaceBetween: 20 },
+                  768: { slidesPerView: 3.2, spaceBetween: 25 },
+                  1024: { slidesPerView: 4.2, spaceBetween: 30 },
+                }}
+                className="!overflow-visible py-5" 
+              >
+                {topRated.map((media, index) => (
+                  <SwiperSlide key={media.id}>
+                    <motion.div
+                      whileTap={{ scale: 0.95 }}
+                      className="relative group cursor-pointer"
+                    >
+                      <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                        <img
+                          src={media.poster_url || "/placeholder.jpg"}
+                          alt={media.title}
+                          className="w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-black/10 to-transparent" />
+
+                        <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 shadow-lg z-20">
+                          <span className="text-xs">🔥</span>
+                          <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
+                        </div>
+
+                        <div className="absolute top-3 md:top-4 right-3 md:right-4 backdrop-blur-md bg-black/40 border border-white/20 px-2 py-0.5 md:py-1 rounded-xl flex items-center gap-1">
+                          <span className="text-[var(--color-primary)] text-xs">★</span>
+                          <span className="text-white text-[10px] font-bold">{(media.avg_rating || 0).toFixed(1)}</span>
+                        </div>
+
+                        <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 p-2 md:p-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl md:rounded-2xl">
+                          <h3 className="text-white text-[10px] md:text-xs font-bold truncate mb-0.5 md:mb-1">
+                            {media.title}
+                          </h3>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--color-primary)] text-[8px] md:text-[9px] font-black uppercase tracking-widest">
+                              {media.category}
+                            </span>
+                            <span className="text-white/60 text-[8px] md:text-[9px]">{media.year}</span>
                           </div>
-                          <span className="text-[#FBBF24] text-[10px] font-bold">
-                            {(media.avg_rating || 0).toFixed(1)}
-                          </span>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          )}
+                    </motion.div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
+          </div>
         </section>
 
-        <div 
-          className="my-10"
-          style={{ height: '1px', backgroundColor: 'rgba(149, 153, 158, 0.2)' }}
-        ></div>
+        <div className="my-10 h-px bg-white/10"></div>
 
-        {/* 🗂️ Contenido Reciente con Filtros */}
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* 🖥️ FILTROS SOLO EN DESKTOP */}
           <div className="hidden lg:block">
             <FilterSidebar
-              textInputs={[
-                { key: "title", label: "Título", value: filterTitle }
-              ]}
-              singleSelects={[
-                { key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }
-              ]}
+              textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
+              singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
               multiSelects={[
                 { 
-                  key: "category", 
-                  label: "Categorías", 
-                  value: filterCategory, 
+                  key: "category", label: "Categorías", value: filterCategory, 
                   options: [
-                    {value: "Películas", label: "Películas"},
-                    {value: "Series", label: "Series"},
-                    {value: "Novelas", label: "Novelas"},
-                    {value: "Reality Shows", label: "Reality Shows"},
-                    {value: "MiniSeries", label: "MiniSeries"},
-                    {value: "Series Animadas", label: "Series Animadas"},
-                    {value: "Películas Animadas", label: "Películas Animadas"},
-                    {value: "Anime", label: "Anime"},
+                    {value: "Películas", label: "Películas"}, {value: "Series", label: "Series"},
+                    {value: "Novelas", label: "Novelas"}, {value: "Reality Shows", label: "Reality Shows"},
+                    {value: "MiniSeries", label: "MiniSeries"}, {value: "Series Animadas", label: "Series Animadas"},
+                    {value: "Películas Animadas", label: "Películas Animadas"}, {value: "Anime", label: "Anime"},
                     {value: "Películas Anime", label: "Películas Anime"}
                   ]
                 },
                 { 
-                  key: "genre", 
-                  label: "Géneros", 
-                  value: filterGenre, 
+                  key: "genre", label: "Géneros", value: filterGenre, 
                   options: [
-                    {value: "Acción", label: "Acción"},
-                    {value: "Drama", label: "Drama"},
-                    {value: "Comedia", label: "Comedia"},
-                    {value: "Terror", label: "Terror"},
-                    {value: "Romance", label: "Romance"},
-                    {value: "Aventura", label: "Aventura"}
+                    {value: "Acción", label: "Acción"}, {value: "Drama", label: "Drama"},
+                    {value: "Comedia", label: "Comedia"}, {value: "Terror", label: "Terror"},
+                    {value: "Romance", label: "Romance"}, {value: "Aventura", label: "Aventura"}
                   ]
                 }
               ]}
@@ -328,169 +324,175 @@ const yearOptions = Array.from(
             />
           </div>
 
-          {/* 📱 BOTÓN DE FILTROS SOLO EN MÓVIL */}
-          <div className="lg:hidden flex justify-end mb-4">
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="p-2 rounded-full flex items-center gap-1.5"
-              style={{
-                backgroundColor: 'rgba(249, 195, 164, 0.15)',
-                color: 'var(--color-primary)',
-                border: '1px solid rgba(249, 195, 164, 0.3)'
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+  <div className="lg:hidden flex flex-col mb-6">
+            <div className="flex items-center gap-2 w-full">
+              
+              {/* 1. Botón de Filtros Integrado */}
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-90 transition-transform"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
-              </svg>
-              <span className="text-xs font-medium">Filtros</span>
-            </button>
-          </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
+                </svg>
+              </button>
 
-          {/* 📺 Contenido Principal */}
-          <main className="flex-1">
-            <div className="flex items-center mb-6">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 text-[var(--color-primary)] mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.55-4.55a.8.8 0 011.12 0l.33.33a.8.8 0 010 1.12L16.4 11.4l-4.7 4.7a.8.8 0 01-1.12 0l-.33-.33a.8.8 0 010-1.12L13.6 11.4l1.4-1.4zM3 15v5a2 2 0 002 2h14a2 2 0 002-2v-5M3 9V4a2 2 0 012-2h14a2 2 0 012 2v5" />
-              </svg>
-              <h2 className="text-2xl font-bold text-[var(--color-secondary)] tracking-tight">
-                <span className="text-[var(--color-primary)]">Contenido</span> Reciente
-              </h2>
-            </div>
-
-            {loadingRecent ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-                {[...Array(12)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="aspect-[2/3] rounded-xl animate-pulse"
-                    style={{ backgroundColor: 'rgba(149, 153, 158, 0.15)' }}
-                  ></div>
+              {/* 2. Tabs de Navegación (Tus NavItems) */}
+              <div className="flex-1 flex overflow-x-auto gap-2 py-1 no-scrollbar select-none">
+                {[
+                  { name: "Películas", href: "/category/peliculas", icon: "🎬" },
+                  { name: "Series", href: "/category/series", icon: "📺" },
+                  { name: "Anime", href: "/category/anime", icon: "🍱" },
+                  { name: "Novelas", href: "/category/novelas", icon: "🎭" },
+                  { name: "Reality", href: "/category/reality", icon: "✨" },
+                  { name: "Info", href: "/descripcion", icon: "📝" },
+                ].map((item) => (
+                  <Link 
+                    key={item.name} 
+                    href={item.href}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap active:bg-white/10 transition-colors"
+                  >
+                    <span className="text-sm">{item.icon}</span>
+                    <span className="text-xs font-bold text-white/90">{item.name}</span>
+                  </Link>
                 ))}
               </div>
-            ) : (
-              <>
-                {recent.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="text-5xl mb-4 opacity-60">🎬</div>
-                    <p className="text-xl" style={{ color: 'var(--color-accent)' }}>
-                      No hay contenido disponible con estos filtros.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-                    {recent.map((media) => (
-                      <MediaCard key={media.id} media={{ ...media }} />
-                    ))}
-                  </div>
-                )}
+            </div>
+          </div>
 
-                {/* Paginación */}
-                {recent.length > 0 && (
-                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-12 pb-8">
-                    <button
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                      className="px-6 py-2.5 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        backgroundColor: 'rgba(149, 153, 158, 0.15)',
-                        color: 'var(--color-secondary)',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (page !== 1) e.currentTarget.style.backgroundColor = 'rgba(249, 195, 164, 0.8)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (page !== 1) e.currentTarget.style.backgroundColor = 'rgba(149, 153, 158, 0.15)';
-                      }}
-                    >
-                      Anterior
-                    </button>
-                    
-                    <span 
-                      className="font-medium text-lg"
-                      style={{ color: 'var(--color-primary)' }}
-                    >
-                      Página {page}
-                    </span>
-                    
-                    <button
-                      disabled={recent.length < pageSize}
-                      onClick={() => setPage(page + 1)}
-                      className="px-6 py-2.5 rounded-xl font-semibold text-[var(--color-background)] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ backgroundColor: 'var(--color-primary)' }}
-                      onMouseEnter={(e) => {
-                        if (recent.length >= pageSize) e.currentTarget.style.backgroundColor = '#e8b293';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (recent.length >= pageSize) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                      }}
-                    >
-                      Siguiente
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </main>
+ {/* 📺 Contenido Principal */}
+<main className="flex-1 min-w-0">
+  <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center">
+      <div className="w-1.5 h-8 bg-[var(--color-primary)] rounded-full mr-4 shadow-[0_0_15px_rgba(249,195,164,0.5)]" />
+      <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+        <span className="text-[var(--color-primary)]">CONTENIDO</span> RECIENTE
+      </h2>
+    </div>
+    
+    {/* Badge de cantidad (Opcional, se ve pro) */}
+    {!loadingRecent && recent.length > 0 && (
+      <span className="hidden sm:block px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-[var(--color-accent)] tracking-widest uppercase">
+        {recent.length} Resultados
+      </span>
+    )}
+  </div>
+
+  {loadingRecent ? (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+      {[...Array(10)].map((_, i) => (
+        <div 
+          key={i} 
+          className="aspect-[2/3] rounded-[1.5rem] bg-gradient-to-br from-white/5 to-white/[0.02] animate-pulse border border-white/5" 
+        />
+      ))}
+    </div>
+  ) : (
+    <>
+      {recent.length === 0 ? (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-24 bg-white/[0.02] rounded-[3rem] border border-dashed border-white/10"
+        >
+          <div className="text-6xl mb-4 grayscale opacity-50">🎬</div>
+          <p className="text-xl font-medium text-[var(--color-accent)]">
+            No encontramos lo que buscas
+          </p>
+          <p className="text-sm text-white/40 mt-2">Prueba ajustando los filtros de búsqueda</p>
+        </motion.div>
+      ) : (
+        <motion.div 
+          layout // Para animar suavemente cuando cambian los filtros
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
+        >
+          <AnimatePresence mode="popLayout">
+            {recent.map((media, index) => (
+              <motion.div
+                key={media.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                whileHover={{ y: -8 }} // Sube un poco al pasar el mouse
+                className="relative"
+              >
+                {/* Aquí usamos tu MediaCard, pero le puedes pasar una clase 
+                   o envolverla para que herede el estilo premium 
+                */}
+                <div className="group relative transition-all duration-300">
+                  <MediaCard media={{ ...media }} />
+                  
+                  {/* Overlay sutil de brillo al hacer hover (opcional) */}
+                  <div className="absolute inset-0 rounded-xl md:rounded-[2rem] pointer-events-none group-hover:bg-gradient-to-t group-hover:from-[var(--color-primary)]/10 group-hover:to-transparent transition-all duration-500" />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      {/* Paginación Estilizada */}
+{/* Paginación Estilizada y Responsive */}
+{recent.length > 0 && (
+  <div className="flex justify-center items-center gap-2 md:gap-6 mt-12 md:mt-16 pb-12">
+    
+    {/* Botón Anterior */}
+    <button
+      disabled={page === 1}
+      onClick={() => {
+        setPage(page - 1);
+        window.scrollTo({ top: 400, behavior: 'smooth' });
+      }}
+      className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      </svg>
+      <span className="hidden sm:inline">Anterior</span>
+    </button>
+    
+    {/* Indicador de Página Compacto */}
+    <div className="flex items-center px-4 py-2 md:py-3 bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl">
+      <span className="text-white/40 text-[10px] md:text-sm font-medium mr-2 uppercase tracking-tighter">Pág</span>
+      <span className="text-[var(--color-primary)] text-sm md:text-lg font-black min-w-[20px] text-center">
+        {page}
+      </span>
+    </div>
+    
+    {/* Botón Siguiente */}
+    <button
+      disabled={recent.length < pageSize}
+      onClick={() => {
+        setPage(page + 1);
+        window.scrollTo({ top: 400, behavior: 'smooth' });
+      }}
+      className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-[var(--color-primary)] hover:shadow-[0_0_20px_rgba(249,195,164,0.4)] text-black"
+    >
+      <span className="hidden sm:inline">Siguiente</span>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </div>
+)}
+    </>
+  )}
+</main>
         </div>
 
-        {/* 📱 PANEL DE FILTROS MÓVIL - ¡CORREGIDO! */}
         {isFilterOpen && (
           <FilterSidebar
-            textInputs={[
-              { key: "title", label: "Título", value: filterTitle }
-            ]}
-            singleSelects={[
-              { key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }
-            ]}
+            textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
+            singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
             multiSelects={[
-              { 
-                key: "category", 
-                label: "Categorías", 
-                value: filterCategory, 
-                options: [
-                  {value: "Películas", label: "Películas"},
-                  {value: "Series", label: "Series"},
-                  {value: "Novelas", label: "Novelas"},
-                  {value: "Reality Shows", label: "Reality Shows"},
-                  {value: "MiniSeries", label: "MiniSeries"},
-                  {value: "Series Animadas", label: "Series Animadas"},
-                  {value: "Películas Animadas", label: "Películas Animadas"},
-                  {value: "Anime", label: "Anime"},
-                  {value: "Películas Anime", label: "Películas Anime"}
-                ]
-              },
-              { 
-                key: "genre", 
-                label: "Géneros", 
-                value: filterGenre, 
-                options: [
-                  {value: "Acción", label: "Acción"},
-                  {value: "Drama", label: "Drama"},
-                  {value: "Comedia", label: "Comedia"},
-                  {value: "Terror", label: "Terror"},
-                  {value: "Romance", label: "Romance"},
-                  {value: "Aventura", label: "Aventura"}
-                ]
-              }
+              { key: "category", label: "Categorías", value: filterCategory, options: [{value: "Películas", label: "Películas"}, {value: "Series", label: "Series"}] },
+              { key: "genre", label: "Géneros", value: filterGenre, options: [{value: "Acción", label: "Acción"}] }
             ]}
             onApply={handleApplyFilters}
             onReset={handleResetFilters}
-            isMobile={true}                    // ✅ ¡Faltaba esta prop!
-            onCloseMobile={() => setIsFilterOpen(false)} // ✅ ¡Faltaba esta prop!
+            isMobile={true}
+            onCloseMobile={() => setIsFilterOpen(false)}
           />
         )}
       </div>
