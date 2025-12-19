@@ -6,8 +6,3 @@
 body {
   @apply bg-background text-secondary font-sans antialiased;
 }
-.text-outline-primary {
-  -webkit-text-stroke: 2px #f9c3a4; /* Ajusta al color primario */
-  color: transparent;
-  paint-order: stroke fill;
-}

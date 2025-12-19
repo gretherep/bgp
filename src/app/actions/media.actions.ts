@@ -7,38 +7,48 @@ import { Media } from "../models/media";
  * Obtener todos los media (accesible para cualquier usuario)
  */
 export async function getAllMedia(): Promise<(Media & { avg_rating: number })[]> {
-  const supabase = await createServerClient(); // ✅ await
+  try {
+    const supabase = await createServerClient();
 
-  const { data: mediaData, error: mediaError } = await supabase
-    .from("media")
-    .select("*");
+    // ✅ Consulta única optimizada: trae media y sus ratings de golpe
+    const { data: mediaData, error: mediaError } = await supabase
+      .from("media")
+      .select(`
+        *,
+        ratings (
+          rating
+        )
+      `);
 
-  if (mediaError) throw new Error(mediaError.message);
-  const media = mediaData ?? [];
+    if (mediaError) {
+      console.error("Supabase Error:", mediaError.message);
+      throw new Error(mediaError.message);
+    }
 
-  const mediaWithRatings = await Promise.all(
-    media.map(async (m) => {
-      const { data: ratingsData, error: ratingsError } = await supabase
-        .from("ratings")
-        .select("rating")
-        .eq("media_id", m.id);
+    if (!mediaData) return [];
 
-      if (ratingsError) throw new Error(ratingsError.message);
-
-      const ratings = ratingsData ?? [];
+    // ✅ Procesamos los datos en memoria (mucho más rápido que hacer 50 consultas)
+    const mediaWithRatings = mediaData.map((m: any) => {
+      const ratings = m.ratings || [];
       const avg_rating =
         ratings.length > 0
-          ? ratings.reduce((acc, r) => acc + r.rating, 0) / ratings.length
+          ? ratings.reduce((acc: number, r: any) => acc + r.rating, 0) / ratings.length
           : 0;
 
+      // Eliminamos la propiedad ratings para no enviar datos extra innecesarios al cliente
+      const { ratings: _, ...mediaContent } = m;
+      
       return {
-        ...m,
+        ...mediaContent,
         avg_rating,
       };
-    })
-  );
+    });
 
-  return mediaWithRatings;
+    return mediaWithRatings;
+  } catch (error) {
+    console.error("Critical error in getAllMedia:", error);
+    return []; // Retornamos array vacío para evitar que la página explote
+  }
 }
 
 /**
