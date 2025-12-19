@@ -111,7 +111,7 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
     <nav 
       className="fixed top-0 left-0 right-0 z-50 shadow-lg"
       style={{ 
-        backgroundColor: '#0e0e0eff',
+        backgroundColor: '#212121ff',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         color: 'var(--color-secondary)'

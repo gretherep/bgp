@@ -5,6 +5,8 @@ import { Media } from "@/app/models/media";
 import MediaCard from "@/components/MediaCard";
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { motion } from "framer-motion";
+import FilterSidebar from "@/components/FilterSidebar"; // ✅ Importa el componente
 
 // =================================================================
 // DATOS MOCK PARA FILTROS
@@ -76,112 +78,6 @@ const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
 );
 
 // =================================================================
-// FILTROS
-// =================================================================
-const FilterSidebar = () => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const initialYear = searchParams.get('year') || '';
-  const initialGenre = searchParams.get('genre') || '';
-
-  const [currentYear, setCurrentYear] = useState(initialYear);
-  const [currentGenre, setCurrentGenre] = useState(initialGenre);
-
-  const handleApplyFilters = useCallback(() => {
-    const newParams = new URLSearchParams();
-    if (currentYear) newParams.set('year', currentYear);
-    if (currentGenre) newParams.set('genre', currentGenre);
-    router.push(`${pathname}?${newParams.toString()}`);
-  }, [currentYear, currentGenre, router, pathname]);
-
-  useEffect(() => {
-    setCurrentYear(searchParams.get('year') || '');
-    setCurrentGenre(searchParams.get('genre') || '');
-  }, [searchParams]);
-
-  return (
-    <aside className="lg:w-64 flex-shrink-0">
-      <div 
-        className="p-5 rounded-xl shadow-lg"
-        style={{ 
-          backgroundColor: 'rgba(149, 153, 158, 0.1)',
-          border: '1px solid rgba(149, 153, 158, 0.3)',
-          backdropFilter: 'blur(10px)'
-        }}
-      >
-        <h3 className="text-lg font-bold text-[var(--color-primary)] mb-4 flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-1.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z"
-            />
-          </svg>
-          Filtros
-        </h3>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">Año</label>
-            <select
-              value={currentYear}
-              onChange={(e) => setCurrentYear(e.target.value)}
-              className="w-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 rounded-lg px-3 py-2 text-[var(--color-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            >
-              <option value="" className="bg-[var(--color-background)]">Todos los años</option>
-              {YEAR_OPTIONS.map(year => (
-                <option key={year} value={year} className="bg-[var(--color-background)]">{year}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[var(--color-accent)] uppercase mb-1">Género</label>
-            <select
-              value={currentGenre}
-              onChange={(e) => setCurrentGenre(e.target.value)}
-              className="w-full bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 rounded-lg px-3 py-2 text-[var(--color-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            >
-              <option value="" className="bg-[var(--color-background)]">Todos los géneros</option>
-              {GENRE_OPTIONS.map(genre => (
-                <option key={genre} value={normalizeText(genre)} className="bg-[var(--color-background)]">{genre}</option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={handleApplyFilters}
-            className="w-full bg-[var(--color-primary)] hover:bg-[#e8b293] text-[var(--color-background)] font-semibold py-2 px-4 rounded-lg transition"
-          >
-            Aplicar Filtros
-          </button>
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-// =================================================================
-// FUNCIÓN DE UTILIDAD
-// =================================================================
-function normalizeText(text: string | null | undefined): string {
-  if (!text) return "";
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-// =================================================================
 // COMPONENTE PRINCIPAL
 // =================================================================
 interface CategoryPageProps {
@@ -191,10 +87,20 @@ interface CategoryPageProps {
 export default function CategoryPage({ params }: CategoryPageProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const categoryParam = pathname.split('/').pop() || '';
 
-  const [allMedia, setAllMedia] = useState<MediaWithRating[]>([]);
+  const [allMedia, setAllMedia] = useState<MediaWithRating[]>(([]));
   const [loading, setLoading] = useState(true);
+  
+  // Filtros
+  const initialYear = searchParams.get('year') || '';
+  const initialGenre = searchParams.get('genre') || '';
+  const [currentYear, setCurrentYear] = useState(initialYear);
+  const [currentGenre, setCurrentGenre] = useState(initialGenre);
+  
+  // Estado para el panel de filtros móvil
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     if (!categoryParam) return;
@@ -211,6 +117,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     };
     fetchData();
   }, [categoryParam]);
+
+  useEffect(() => {
+    setCurrentYear(searchParams.get('year') || '');
+    setCurrentGenre(searchParams.get('genre') || '');
+  }, [searchParams]);
 
   const categoryMedia = useMemo(() => {
     if (loading || !categoryParam) return [];
@@ -238,6 +149,20 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 5);
   }, [categoryMedia]);
+
+  // ✅ HANDLERS PARA EL COMPONENTE FILTROS
+ const handleApplyFilters = (filters: Record<string, string | string[]>) => {
+    const newParams = new URLSearchParams();
+    if (filters.year) newParams.set('year', filters.year as string);
+    if (filters.genre) newParams.set('genre', filters.genre as string);
+    router.push(`${pathname}?${newParams.toString()}`);
+    setIsFilterOpen(false); // ✅ Cerrar panel en móvil
+  };
+
+  const handleResetFilters = () => {
+    router.push(pathname);
+    setIsFilterOpen(false); // ✅ Cerrar panel en móvil
+  };
 
   if (loading) {
     return (
@@ -276,21 +201,24 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     );
   }
 
+  // ✅ PREPARAR LAS OPCIONES PARA EL COMPONENTE
+  const yearOptions = YEAR_OPTIONS.map(year => ({ 
+    value: year, 
+    label: year 
+  }));
+
+  const genreOptions = GENRE_OPTIONS.map(genre => ({ 
+    value: genre, 
+    label: genre 
+  }));
+
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)] mt-19">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         <h1 className="text-2xl sm:text-3xl font-bold capitalize mb-2 mt-12">
           {categoryParam.replace(/-/g, ' ')}
         </h1>
-        {/* <p className="text-[var(--color-accent)] mb-8">
-          {categoryMedia.length} títulos disponibles
-        </p>
-
-        <hr 
-          className="my-6"
-          style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}
-        /> */}
 
         {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
 
@@ -300,12 +228,48 @@ export default function CategoryPage({ params }: CategoryPageProps) {
         />
 
         <div className="flex flex-col lg:flex-row gap-8">
-          <FilterSidebar />
-          
+          {/* 🖥️ FILTROS SOLO EN DESKTOP (oculto en móvil) */}
+          <div className="hidden lg:block">
+            <FilterSidebar
+              singleSelects={[
+                { key: "year", label: "Año", value: currentYear, options: [{value: "", label: "Todos los años"}, ...yearOptions] },
+                { key: "genre", label: "Género", value: currentGenre, options: [{value: "", label: "Todos los géneros"}, ...genreOptions] }
+              ]}
+              onApply={handleApplyFilters}
+              onReset={handleResetFilters}
+            />
+          </div>
+
+          {/* 📱 BOTÓN DE FILTROS SOLO EN MÓVIL */}
+          <div className="lg:hidden flex justify-end mb-4">
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="p-2 rounded-full flex items-center gap-1.5"
+              style={{
+                backgroundColor: 'rgba(249, 195, 164, 0.15)',
+                color: 'var(--color-primary)',
+                border: '1px solid rgba(249, 195, 164, 0.3)'
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
+              </svg>
+              <span className="text-xs font-medium">Filtros</span>
+            </button>
+          </div>
+
+          {/* 📺 CONTENIDO PRINCIPAL */}
           <main className="flex-1">
             {categoryMedia.length === 0 ? (
               <p 
-                className="text-lg p-6 rounded-lg"
+                className="text-lg p-6 rounded-lg text-center"
                 style={{ 
                   backgroundColor: 'rgba(149, 153, 158, 0.1)',
                   color: 'var(--color-accent)',
@@ -324,6 +288,31 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           </main>
         </div>
       </div>
+
+      {/* 📱 PANEL DE FILTROS MÓVIL (solo cuando está abierto) */}
+      {isFilterOpen && (
+        <FilterSidebar
+          singleSelects={[
+            { key: "year", label: "Año", value: currentYear, options: [{value: "", label: "Todos los años"}, ...yearOptions] },
+            { key: "genre", label: "Género", value: currentGenre, options: [{value: "", label: "Todos los géneros"}, ...genreOptions] }
+          ]}
+          onApply={handleApplyFilters}
+          onReset={handleResetFilters}
+          isMobile={true}
+          onCloseMobile={() => setIsFilterOpen(false)}
+        />
+      )}
     </div>
   );
+}
+
+// =================================================================
+// FUNCIÓN DE UTILIDAD
+// =================================================================
+function normalizeText(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }

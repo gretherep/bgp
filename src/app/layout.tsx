@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           "--color-primary": "#F9C3A4",
           "--color-secondary": "#DCDAD9",
           "--color-accent": "#95999E",
-          "--color-background": "rgba(0, 0, 0, 0.9)",
+          "--color-background": "#161616ff",
         } as React.CSSProperties}
       >
         <div className="bg-[var(--color-background)] text-[var(--color-secondary)] min-h-screen">
