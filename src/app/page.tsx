@@ -7,7 +7,7 @@ import { Autoplay, FreeMode } from "swiper/modules";
 import MediaCard from "@/components/MediaCard";
 import { Media } from "@/app/models/media";
 import { motion } from "framer-motion";
-import FilterSidebar from "@/components/FilterSidebar"; // ✅ Importa el componente
+import FilterSidebar from "@/components/FilterSidebar";
 
 type MediaItem = Media & { avg_rating?: number | null };
 
@@ -20,7 +20,6 @@ export default function HomePage() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  // 🔹 FILTROS RECENTES
   const [filterTitle, setFilterTitle] = useState("");
   const [filterYear, setFilterYear] = useState<number | "">("");
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
@@ -33,8 +32,8 @@ export default function HomePage() {
   }, [page, filterTitle, filterYear, filterCategory, filterGenre]);
 
   /** ⭐ TOP 10 MEJOR VALORADAS */
-  async function fetchTopRated() {
-    setLoadingTop(true);
+async function fetchTopRated() {
+  setLoadingTop(true);
 
   // 1️⃣ Obtener promedios reales desde ratings
   const { data: ratingsData, error: ratingsError } = await supabase
@@ -70,35 +69,32 @@ export default function HomePage() {
       return;
     }
 
-  // 4️⃣ Traer los datos reales de media
-const { data: mediaData, error: mediaError } = await supabase
-  .from("media")
-  .select(`
-    id,
-    title,
-    synopsis,
-    genre,
-    category,
-    poster_url,
-    year,
-    created_at,
-    updated_at,
-    slug
-  `)
-  .in("id", top10Ids.map((i) => i.media_id));
+    const {  data:mediaData, error: mediaError } = await supabase
+      .from("media")
+      .select(`
+        id,
+        title,
+        synopsis,
+        genre,
+        category,
+        poster_url,
+        year,
+        created_at,
+        updated_at,
+        slug
+      `)
+      .in("id", top10Ids.map((i) => i.media_id));
 
+    if (mediaError) {
+      console.error("Error media:", mediaError);
+      setLoadingTop(false);
+      return;
+    }
 
-  if (mediaError) {
-    console.error("Error media:", mediaError);
-    setLoadingTop(false);
-    return;
-  }
-
-  // 5️⃣ Unir media + avg
- const finalTop = mediaData.map((m) => ({
-    ...m,
-    avg_rating: top10Ids.find((t) => t.media_id === m.id)?.avg_rating || 0,
-  }));
+    const finalTop = mediaData.map((m) => ({
+      ...m,
+      avg_rating: top10Ids.find((t) => t.media_id === m.id)?.avg_rating || 0,
+    }));
 
     finalTop.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
 
@@ -106,14 +102,6 @@ const { data: mediaData, error: mediaError } = await supabase
     setLoadingTop(false);
   }
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-  { length: currentYear - 1999 }, 
-  (_, i) => ({ 
-    value: (2000 + i).toString(), 
-    label: (2000 + i).toString() 
-  })
-).reverse(); // Del más reciente al más antiguo
   /** ⭐ RECIENTES PAGINADOS CON FILTROS MULTI */
   async function fetchRecent() {
     setLoadingRecent(true);
@@ -144,15 +132,29 @@ const { data: mediaData, error: mediaError } = await supabase
     setLoadingRecent(false);
   }
 
+  // ✅ Generar opciones de años (2000 - actual)
+const currentYear = new Date().getFullYear();
+
+const yearOptions = Array.from(
+  { length: currentYear - 1999 },
+  (_, i) => {
+    const year = 2000 + i;
+    return {
+      value: year.toString(),
+      label: year.toString(),
+    };
+  }
+).reverse();
+
+
   // ✅ HANDLERS PARA EL COMPONENTE FILTROS
   const handleApplyFilters = (filters: Record<string, string | string[]>) => {
-    // Actualizar estados locales
     setFilterTitle(filters.title as string || "");
     setFilterYear(filters.year ? Number(filters.year) : "");
     setFilterCategory(filters.category as string[] || []);
     setFilterGenre(filters.genre as string[] || []);
     setPage(1);
-    setIsFilterOpen(false); // ✅ Cerrar en móvil
+    setIsFilterOpen(false);
   };
 
   const handleResetFilters = () => {
@@ -161,7 +163,7 @@ const { data: mediaData, error: mediaError } = await supabase
     setFilterCategory([]);
     setFilterGenre([]);
     setPage(1);
-    setIsFilterOpen(false); // ✅ Cerrar en móvil
+    setIsFilterOpen(false);
   };
 
   return (
@@ -170,39 +172,6 @@ const { data: mediaData, error: mediaError } = await supabase
         
         {/* 🌟 TOP 10 MEJOR VALORADAS - CARRUSEL ANIMADO */}
         <section className="mb-12 mt-20">
-          <div className="flex items-center mb-6">
-            <div 
-              className="p-2 rounded-lg mr-3"
-              style={{
-                background: 'linear-gradient(90deg, var(--color-primary), #e8b293)',
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                style={{ color: 'var(--color-background)' }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.185a.75.75 0 01.902 0l3.968 2.531a.75.75 0 00.902 0l3.968-2.531a.75.75 0 01.902 0l1.2 1.916a.75.75 0 01-.225.967l-3.218 2.872a.75.75 0 00-.225.755l.391 3.51a.75.75 0 01-1.096.793l-3.41-2.193a.75.75 0 00-.776 0l-3.41 2.193a.75.75 0 01-1.096-.793l.391-3.51a.75.75 0 00-.225-.755L3.921 5.068a.75.75 0 01-.225-.967l1.2-1.916a.75.75 0 01.902 0z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--color-secondary)' }}>
-              <span 
-                className="bg-clip-text text-transparent"
-                style={{ 
-                  background: 'linear-gradient(90deg, var(--color-primary), #e8b293)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}
-              >
-                Mejor Valoradas
-              </span>
-            </h2>
-          </div>
-
           {loadingTop ? (
             <div className="flex space-x-6 overflow-x-auto pb-4">
               {[...Array(6)].map((_, i) => (
@@ -316,38 +285,47 @@ const { data: mediaData, error: mediaError } = await supabase
         <div className="flex flex-col lg:flex-row gap-8">
           {/* 🖥️ FILTROS SOLO EN DESKTOP */}
           <div className="hidden lg:block">
-          <FilterSidebar
-    textInputs={[
-    { key: "title", label: "Título", value: filterTitle }
-  ]}
-  singleSelects={[
-    { key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }
-  ]}
-  multiSelects={[
-    { 
-      key: "category", 
-      label: "Categorías", 
-      value: filterCategory, 
-      options: [
-        {value: "Películas", label: "Películas"},
-        {value: "Series", label: "Series"},
-        // ... todas tus categorías
-      ]
-    },
-    { 
-      key: "genre", 
-      label: "Géneros", 
-      value: filterGenre, 
-      options: [
-        {value: "Acción", label: "Acción"},
-        {value: "Drama", label: "Drama"},
-        // ... todos tus géneros
-      ]
-    }
-  ]}
-  onApply={handleApplyFilters}
-  onReset={handleResetFilters}
-/>
+            <FilterSidebar
+              textInputs={[
+                { key: "title", label: "Título", value: filterTitle }
+              ]}
+              singleSelects={[
+                { key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }
+              ]}
+              multiSelects={[
+                { 
+                  key: "category", 
+                  label: "Categorías", 
+                  value: filterCategory, 
+                  options: [
+                    {value: "Películas", label: "Películas"},
+                    {value: "Series", label: "Series"},
+                    {value: "Novelas", label: "Novelas"},
+                    {value: "Reality Shows", label: "Reality Shows"},
+                    {value: "MiniSeries", label: "MiniSeries"},
+                    {value: "Series Animadas", label: "Series Animadas"},
+                    {value: "Películas Animadas", label: "Películas Animadas"},
+                    {value: "Anime", label: "Anime"},
+                    {value: "Películas Anime", label: "Películas Anime"}
+                  ]
+                },
+                { 
+                  key: "genre", 
+                  label: "Géneros", 
+                  value: filterGenre, 
+                  options: [
+                    {value: "Acción", label: "Acción"},
+                    {value: "Drama", label: "Drama"},
+                    {value: "Comedia", label: "Comedia"},
+                    {value: "Terror", label: "Terror"},
+                    {value: "Romance", label: "Romance"},
+                    {value: "Aventura", label: "Aventura"}
+                  ]
+                }
+              ]}
+              onApply={handleApplyFilters}
+              onReset={handleResetFilters}
+            />
           </div>
 
           {/* 📱 BOTÓN DE FILTROS SOLO EN MÓVIL */}
@@ -469,23 +447,23 @@ const { data: mediaData, error: mediaError } = await supabase
           </main>
         </div>
 
-        {/* 📱 PANEL DE FILTROS MÓVIL */}
+        {/* 📱 PANEL DE FILTROS MÓVIL - ¡CORREGIDO! */}
         {isFilterOpen && (
-        <FilterSidebar
-  textInputs={[
-    { key: "title", label: "Título", value: filterTitle }
-  ]}
-  singleSelects={[
-    { key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }
-  ]}
-  multiSelects={[
-    { 
-      key: "category", 
-      label: "Categorías", 
-      value: filterCategory, 
-      options: [
-        {value: "Películas", label: "Películas"},
-        {value: "Series", label: "Series"},
+          <FilterSidebar
+            textInputs={[
+              { key: "title", label: "Título", value: filterTitle }
+            ]}
+            singleSelects={[
+              { key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }
+            ]}
+            multiSelects={[
+              { 
+                key: "category", 
+                label: "Categorías", 
+                value: filterCategory, 
+                options: [
+                  {value: "Películas", label: "Películas"},
+                  {value: "Series", label: "Series"},
                   {value: "Novelas", label: "Novelas"},
                   {value: "Reality Shows", label: "Reality Shows"},
                   {value: "MiniSeries", label: "MiniSeries"},
@@ -493,27 +471,27 @@ const { data: mediaData, error: mediaError } = await supabase
                   {value: "Películas Animadas", label: "Películas Animadas"},
                   {value: "Anime", label: "Anime"},
                   {value: "Películas Anime", label: "Películas Anime"}
-      ]
-    },
-    { 
-      key: "genre", 
-      label: "Géneros", 
-      value: filterGenre, 
-      options: [
-        {value: "Acción", label: "Acción"},
-        {value: "Drama", label: "Drama"},
+                ]
+              },
+              { 
+                key: "genre", 
+                label: "Géneros", 
+                value: filterGenre, 
+                options: [
+                  {value: "Acción", label: "Acción"},
+                  {value: "Drama", label: "Drama"},
                   {value: "Comedia", label: "Comedia"},
                   {value: "Terror", label: "Terror"},
                   {value: "Romance", label: "Romance"},
                   {value: "Aventura", label: "Aventura"}
-      ]
-    }
-  ]}
-  onApply={handleApplyFilters}
-  onReset={handleResetFilters}
-            isMobile={true}
-            onCloseMobile={() => setIsFilterOpen(false)}
-/>
+                ]
+              }
+            ]}
+            onApply={handleApplyFilters}
+            onReset={handleResetFilters}
+            isMobile={true}                    // ✅ ¡Faltaba esta prop!
+            onCloseMobile={() => setIsFilterOpen(false)} // ✅ ¡Faltaba esta prop!
+          />
         )}
       </div>
     </div>

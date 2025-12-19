@@ -57,6 +57,7 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const navItems = [
+    { name: "Inicio", href: "/" },
     { name: "Películas", href: "/category/peliculas" },
     { name: "Series", href: "/category/series" },
     { name: "Anime", href: "/category/anime" },
@@ -102,6 +103,9 @@ export default function Navbar({ onOpenLogin }: NavbarProps) {
     }
     // Para "/descripcion"
     if (href === '/descripcion') {
+      return pathname === href;
+    }
+     if (href === '/') {
       return pathname === href;
     }
     return false;

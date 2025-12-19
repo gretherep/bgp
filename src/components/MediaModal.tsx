@@ -1,130 +1,238 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useMediaModal } from "@/app/context/MediaModalContext";
+import { useMediaRating } from "@/hooks/useMediaRating";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/app/context/ToastContext";
+import { useUserMediaRating } from "@/hooks/useUserMediaRating";
 
 export default function MediaModal() {
   const { selectedMedia, closeModal } = useMediaModal();
-  const isOpen = !!selectedMedia;
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
-  if (!isOpen || !selectedMedia) return null;
+  // ✅ ✅ ✅ TODOS LOS HOOKS AL PRINCIPIO, SIN EXCEPCIÓN ✅ ✅ ✅
+const avgRating = useMediaRating(selectedMedia?.id ?? null);
+const { userRating, setUserRating } = useUserMediaRating(
+  selectedMedia?.id ?? null,
+  user?.id ?? null
+);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+
+  const [hoverRating, setHoverRating] = useState(0);
+  const [imageError, setImageError] = useState(false); // ✅ Ahora está arriba
+
+  // ✅ Condición de renderizado DESPUÉS de los hooks
+  if (!selectedMedia) return null;
+
+  const handleVote = async (value: number) => {
+    if (!user) {
+      showToast("Debes iniciar sesión para calificar", true);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/ratings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mediaId: selectedMedia.id,
+          rating: value,
+          userId: user.id,
+        }),
+      });
+      setUserRating(value);
+      if (!res.ok) {
+        const data = await res.json();
+        showToast(data.error || "Error al votar", true);
+        return;
+      }
+
+      showToast("⭐ ¡Gracias por tu voto!", false);
+    } catch {
+      showToast("❌ Error de conexión", true);
+    }
+  };
+
+const vividColors = [
+  { bg: "rgba(59, 130, 246, 0.25)", border: "rgba(59, 130, 246, 0.9)" },   // azul
+  { bg: "rgba(16, 185, 129, 0.25)", border: "rgba(16, 185, 129, 0.9)" },   // verde
+  { bg: "rgba(239, 68, 68, 0.25)", border: "rgba(239, 68, 68, 0.9)" },     // rojo
+  { bg: "rgba(234, 179, 8, 0.25)", border: "rgba(234, 179, 8, 0.9)" },     // amarillo
+  { bg: "rgba(168, 85, 247, 0.25)", border: "rgba(168, 85, 247, 0.9)" },   // morado
+  { bg: "rgba(236, 72, 153, 0.25)", border: "rgba(236, 72, 153, 0.9)" },   // rosa
+];
+
+const categoryStyle = {
+  bg: "rgba(14, 165, 233, 0.25)",
+  border: "rgba(14, 165, 233, 0.9)",
+};
+
+const yearStyle = {
+  bg: "rgba(34, 197, 94, 0.25)",
+  border: "rgba(34, 197, 94, 0.9)",
+};
+
+const genres = selectedMedia.genre
+  ? selectedMedia.genre.split(",").map(g => g.trim())
+  : [];
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
-  };
-
-  const renderRating = () => {
-    if (selectedMedia.avg_rating == null) return null;
-    const rating = Number(selectedMedia.avg_rating.toFixed(1));
-    const fullStars = Math.floor(rating);
-    const hasHalf = rating % 1 >= 0.5;
-
-    return (
-      <div className="flex items-center gap-1.5 mt-1">
-        <div className="flex">
-          {[...Array(5)].map((_, i) => {
-            const starIndex = i + 1;
-            let variant = "empty";
-            if (starIndex <= fullStars) variant = "full";
-            else if (starIndex === fullStars + 1 && hasHalf) variant = "half";
-
-            return (
-              <svg
-                key={i}
-                className={`w-4 h-4 ${
-                  variant === "full" || variant === "half"
-                    ? "text-[var(--color-primary)]"
-                    : "text-[var(--color-accent)]"
-                }`}
-                fill={variant === "full" ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="1"
-                viewBox="0 0 24 24"
-              >
-                {variant === "half" ? (
-                  <path d="M12 2l3.09 9.26L23 13l-7.81 5.74L12 24l-3.19-8.76L1 13l7.91-1.74L12 2z" clipPath="url(#half-star)" />
-                ) : (
-                  <path d="M12 2l3.09 9.26L23 13l-7.81 5.74L12 24l-3.19-8.76L1 13l7.91-1.74L12 2z" />
-                )}
-                <defs>
-                  <clipPath id="half-star">
-                    <rect width="12" height="24" />
-                  </clipPath>
-                </defs>
-              </svg>
-            );
-          })}
-        </div>
-        <span className="text-[var(--color-primary)] font-medium text-sm">{rating}</span>
-      </div>
-    );
-  };
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:p-6"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={closeModal}
     >
       <div
-        className="text-[var(--color-secondary)] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
-        style={{ 
-          backgroundColor: 'rgba(22, 18, 20, 0.95)',
-          border: '1px solid rgba(149, 153, 158, 0.3)',
-          backdropFilter: 'blur(12px)'
+        className="relative w-full max-w-3xl overflow-hidden rounded-2xl shadow-2xl text-[var(--color-secondary)]"
+        style={{
+          backgroundColor: "rgba(22, 18, 20, 0.95)",
+          border: "1px solid rgba(149, 153, 158, 0.3)",
+          backdropFilter: "blur(12px)",
+          maxHeight: '90vh',
         }}
       >
+        {/* Cerrar */}
         <button
           onClick={closeModal}
-          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-[var(--color-accent)] hover:text-[var(--color-secondary)] transition-all duration-200 backdrop-blur-sm z-10"
-          aria-label="Cerrar modal"
+          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center z-10 text-white text-xl font-bold"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          ✕
         </button>
 
-        <div className="p-5 sm:p-6 flex flex-col md:flex-row gap-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 flex flex-col md:flex-row gap-6 overflow-y-auto max-h-[85vh]">
+          {/* Poster */}
           <div className="md:w-1/3 flex-shrink-0">
-            <div className="relative group">
-              <img
-                src={selectedMedia.poster_url || "https://placehold.co/300x450/1f2937/9CA3AF?text=Sin+Poster"}
-                alt={selectedMedia.title}
-                className="w-full h-auto object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-[1.02]"
-                onError={(e) => {
-                  e.currentTarget.src = "https://placehold.co/300x450/1f2937/9CA3AF?text=Sin+Poster";
-                }}
-              />
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            <div className="aspect-[2/3] rounded-xl overflow-hidden bg-[#0e0e0e] flex items-center justify-center">
+              {imageError || !selectedMedia.poster_url ? (
+                <div className="text-center p-2">
+                  <div className="text-4xl mb-2">🎬</div>
+                  <span className="text-[var(--color-accent)] text-xs">Sin póster</span>
+                </div>
+              ) : (
+                <img
+                  src={selectedMedia.poster_url}
+                  alt={selectedMedia.title}
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              )}
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-4">
-            <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
+          {/* Info */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
+            <h2 className="text-2xl md:text-3xl font-bold leading-tight">
               {selectedMedia.title}
             </h2>
 
-            {/* 👇 Tags con colores ORIGINALES (indigo, emerald, amber) */}
-            <div className="flex flex-wrap gap-2">
-              <span className="px-3 py-1.5 bg-indigo-900/40 text-indigo-300 rounded-full text-xs font-medium border border-indigo-800/50">
-                {selectedMedia.category}
-              </span>
-              <span className="px-3 py-1.5 bg-emerald-900/40 text-emerald-300 rounded-full text-xs font-medium border border-emerald-800/50">
-                {selectedMedia.genre}
-              </span>
-              <span className="px-3 py-1.5 bg-amber-900/30 text-amber-300 rounded-full text-xs font-medium border border-amber-800/50">
-                {selectedMedia.year}
-              </span>
-            </div>
+{/* Tags */}
+<div className="flex flex-wrap gap-2">
+  {/* Categoría */}
+  <span
+    className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide"
+    style={{
+      backgroundColor: categoryStyle.bg,
+      border: `1px solid ${categoryStyle.border}`,
+      color: "#fff",
+    }}
+  >
+    {selectedMedia.category}
+  </span>
 
-            {renderRating()}
+  {/* Géneros (múltiples) */}
+  {genres.map((genre, index) => {
+    const color = vividColors[index % vividColors.length];
 
-            <div className="mt-3">
-              <h3 className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wider mb-2">
+    return (
+      <span
+        key={genre}
+        className="px-3 py-1 rounded-full text-xs font-medium transition-transform hover:scale-105"
+        style={{
+          backgroundColor: color.bg,
+          border: `1px solid ${color.border}`,
+          color: "#fff",
+        }}
+      >
+        {genre}
+      </span>
+    );
+  })}
+
+  {/* Año */}
+  <span
+    className="px-3 py-1 rounded-full text-xs font-medium"
+    style={{
+      backgroundColor: yearStyle.bg,
+      border: `1px solid ${yearStyle.border}`,
+      color: "#fff",
+    }}
+  >
+    {selectedMedia.year}
+  </span>
+</div>
+
+
+{/* ⭐ RATING INTERACTIVO */}
+<div className="flex items-center space-x-0.5">
+  {Array.from({ length: 5 }, (_, i) => {
+    const ratingValue = i + 1;
+
+    const effectiveRating =
+      hoverRating > 0
+        ? hoverRating
+        : userRating ?? Math.round(avgRating);
+
+    const showFilled = ratingValue <= effectiveRating;
+
+    return (
+      <button
+        key={i}
+        disabled={!user}
+        onMouseEnter={() => user && setHoverRating(ratingValue)}
+        onMouseLeave={() => setHoverRating(0)}
+        onClick={() => handleVote(ratingValue)}
+        className={`focus:outline-none transition-transform duration-150
+          ${user ? "hover:scale-110" : "cursor-not-allowed opacity-40"}
+        `}
+      >
+        <svg
+          className={`w-4 h-4 transition-all duration-200 ${
+            showFilled
+              ? "text-[#FBBF24] scale-110"
+              : "text-[var(--color-accent)] scale-100"
+          }`}
+          fill={showFilled ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="1.5"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+          />
+        </svg>
+      </button>
+    );
+  })}
+
+  <span className="text-[var(--color-accent)] text-xs ml-1">
+    {avgRating ? avgRating.toFixed(1) : "–"}
+  </span>
+</div>
+
+            {/* Sinopsis */}
+            <div className="flex-1 min-h-0">
+              <h3 className="text-xs uppercase text-[var(--color-accent)] mb-2">
                 Sinopsis
               </h3>
               <p className="text-sm leading-relaxed text-[var(--color-secondary)]">
@@ -132,11 +240,13 @@ export default function MediaModal() {
               </p>
             </div>
 
-            <div className="mt-auto pt-3 border-t" style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}>
-              <p className="text-xs text-[var(--color-accent)]">
-                Agregado el <time dateTime={selectedMedia.created_at}>
-                  {selectedMedia.created_at ? formatDate(selectedMedia.created_at) : "—"}
-                </time>
+            {/* Fecha */}
+            <div className="pt-3 border-t" style={{ borderColor: 'rgba(149, 153, 158, 0.2)' }}>
+              <p className="text-xs" style={{ color: 'var(--color-accent)' }}>
+                Agregado el{" "}
+                {selectedMedia.created_at
+                  ? formatDate(selectedMedia.created_at)
+                  : "—"}
               </p>
             </div>
           </div>
