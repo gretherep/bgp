@@ -1,16 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-    // Usamos remotePatterns para ser más flexibles y seguros.
+  images: {
     remotePatterns: [
       {
-        protocol: 'https', // Protocolo seguro
-        hostname: 'fruzelhtekormrxrdohf.supabase.co', // <--- ¡AQUÍ ESTÁ LA SOLUCIÓN!
-        port: '', // Dejar vacío
-        pathname: '/storage/v1/object/public/**', // Permitir cualquier ruta después de /public/
+        protocol: 'https',
+        hostname: 'fruzelhtekormrxrdohf.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
+  // Añade esto para evitar errores de hidratación y asegurar consistencia en producción
+  reactStrictMode: true,
 };
 
 export default nextConfig;

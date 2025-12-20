@@ -4,16 +4,14 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAuth } from "@/hooks/useAuth"; // Cambiamos a useAuth directamente
 import { 
   LogOut, 
   LayoutDashboard, 
   Film, 
-  Users,       // ✅ Cambiado: User → Users
-  FileText,    // ✅ Nuevo: para "Descripción"
-  CreditCard,  // ✅ Nuevo: para "Precios"
-  Menu, 
-  X 
+  Users, 
+  FileText, 
+  CreditCard, 
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -29,10 +27,29 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  useAdminAuth();
+  const { user, loading } = useAuth(); // Usamos el estado aquí directamente
   const pathname = usePathname();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // 1. Efecto de redirección si no es admin (Seguridad)
+  if (!loading && (!user || user.role !== "admin")) {
+    router.replace("/");
+    return null;
+  }
+
+  // 2. Mientras carga la sesión, mostramos un esqueleto o pantalla de carga limpia
+  // Esto evita el "parpadeo" donde se ve el panel antes de echar al usuario
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium">Verificando credenciales...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     if (!confirm("¿Seguro que quieres cerrar sesión?")) return;
@@ -41,9 +58,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    // Se mantiene flex y min-h-screen
     <div className="flex min-h-screen bg-gray-950 text-white">
-      
       {/* Mobile menu button */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -54,25 +69,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </svg>
       </button>
 
-      {/* Sidebar: Ahora FIXED en todas las pantallas. h-screen fuerza la altura de la pantalla. */}
+      {/* Sidebar */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-800 p-6 
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 border-r border-white/5 p-6 
           flex flex-col gap-6 h-screen 
           transform transition-transform duration-300 ease-in-out ${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
       >
-        {/* Header del sidebar */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <LayoutDashboard className="w-5 h-5 text-white" />
           </div>
           <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-amber-400 bg-clip-text text-transparent">
-            Admin
+            Panel Admin
           </h2>
         </div>
 
-        {/* Navegación */}
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => (
             <Link
@@ -82,9 +95,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                 ${
                   pathname.startsWith(item.href)
-                    ? "bg-indigo-600/30 text-indigo-200 border-l-2 border-indigo-400"
-                    : "text-gray-300 hover:bg-gray-700/50 hover:text-white"
-              }`}
+                    ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 shadow-[inset_0_0_10px_rgba(99,102,241,0.1)]"
+                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                }`}
             >
               {item.icon}
               <span className="font-medium">{item.name}</span>
@@ -92,10 +105,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           ))}
         </nav>
 
-        {/* Logout button: mt-auto lo ancla al fondo del h-screen */}
         <button
           onClick={handleLogout}
-          className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:text-red-200 hover:bg-red-900/30 transition-all duration-200 font-medium"
+          className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 font-medium border border-transparent hover:border-red-500/20"
         >
           <LogOut className="w-5 h-5" />
           Cerrar sesión
@@ -105,14 +117,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Main content: AGREGAMOS md:ml-64 para compensar el sidebar fijo */}
-      <main className="flex-grow p-6 md:ml-64"> 
-        {children}
+      {/* Main content */}
+      <main className="flex-grow p-6 md:ml-64 lg:p-10"> 
+        <div className="max-w-6xl mx-auto">
+          {children}
+        </div>
       </main>
     </div>
   );
