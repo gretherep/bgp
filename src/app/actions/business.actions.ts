@@ -33,26 +33,64 @@ export async function getBusinessInfo(): Promise<BusinessInfo | null> {
   return data as BusinessInfo;
 }
 
-// Actualizar la información del negocio (solo admin)
-export async function updateBusinessInfo(info: Partial<BusinessInfo>) {
+export async function updateBusinessInfo(formData: FormData) {
   const supabase = await createServerClient();
 
+  const id = formData.get("id") as string;
+  if (!id) throw new Error("ID requerido");
+
+  // 1️⃣ Procesar imagen
+  let imageUrl: string | null = formData.get("current_image") as string | null;
+
+  const file = formData.get("image") as File | null;
+
+  if (file && file.size > 0) {
+    const ext = file.name.split(".").pop();
+    const fileName = `logo-${id}-${Date.now()}.${ext}`;
+
+    const { data: uploadData, error: uploadError } =
+      await supabase.storage
+        .from("logo")
+        .upload(fileName, file, {
+          upsert: true,
+          contentType: file.type,
+        });
+
+    if (uploadError) {
+      console.error(uploadError);
+      throw new Error("Error subiendo imagen");
+    }
+
+    const { data: publicUrl } = supabase.storage
+      .from("logo")
+      .getPublicUrl(uploadData.path);
+
+    imageUrl = publicUrl.publicUrl;
+  }
+
+  // 2️⃣ Actualizar BD (SOLO STRINGS)
   const { error } = await supabase
     .from("business_info")
     .update({
-      title: info.title,
-      image_url: info.image_url ?? null,
-      description: info.description ?? null,
-      price_basic: info.price_basic ?? null,
-      price_standard: info.price_standard ?? null,
-      price_premium: info.price_premium ?? null,
-      whatsapp_url: info.whatsapp_url ?? null,
-      telegram_url: info.telegram_url ?? null,
+      title: formData.get("title"),
+      description: formData.get("description"),
+      image_url: imageUrl,
+      whatsapp_url: formData.get("whatsapp_url"),
+      telegram_url: formData.get("telegram_url"),
+      price_basic: formData.get("price_basic")
+        ? Number(formData.get("price_basic"))
+        : null,
+      price_standard: formData.get("price_standard")
+        ? Number(formData.get("price_standard"))
+        : null,
+      price_premium: formData.get("price_premium")
+        ? Number(formData.get("price_premium"))
+        : null,
     })
-    .eq("id", info.id);
+    .eq("id", id);
 
   if (error) {
-    console.error("Error al actualizar business_info:", error.message);
+    console.error(error);
     throw new Error(error.message);
   }
 

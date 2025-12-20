@@ -15,6 +15,7 @@ import 'swiper/css/autoplay';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import Link from "next/link";
+import ShootingStars from "@/components/ShootingStars";
 
 type MediaItem = Media & { avg_rating?: number | null };
 
@@ -163,10 +164,10 @@ export default function HomePage() {
   };
 
   return (
-    // CAMBIO: overflow-x-hidden para evitar que los efectos de glow rompan el scroll
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)] overflow-x-hidden">
       
       <section className="relative w-full pt-28 pb-12 overflow-hidden">
+        <ShootingStars />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[var(--color-primary)] blur-[120px] animate-pulse" />
           <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[50%] rounded-full bg-indigo-600 blur-[100px] opacity-20" />

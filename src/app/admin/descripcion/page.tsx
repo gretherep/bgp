@@ -24,6 +24,9 @@ export default function AdminBusinessPage() {
   const [formData, setFormData] = useState<Partial<BusinessInfo>>({});
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchBusinessInfo();
@@ -35,6 +38,7 @@ export default function AdminBusinessPage() {
       if (data) {
         setInfo(data);
         setFormData(data);
+        setLogoPreview(data.image_url ?? null); // mostrar logo guardado
       }
     } catch (err: any) {
       showToast("Error al cargar información del negocio", true);
@@ -47,22 +51,45 @@ export default function AdminBusinessPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
-    if (!info) return;
-    setSaving(true);
-    setError(null);
+  const handleLogoChange = (file: File | null) => {
+  if (!file) return;
 
-    try {
-      await updateBusinessInfo({ id: info.id, ...formData });
-      showToast("Información actualizada con éxito", false, 2000);
-      setIsEditing(false);
-      fetchBusinessInfo();
-    } catch (err: any) {
-      showToast("Error al actualizar: " + err.message, true, 5000);
-    } finally {
-      setSaving(false);
+  setLogoFile(file);
+
+  const previewUrl = URL.createObjectURL(file);
+  setLogoPreview(previewUrl);
+};
+
+const handleSave = async () => {
+  if (!info) return;
+  setSaving(true);
+
+  try {
+    const fd = new FormData();
+    fd.append("id", info.id);
+    fd.append("title", formData.title ?? "");
+    fd.append("description", formData.description ?? "");
+    fd.append("whatsapp_url", formData.whatsapp_url ?? "");
+    fd.append("telegram_url", formData.telegram_url ?? "");
+    fd.append("current_image", info.image_url ?? "");
+
+    if (logoFile) {
+      fd.append("image", logoFile);
     }
-  };
+
+    await updateBusinessInfo(fd);
+
+    showToast("Información actualizada con éxito", false);
+    setIsEditing(false);
+    fetchBusinessInfo();
+  } catch (err: any) {
+    showToast("Error al actualizar", true);
+  } finally {
+    setSaving(false);
+  }
+};
+
+
 
   if (loading) {
     return (
@@ -155,22 +182,33 @@ export default function AdminBusinessPage() {
                 />
               </div>
 
-              {/* Imagen/Logo */}
-              <div>
-                <label htmlFor="image_url" className="block text-white font-medium mb-2 flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-indigo-400" />
-                  URL del logo o imagen
-                </label>
-                <input
-                  id="image_url"
-                  type="text"
-                  value={formData.image_url ?? ""}
-                  onChange={(e) => handleChange("image_url", e.target.value)}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                  placeholder="https://ejemplo.com/logo.png"
-                />
-              </div>
+<div>
+  <label className="block text-white font-medium mb-2">
+    Logo
+  </label>
+
+  {logoPreview || info?.image_url ? (
+    <img
+      src={logoPreview || info?.image_url!}
+      className="h-24 mb-3 rounded-lg object-contain bg-gray-700 p-2"
+    />
+  ) : null}
+
+  <input
+    type="file"
+    accept="image/*"
+    disabled={!isEditing}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }}
+    className="block w-full text-sm text-gray-300"
+  />
+</div>
+
 
               {/* Descripción */}
               <div>
