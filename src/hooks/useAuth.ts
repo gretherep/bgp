@@ -13,59 +13,44 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ 1. Obtener sesión inicial
-    const getUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const fetchProfile = async (sessionUser: any) => {
+      // Marcamos como cargando mientras buscamos el perfil
+      setLoading(true); 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, first_name, last_name")
+        .eq("id", sessionUser.id)
+        .single();
 
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role, first_name, last_name")
-          .eq("id", session.user.id)
-          .single();
-
-        setUser({
-          ...session.user,
-          role: profile?.role || "user",
-          first_name: profile?.first_name,
-          last_name: profile?.last_name,
-        });
-      } else {
-        setUser(null);
-      }
-
+      setUser({
+        ...sessionUser,
+        role: profile?.role || "user",
+        first_name: profile?.first_name,
+        last_name: profile?.last_name,
+      });
       setLoading(false);
     };
 
-    getUser();
-
-    // ✅ 2. Escuchar cambios de sesión correctamente (v2)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // 1. Sesión inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role, first_name, last_name")
-          .eq("id", session.user.id)
-          .single();
-
-        setUser({
-          ...session.user,
-          role: profile?.role || "user",
-          first_name: profile?.first_name,
-          last_name: profile?.last_name,
-        });
+        fetchProfile(session.user);
       } else {
-        setUser(null);
+        setLoading(false);
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    // 2. Cambios de estado
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchProfile(session.user);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return { user, loading };

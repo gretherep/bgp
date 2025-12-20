@@ -7,8 +7,12 @@ export const useAdminAuth = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "admin")) {
-      router.push("/"); // Redirige a home si no es admin
+    // Solo redirigir si el proceso de carga terminó REALMENTE
+    if (!loading) {
+      if (!user || user.role !== "admin") {
+        console.log("Acceso denegado. Redirigiendo...");
+        router.push("/");
+      }
     }
   }, [user, loading, router]);
 };

@@ -30,8 +30,6 @@ async function requireAdmin(req: NextRequest | Request) {
 }
 
 export async function GET(req: NextRequest) {
-  const user = await requireAdmin(req);
-  if (user instanceof NextResponse) return user;
 
   const supabase = createServerClient();
   const { data, error } = await supabase
