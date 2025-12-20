@@ -7,8 +7,17 @@ export const useAdminAuth = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "admin")) {
-      router.push("/"); // Redirige a home si no es admin
+    // Si terminó de cargar y no hay usuario o no es admin
+    if (!loading) {
+      if (!user) {
+        console.log("No hay sesión activa. Redirigiendo al home...");
+        router.replace("/"); // Usamos replace para no ensuciar el historial
+      } else if (user.role !== "admin") {
+        console.log("Usuario no es admin. Role actual:", user.role);
+        router.replace("/");
+      }
     }
   }, [user, loading, router]);
+
+  return { user, loading }; // Devolvemos esto para que el componente sepa si mostrar contenido
 };
