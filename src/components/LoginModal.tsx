@@ -60,7 +60,12 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
       showToast(`¡Bienvenido${profile.first_name ? `, ${profile.first_name}` : ""}!`, false, 2000);
 
       if (profile.role === "admin") {
-        router.push("/admin/dashboard");
+  showToast("Acceso de administrador", false, 2000);
+  
+  // En lugar de router.push, forzamos un refresh para que el 
+  // middleware detecte la nueva cookie de sesión
+  onClose();
+  window.location.href = "/admin/dashboard";
       } else {
         router.push("/");
       }
