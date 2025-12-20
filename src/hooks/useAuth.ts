@@ -10,47 +10,59 @@ interface AppUser extends User {
 
 export const useAuth = () => {
   const [user, setUser] = useState<AppUser | null>(null);
+  // Importante: empezamos en true
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async (sessionUser: any) => {
-      // Marcamos como cargando mientras buscamos el perfil
-      setLoading(true); 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, first_name, last_name")
-        .eq("id", sessionUser.id)
-        .single();
+    let mounted = true;
 
-      setUser({
-        ...sessionUser,
-        role: profile?.role || "user",
-        first_name: profile?.first_name,
-        last_name: profile?.last_name,
-      });
-      setLoading(false);
+    const fetchProfile = async (sessionUser: any) => {
+      try {
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("role, first_name, last_name")
+          .eq("id", sessionUser.id)
+          .single();
+
+        if (mounted) {
+          setUser({
+            ...sessionUser,
+            role: profile?.role || "user",
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching profile", e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
     };
 
-    // 1. Sesión inicial
+    // Verificar sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchProfile(session.user);
       } else {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     });
 
-    // 2. Cambios de estado
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         fetchProfile(session.user);
       } else {
-        setUser(null);
-        setLoading(false);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, loading };
