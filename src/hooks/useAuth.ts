@@ -10,57 +10,60 @@ interface AppUser extends User {
 
 export const useAuth = () => {
   const [user, setUser] = useState<AppUser | null>(null);
-  // Importante: empezamos en true
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
+    // ✅ 1. Obtener sesión inicial
+    const getUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    const fetchProfile = async (sessionUser: any) => {
-      try {
-        const { data: profile, error } = await supabase
+      if (session?.user) {
+        const { data: profile } = await supabase
           .from("profiles")
           .select("role, first_name, last_name")
-          .eq("id", sessionUser.id)
+          .eq("id", session.user.id)
           .single();
 
-        if (mounted) {
-          setUser({
-            ...sessionUser,
-            role: profile?.role || "user",
-            first_name: profile?.first_name,
-            last_name: profile?.last_name,
-          });
-        }
-      } catch (e) {
-        console.error("Error fetching profile", e);
-      } finally {
-        if (mounted) setLoading(false);
+        setUser({
+          ...session.user,
+          role: profile?.role || "user",
+          first_name: profile?.first_name,
+          last_name: profile?.last_name,
+        });
+      } else {
+        setUser(null);
       }
+
+      setLoading(false);
     };
 
-    // Verificar sesión inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfile(session.user);
-      } else {
-        if (mounted) setLoading(false);
-      }
-    });
+    getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // ✅ 2. Escuchar cambios de sesión correctamente (v2)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        fetchProfile(session.user);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, first_name, last_name")
+          .eq("id", session.user.id)
+          .single();
+
+        setUser({
+          ...session.user,
+          role: profile?.role || "user",
+          first_name: profile?.first_name,
+          last_name: profile?.last_name,
+        });
       } else {
-        if (mounted) {
-          setUser(null);
-          setLoading(false);
-        }
+        setUser(null);
       }
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
