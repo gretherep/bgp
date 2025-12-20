@@ -4,6 +4,7 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { 
   LogOut, 
   LayoutDashboard, 
@@ -28,6 +29,7 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  useAdminAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

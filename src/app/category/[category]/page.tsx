@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from "framer-motion";
 import FilterSidebar from "@/components/FilterSidebar";
+import Link from "next/link";
 
 type MediaWithRating = Media & { avg_rating: number; }
 const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => (2025 - i).toString());
@@ -143,10 +144,40 @@ useEffect(() => {
             />
           </div>
 
-          <div className="lg:hidden flex justify-end mb-4">
-            <button onClick={() => setIsFilterOpen(true)} className="px-4 py-2 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/30 text-xs font-black uppercase">
-              Filtros
-            </button>
+<div className="lg:hidden flex flex-col mb-6">
+            <div className="flex items-center gap-2 w-full">
+              
+              {/* 1. Botón de Filtros Integrado */}
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-90 transition-transform"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
+                </svg>
+              </button>
+
+              {/* 2. Tabs de Navegación (Tus NavItems) */}
+              <div className="flex-1 flex overflow-x-auto gap-2 py-1 no-scrollbar select-none">
+                {[
+                  { name: "Películas", href: "/category/peliculas", icon: "🎬" },
+                  { name: "Series", href: "/category/series", icon: "📺" },
+                  { name: "Anime", href: "/category/anime", icon: "🍱" },
+                  { name: "Novelas", href: "/category/novelas", icon: "🎭" },
+                  { name: "Reality", href: "/category/reality", icon: "✨" },
+                  { name: "Info", href: "/descripcion", icon: "📝" },
+                ].map((item) => (
+                  <Link 
+                    key={item.name} 
+                    href={item.href}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap active:bg-white/10 transition-colors"
+                  >
+                    <span className="text-sm">{item.icon}</span>
+                    <span className="text-xs font-bold text-white/90">{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
 
           <main className="flex-1">

@@ -330,7 +330,7 @@ export default function HomePage() {
             />
           </div>
 
-  <div className="lg:hidden flex flex-col mb-6">
+          <div className="lg:hidden flex flex-col mb-6">
             <div className="flex items-center gap-2 w-full">
               
               {/* 1. Botón de Filtros Integrado */}

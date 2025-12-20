@@ -182,10 +182,11 @@ const genres = selectedMedia.genre
 
 
 {/* ⭐ RATING INTERACTIVO */}
-<div className="flex items-center space-x-0.5">
+<div className="flex items-center space-x-0.5 group">
   {Array.from({ length: 5 }, (_, i) => {
     const ratingValue = i + 1;
 
+    // Ahora permitimos el hover independientemente de si hay usuario o no
     const effectiveRating =
       hoverRating > 0
         ? hoverRating
@@ -196,19 +197,18 @@ const genres = selectedMedia.genre
     return (
       <button
         key={i}
-        disabled={!user}
-        onMouseEnter={() => user && setHoverRating(ratingValue)}
+        // ✅ Quitamos disabled={!user} para permitir el clic y el toast
+        onMouseEnter={() => setHoverRating(ratingValue)} 
         onMouseLeave={() => setHoverRating(0)}
         onClick={() => handleVote(ratingValue)}
-        className={`focus:outline-none transition-transform duration-150
-          ${user ? "hover:scale-110" : "cursor-not-allowed opacity-40"}
-        `}
+        className="focus:outline-none transition-transform duration-150 hover:scale-125 active:scale-95 cursor-pointer"
+        title={!user ? "Inicia sesión para votar" : `Votar ${ratingValue} estrellas`}
       >
         <svg
-          className={`w-4 h-4 transition-all duration-200 ${
+          className={`w-5 h-5 transition-all duration-200 ${
             showFilled
-              ? "text-[#FBBF24] scale-110"
-              : "text-[var(--color-accent)] scale-100"
+              ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]"
+              : "text-white/20"
           }`}
           fill={showFilled ? "currentColor" : "none"}
           stroke="currentColor"
@@ -225,8 +225,8 @@ const genres = selectedMedia.genre
     );
   })}
 
-  <span className="text-[var(--color-accent)] text-xs ml-1">
-    {avgRating ? avgRating.toFixed(1) : "–"}
+  <span className="text-[var(--color-accent)] text-[10px] font-bold ml-2 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+    {avgRating ? avgRating.toFixed(1) : "N/A"}
   </span>
 </div>
 

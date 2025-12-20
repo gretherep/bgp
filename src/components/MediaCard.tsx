@@ -3,6 +3,7 @@
 import { Media } from "@/app/models/media";
 import { useMediaModal } from "@/app/context/MediaModalContext";
 import { useMediaRating } from "@/hooks/useMediaRating";
+import { motion } from "framer-motion";
 
 interface MediaCardProps {
   media: Media;
@@ -13,49 +14,70 @@ export default function MediaCard({ media }: MediaCardProps) {
   const avgRating = useMediaRating(media.id);
 
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -5, scale: 1.02 }}
       onClick={() => openModal(media)}
-      className="group cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-xl transition transform hover:-translate-y-1"
+      className="group cursor-pointer bg-white/[0.03] rounded-2xl overflow-hidden border border-white/5 hover:border-[var(--color-primary)]/50 transition-all duration-300 shadow-lg"
     >
-      <div className="relative pb-[150%]">
+      <div className="relative aspect-[2/3] overflow-hidden">
         <img
-          src={media.poster_url || "https://placehold.co/300x450?text=Sin+Poster"}
+          src={media.poster_url || "https://placehold.co/300x450/161616/DCDAD9?text=Sin+Poster"}
           alt={media.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
+        
+        {/* Capa de degradado para legibilidad */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#161616] via-transparent to-black/20" />
+
+        {/* 🏷️ TABS FLOTANTES (Año y Categoría) */}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+          {/* Año - Color Naranja Vivo */}
+          <span className="px-2 py-1 text-[10px] font-black uppercase bg-orange-500/20 text-orange-400 border-2 border-orange-500/50 rounded-lg backdrop-blur-md">
+            {media.year}
+          </span>
+          
+          {/* Categoría - Color Azul Eléctrico */}
+          <span className="px-2 py-1 text-[10px] font-black uppercase bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 rounded-lg backdrop-blur-md">
+            {media.category}
+          </span>
+        </div>
+
+        {/* 🎭 TIPO DE MEDIA (Género) - Flotante abajo izquierda */}
+        {/* <div className="absolute bottom-3 left-3">
+          <span className="px-2 py-1 text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50 rounded-lg backdrop-blur-md">
+            {media.genre?.split(',')[0] || "Media"}
+          </span>
+        </div> */}
       </div>
 
-      <div className="p-3">
-        <h3 className="font-semibold text-sm line-clamp-2">
+      <div className="p-4">
+        <h3 className="font-bold text-sm text-white line-clamp-1 group-hover:text-[var(--color-primary)] transition-colors">
           {media.title}
         </h3>
 
-        <div className="flex justify-between text-xs text-[var(--color-accent)] mt-1">
-          <span>{media.year}</span>
-          <span>{media.category}</span>
-        </div>
-
-        {/* ⭐ SOLO LECTURA */}
-        <div className="flex items-center gap-1 mt-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <svg
-              key={i}
-              className={`w-4 h-4 ${
-                i + 1 <= Math.round(avgRating)
-                  ? "text-yellow-400"
-                  : "text-[var(--color-accent)]"
-              }`}
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967h4.178c.969 0 1.371 1.24.588 1.81l-3.382 2.455 1.286 3.966c.3.922-.755 1.688-1.538 1.118L10 13.348l-3.38 2.455c-.783.57-1.838-.196-1.538-1.118l1.286-3.966-3.382-2.455c-.783-.57-.38-1.81.588-1.81h4.178L9.05 2.927z" />
-            </svg>
-          ))}
-          <span className="text-xs ml-1">
-            {avgRating ? avgRating.toFixed(1) : "–"}
+        {/* ⭐ RATING CON ESTILO PULIDO */}
+        <div className="flex items-center gap-1 mt-3">
+          <div className="flex">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <svg
+                key={i}
+                className={`w-3 h-3 ${
+                  i + 1 <= Math.round(avgRating)
+                    ? "text-yellow-400"
+                    : "text-white/10"
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967h4.178c.969 0 1.371 1.24.588 1.81l-3.382 2.455 1.286 3.966c.3.922-.755 1.688-1.538 1.118L10 13.348l-3.38 2.455c-.783.57-1.838-.196-1.538-1.118l1.286-3.966-3.382-2.455c-.783-.57-.38-1.81.588-1.81h4.178L9.05 2.927z" />
+              </svg>
+            ))}
+          </div>
+          <span className="text-[10px] font-bold text-[var(--color-accent)] ml-1">
+            {avgRating ? avgRating.toFixed(1) : "N/A"}
           </span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
