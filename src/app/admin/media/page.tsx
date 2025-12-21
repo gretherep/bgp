@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { Media } from "@/app/models/media";
+import { useToast } from "@/app/context/ToastContext";
 import Link from "next/link";
 import {
   Plus,
@@ -21,6 +22,7 @@ import {
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminMediaPage() {
+  const { showToast } = useToast();
   const [media, setMedia] = useState<Media[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,8 +78,9 @@ export default function AdminMediaPage() {
     if (!confirm("¿Seguro que quieres eliminar este contenido? Esta acción es irreversible.")) return;
 
     try {
-      const { error } = await supabase.from("media").delete().eq("id", id);
-      if (error) throw error;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Debes estar autenticado");
+      
 
       await fetchTotalCount();
       const newTotalItems = totalItems - 1;

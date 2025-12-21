@@ -1,22 +1,7 @@
 // app/api/media/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getAllMedia, createMedia, updateMedia, deleteMedia, getMediaById } from "@/app/actions/media.actions";
-import { supabase } from "@/utils/supabaseClient";
 
-// Función de utilidad para validar admin
-async function requireAdmin(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  if (error || !data || data.role !== "admin") {
-    throw new Error("Unauthorized: admin only");
-  }
-}
-
-// GET: cualquiera puede leer
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -34,22 +19,20 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: solo admin
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const userId = formData.get("userId") as string;
+
   if (!userId) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 
   try {
-    await requireAdmin(userId);
-    await createMedia(formData, userId);
+    await createMedia(formData, userId); // createMedia ya valida que sea admin
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 403 });
+    return NextResponse.json({ error: err.message }, { status: 403 }); // no autorizado o error
   }
 }
 
-// PUT: solo admin
 export async function PUT(req: NextRequest) {
   const formData = await req.formData();
   const id = formData.get("id") as string;
@@ -58,15 +41,13 @@ export async function PUT(req: NextRequest) {
   if (!id || !userId) return NextResponse.json({ error: "ID and User ID are required" }, { status: 400 });
 
   try {
-    await requireAdmin(userId);
-    await updateMedia(id, formData, userId);
+    await updateMedia(id, formData, userId); // updateMedia valida rol admin
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 403 });
   }
 }
 
-// DELETE: solo admin
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -75,8 +56,7 @@ export async function DELETE(req: NextRequest) {
   if (!id || !userId) return NextResponse.json({ error: "ID and User ID are required" }, { status: 400 });
 
   try {
-    await requireAdmin(userId);
-    await deleteMedia(id, userId);
+    await deleteMedia(id, userId); // deleteMedia valida rol admin
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 403 });
