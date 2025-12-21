@@ -4,12 +4,14 @@ import { Media } from "@/app/models/media";
 import { useMediaModal } from "@/app/context/MediaModalContext";
 import { useMediaRating } from "@/hooks/useMediaRating";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface MediaCardProps {
   media: Media;
+  index?: number; // Para controlar priority
 }
 
-export default function MediaCard({ media }: MediaCardProps) {
+export default function MediaCard({ media, index = 0 }: MediaCardProps) {
   const { openModal } = useMediaModal();
   const avgRating = useMediaRating(media.id);
 
@@ -20,10 +22,13 @@ export default function MediaCard({ media }: MediaCardProps) {
       className="group cursor-pointer bg-white/[0.03] rounded-2xl overflow-hidden border border-white/5 hover:border-[var(--color-primary)]/50 transition-all duration-300 shadow-lg"
     >
       <div className="relative aspect-[2/3] overflow-hidden">
-        <img
+        <Image
           src={media.poster_url || "https://placehold.co/300x450/161616/DCDAD9?text=Sin+Poster"}
           alt={media.title}
+          fill
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          sizes="(max-width: 768px) 50vw, 300px"
+          priority={index < 5} // Prioriza solo las primeras 5 imágenes
         />
         
         {/* Capa de degradado para legibilidad */}
@@ -31,23 +36,13 @@ export default function MediaCard({ media }: MediaCardProps) {
 
         {/* 🏷️ TABS FLOTANTES (Año y Categoría) */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-          {/* Año - Color Naranja Vivo */}
           <span className="px-2 py-1 text-[10px] font-black uppercase bg-orange-500/20 text-orange-400 border-2 border-orange-500/50 rounded-lg backdrop-blur-md">
             {media.year}
           </span>
-          
-          {/* Categoría - Color Azul Eléctrico */}
           <span className="px-2 py-1 text-[10px] font-black uppercase bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 rounded-lg backdrop-blur-md">
             {media.category}
           </span>
         </div>
-
-        {/* 🎭 TIPO DE MEDIA (Género) - Flotante abajo izquierda */}
-        {/* <div className="absolute bottom-3 left-3">
-          <span className="px-2 py-1 text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/50 rounded-lg backdrop-blur-md">
-            {media.genre?.split(',')[0] || "Media"}
-          </span>
-        </div> */}
       </div>
 
       <div className="p-4">
@@ -55,7 +50,6 @@ export default function MediaCard({ media }: MediaCardProps) {
           {media.title}
         </h3>
 
-        {/* ⭐ RATING CON ESTILO PULIDO */}
         <div className="flex items-center gap-1 mt-3">
           <div className="flex">
             {Array.from({ length: 5 }).map((_, i) => (

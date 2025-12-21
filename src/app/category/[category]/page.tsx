@@ -1,21 +1,27 @@
 "use client";
 
-import { getAllMedia } from "@/app/actions/media.actions"; 
+import { getAllMedia } from "@/app/actions/media.actions";
 import { Media } from "@/app/models/media";
 import MediaCard from "@/components/MediaCard";
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterSidebar from "@/components/FilterSidebar";
 import Link from "next/link";
+import { genreOptions } from "@/utils/filter-options";
 
-type MediaWithRating = Media & { avg_rating: number; }
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => (2025 - i).toString());
-const GENRE_OPTIONS = ["Acción", "Comedia", "Drama", "Terror", "Sci-Fi", "Documental", "Animación"];
 
-// =================================================================
-// CARRUSEL PREMIUM
-// =================================================================
+// ======================================================
+type MediaWithRating = Media & { avg_rating: number };
+
+// ======================================================
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) =>
+  (new Date().getFullYear() - i).toString()
+);
+
+// ======================================================
+// CARRUSEL PREMIUM (SIN CAMBIOS)
+// ======================================================
 const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
   <section className="mb-12">
     <div className="flex items-center gap-3 mb-6">
@@ -24,90 +30,116 @@ const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
         </svg>
       </div>
-      <h2 className="text-2xl font-black text-white tracking-tight uppercase italic">Agregados <span className="text-[var(--color-primary)]">Recientemente</span></h2>
+      <h2 className="text-2xl font-black text-white tracking-tight uppercase italic">
+        Agregados <span className="text-[var(--color-primary)]">Recientemente</span>
+      </h2>
     </div>
+
     <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x">
-      {media.map((m) => (
+      {media.map(m => (
         <motion.div key={m.id} whileHover={{ y: -8 }} className="flex-shrink-0 w-40 sm:w-48 snap-start group">
-          <div className="relative aspect-[2/3] rounded-[1.5rem] overflow-hidden border border-white/5 shadow-2xl bg-[#1a1a1a]">
-            <img
-              src={m.poster_url || "https://placehold.co/300x450/161616/DCDAD9?text=Sin+Poster"}
-              alt={m.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-            <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center backdrop-blur-md bg-white/10 p-2 rounded-xl border border-white/10">
-              <span className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-tighter text-shadow-sm">Rating</span>
-              <span className="text-xs font-bold text-white">★ {m.avg_rating?.toFixed(1) || "N/A"}</span>
-            </div>
-          </div>
-          <h3 className="mt-3 text-sm font-bold text-[var(--color-secondary)] truncate px-1 group-hover:text-[var(--color-primary)] transition-colors">
-            {m.title}
-          </h3>
+          <MediaCard media={m} />
         </motion.div>
       ))}
     </div>
   </section>
 );
 
-// =================================================================
-// COMPONENTE PRINCIPAL
-// =================================================================
+// ======================================================
+// PAGE
+// ======================================================
 export default function CategoryPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  
-  // Extraemos la categoría de forma segura
-  const categoryParam = useMemo(() => pathname.split('/').pop() || '', [pathname]);
+
+  const categoryParam = useMemo(
+    () => pathname.split("/").pop() || "",
+    [pathname]
+  );
 
   const [allMedia, setAllMedia] = useState<MediaWithRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const currentYear = searchParams.get('year') || '';
-  const currentGenre = searchParams.get('genre') || '';
+  // ======================================================
+  // PARAMS
+  // ======================================================
+  const currentYear = searchParams.get("year") || "";
 
-useEffect(() => {
-  let active = true;
+  const currentGenres = useMemo(
+    () => searchParams.get("genre")?.split(",") ?? [],
+    [searchParams]
+  );
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const data = await getAllMedia();
-      if (active) setAllMedia(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      if (active) setLoading(false);
-    }
-  };
+  // ======================================================
+  // FETCH
+  // ======================================================
+  useEffect(() => {
+    let active = true;
 
-  fetchData();
-  return () => { active = false; };
-}, [categoryParam]); // Esto disparará la carga optimizada cada vez que cambies de categoría
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await getAllMedia();
+        if (active) setAllMedia(data);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
+    fetchData();
+    return () => {
+      active = false;
+    };
+  }, [categoryParam]);
+
+  // ======================================================
+  // FILTERING
+  // ======================================================
   const categoryMedia = useMemo(() => {
-    if (!categoryParam || allMedia.length === 0) return [];
-    
-    let filtered = allMedia.filter(m => normalizeText(m.category) === normalizeText(categoryParam));
-    
-    if (currentYear) filtered = filtered.filter(m => m.year?.toString() === currentYear);
-    if (currentGenre) filtered = filtered.filter(m => normalizeText(m.genre).includes(normalizeText(currentGenre)));
-    
+    let filtered = allMedia.filter(
+      m => normalizeText(m.category) === normalizeText(categoryParam)
+    );
+
+    if (currentYear) {
+      filtered = filtered.filter(m => m.year?.toString() === currentYear);
+    }
+
+    if (currentGenres.length > 0) {
+      filtered = filtered.filter(m =>
+        currentGenres.some(g =>
+          normalizeText(m.genre).includes(normalizeText(g))
+        )
+      );
+    }
+
     return filtered;
-  }, [allMedia, categoryParam, currentYear, currentGenre]);
+  }, [allMedia, categoryParam, currentYear, currentGenres]);
 
   const top5Recent = useMemo(() => {
     return [...categoryMedia]
-      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.created_at || "").getTime() -
+          new Date(a.created_at || "").getTime()
+      )
       .slice(0, 8);
   }, [categoryMedia]);
 
+  // ======================================================
+  // FILTER HANDLER
+  // ======================================================
   const handleApplyFilters = (filters: any) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (filters.year) params.set('year', filters.year); else params.delete('year');
-    if (filters.genre) params.set('genre', filters.genre); else params.delete('genre');
+
+    if (filters.year) params.set("year", filters.year);
+    else params.delete("year");
+
+    if (filters.genre?.length > 0)
+      params.set("genre", filters.genre.join(","));
+    else params.delete("genre");
+
     router.push(`${pathname}?${params.toString()}`);
     setIsFilterOpen(false);
   };
@@ -115,15 +147,26 @@ useEffect(() => {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-[#161616ff] text-[#DCDAD9]"
-      style={{"--color-primary": "#F9C3A4", "--color-secondary": "#DCDAD9", "--color-accent": "#95999E"} as any}
+      style={
+        {
+          "--color-primary": "#F9C3A4",
+          "--color-secondary": "#DCDAD9",
+          "--color-accent": "#95999E",
+        } as any
+      }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12">
-        
-        <motion.div key={categoryParam} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        {/* HEADER */}
+        <motion.div
+          key={categoryParam}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
           <h1 className="text-4xl md:text-6xl font-black text-white capitalize tracking-tighter italic">
-            {categoryParam.replace(/-/g, ' ')}
+            {categoryParam.replace(/-/g, " ")}
           </h1>
           <div className="h-1 w-20 bg-[var(--color-primary)] mt-2 rounded-full shadow-[0_0_15px_rgba(249,195,164,0.4)]" />
         </motion.div>
@@ -133,32 +176,58 @@ useEffect(() => {
         <hr className="my-10 border-white/5" />
 
         <div className="flex flex-col lg:flex-row gap-8">
+          {/* DESKTOP FILTER */}
           <div className="hidden lg:block">
             <FilterSidebar
               singleSelects={[
-                { key: "year", label: "Año", value: currentYear, options: [{value: "", label: "Todos"}, ...YEAR_OPTIONS.map(y => ({value:y, label:y}))] },
-                { key: "genre", label: "Género", value: currentGenre, options: [{value: "", label: "Todos"}, ...GENRE_OPTIONS.map(g => ({value:g, label:g}))] }
+                {
+                  key: "year",
+                  label: "Año",
+                  value: currentYear,
+                  options: [
+                    { value: "", label: "Todos" },
+                    ...YEAR_OPTIONS.map(y => ({ value: y, label: y })),
+                  ],
+                },
+              ]}
+              multiSelects={[
+                {
+                  key: "genre",
+                  label: "Géneros",
+                  value: currentGenres,
+                  options: genreOptions,
+                },
               ]}
               onApply={handleApplyFilters}
               onReset={() => router.push(pathname)}
             />
           </div>
 
-<div className="lg:hidden flex flex-col mb-6">
+          {/* MOBILE UI (SIN CAMBIOS VISUALES) */}
+          <div className="lg:hidden flex flex-col mb-6">
             <div className="flex items-center gap-2 w-full">
-              
-              {/* 1. Botón de Filtros Integrado */}
-              <button
-                onClick={() => setIsFilterOpen(true)}
-                className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-90 transition-transform"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
-                </svg>
-              </button>
+<button
+  onClick={() => setIsFilterOpen(true)}
+  className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-90 transition-transform"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2.5}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z"
+    />
+  </svg>
+</button>
 
-              {/* 2. Tabs de Navegación (Tus NavItems) */}
-              <div className="flex-1 flex overflow-x-auto gap-2 py-1 no-scrollbar select-none">
+
+              <div className="flex-1 flex overflow-x-auto gap-2 py-1 no-scrollbar">
                 {[
                   { name: "Películas", href: "/category/peliculas", icon: "🎬" },
                   { name: "Series", href: "/category/series", icon: "📺" },
@@ -166,29 +235,39 @@ useEffect(() => {
                   { name: "Novelas", href: "/category/novelas", icon: "🎭" },
                   { name: "Reality", href: "/category/reality", icon: "✨" },
                   { name: "Info", href: "/descripcion", icon: "📝" },
-                ].map((item) => (
-                  <Link 
-                    key={item.name} 
+                ].map(item => (
+                  <Link
+                    key={item.name}
                     href={item.href}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap active:bg-white/10 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap"
                   >
-                    <span className="text-sm">{item.icon}</span>
-                    <span className="text-xs font-bold text-white/90">{item.name}</span>
+                    <span>{item.icon}</span>
+                    <span className="text-xs font-bold">{item.name}</span>
                   </Link>
                 ))}
               </div>
             </div>
           </div>
 
+          {/* GRID */}
           <main className="flex-1">
             <AnimatePresence mode="wait">
               {categoryMedia.length === 0 ? (
-                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 bg-white/[0.02] rounded-[3rem] border border-dashed border-white/10">
-                  <p className="text-[var(--color-accent)] font-medium italic">No se encontraron títulos en esta sección.</p>
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-20 bg-white/[0.02] rounded-[3rem] border border-dashed border-white/10"
+                >
+                  No se encontraron títulos.
                 </motion.div>
               ) : (
-                <motion.div key="grid" layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {categoryMedia.map((item) => (
+                <motion.div
+                  key="grid"
+                  layout
+                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6"
+                >
+                  {categoryMedia.map(item => (
                     <MediaCard key={item.id} media={item} />
                   ))}
                 </motion.div>
@@ -198,15 +277,34 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* MOBILE FILTER SIDEBAR */}
       {isFilterOpen && (
         <FilterSidebar
           singleSelects={[
-            { key: "year", label: "Año", value: currentYear, options: [{value: "", label: "Todos"}, ...YEAR_OPTIONS.map(y => ({value:y, label:y}))] },
-            { key: "genre", label: "Género", value: currentGenre, options: [{value: "", label: "Todos"}, ...GENRE_OPTIONS.map(g => ({value:g, label:g}))] }
+            {
+              key: "year",
+              label: "Año",
+              value: currentYear,
+              options: [
+                { value: "", label: "Todos" },
+                ...YEAR_OPTIONS.map(y => ({ value: y, label: y })),
+              ],
+            },
+          ]}
+          multiSelects={[
+            {
+              key: "genre",
+              label: "Géneros",
+              value: currentGenres,
+              options: genreOptions,
+            },
           ]}
           onApply={handleApplyFilters}
-          onReset={() => { router.push(pathname); setIsFilterOpen(false); }}
-          isMobile={true}
+          onReset={() => {
+            router.push(pathname);
+            setIsFilterOpen(false);
+          }}
+          isMobile
           onCloseMobile={() => setIsFilterOpen(false)}
         />
       )}
@@ -214,23 +312,24 @@ useEffect(() => {
   );
 }
 
+// ======================================================
+function normalizeText(text?: string | null): string {
+  if (!text) return "";
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 function LoadingSkeleton() {
   return (
     <div className="min-h-screen bg-[#161616ff] px-4 pt-32 max-w-7xl mx-auto">
       <div className="h-12 w-64 bg-white/5 rounded-2xl animate-pulse mb-12" />
-      <div className="flex gap-10">
-        <div className="hidden lg:block w-48 h-80 bg-white/5 rounded-2xl animate-pulse" />
-        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="aspect-[2/3] bg-white/5 rounded-2xl animate-pulse" />
-          ))}
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="aspect-[2/3] bg-white/5 rounded-2xl animate-pulse"
+          />
+        ))}
       </div>
     </div>
   );
-}
-
-function normalizeText(text: string | null | undefined): string {
-  if (!text) return "";
-  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }

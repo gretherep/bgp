@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, FreeMode } from "swiper/modules";
+import { Autoplay, FreeMode  } from "swiper/modules";
 import MediaCard from "@/components/MediaCard";
 import { Media } from "@/app/models/media";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +16,7 @@ import 'swiper/css';
 import 'swiper/css/free-mode';
 import Link from "next/link";
 import ShootingStars from "@/components/ShootingStars";
+import { categoryOptions, genreOptions } from "@/utils/filter-options";
 
 type MediaItem = Media & { avg_rating?: number | null };
 
@@ -136,14 +137,17 @@ export default function HomePage() {
     setLoadingRecent(false);
   }
 
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: currentYear - 1999 },
-    (_, i) => {
-      const year = 2000 + i;
-      return { value: year.toString(), label: year.toString() };
-    }
-  ).reverse();
+const startYear = 1960;
+const currentYear = new Date().getFullYear();
+
+const yearOptions = Array.from(
+  { length: currentYear - startYear + 1 },
+  (_, i) => {
+    const year = startYear + i;
+    return { value: year.toString(), label: year.toString() };
+  }
+).reverse();
+
 
   const handleApplyFilters = (filters: Record<string, string | string[]>) => {
     setFilterTitle(filters.title as string || "");
@@ -236,65 +240,58 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <Swiper
-                modules={[FreeMode,Autoplay]}
-                grabCursor={true}
-                slidesPerView={1.3} // Se ve una tarjeta y parte de la otra para invitar al scroll
-                spaceBetween={16}
-                freeMode={false}
-                loop={true}
-                autoplay={{
-                delay: 2500,
-                disableOnInteraction: false,
-                }}
-                speed={800}
-                breakpoints={{
-                  480: { slidesPerView: 2.2, spaceBetween: 20 },
-                  768: { slidesPerView: 3.2, spaceBetween: 25 },
-                  1024: { slidesPerView: 4.2, spaceBetween: 30 },
-                }}
-                className="!overflow-visible py-5" 
-              >
-                {topRated.map((media, index) => (
-                  <SwiperSlide key={media.id}>
-                    <motion.div
-                      whileTap={{ scale: 0.95 }}
-                      className="relative group cursor-pointer"
-                    >
-                      <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
-                        <img
-                          src={media.poster_url || "/placeholder.jpg"}
-                          alt={media.title}
-                          className="w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-black/10 to-transparent" />
+<Swiper
+  modules={[FreeMode, Autoplay]}
+  grabCursor
+  slidesPerView={1.3}      // móvil
+  spaceBetween={16}
+  loop
+  freeMode={false}
+  autoplay={{ delay: 2500, disableOnInteraction: false }}
+  speed={800}
+  breakpoints={{
+    480: { slidesPerView: 2.2, spaceBetween: 20 },  // móvil grande
+    768: { slidesPerView: 3.5, spaceBetween: 25 },  // tablet
+    1024: { slidesPerView: 4.5, spaceBetween: 30 }, // desktop
+  }}
+  className="!overflow-visible py-5"
+>
+  {topRated.map((media, index) => (
+    <SwiperSlide key={media.id}>
+      <motion.div whileTap={{ scale: 0.95 }} className="relative group cursor-pointer">
+        <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+          <img
+            src={media.poster_url || "/placeholder.jpg"}
+            alt={media.title}
+            loading="lazy"
+            className="w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-black/10 to-transparent" />
 
-                        <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 shadow-lg z-20">
-                          <span className="text-xs">🔥</span>
-                          <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
-                        </div>
+          <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 shadow-lg z-20">
+            <span className="text-xs">🔥</span>
+            <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
+          </div>
 
-                        <div className="absolute top-3 md:top-4 right-3 md:right-4 backdrop-blur-md bg-black/40 border border-white/20 px-2 py-0.5 md:py-1 rounded-xl flex items-center gap-1">
-                          <span className="text-[var(--color-primary)] text-xs">★</span>
-                          <span className="text-white text-[10px] font-bold">{(media.avg_rating || 0).toFixed(1)}</span>
-                        </div>
+          <div className="absolute top-3 md:top-4 right-3 md:right-4 backdrop-blur-md bg-black/40 border border-white/20 px-2 py-0.5 md:py-1 rounded-xl flex items-center gap-1">
+            <span className="text-[var(--color-primary)] text-xs">★</span>
+            <span className="text-white text-[10px] font-bold">{(media.avg_rating || 0).toFixed(1)}</span>
+          </div>
 
-                        <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 p-2 md:p-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl md:rounded-2xl">
-                          <h3 className="text-white text-[10px] md:text-xs font-bold truncate mb-0.5 md:mb-1">
-                            {media.title}
-                          </h3>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[var(--color-primary)] text-[8px] md:text-[9px] font-black uppercase tracking-widest">
-                              {media.category}
-                            </span>
-                            <span className="text-white/60 text-[8px] md:text-[9px]">{media.year}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+          <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 p-2 md:p-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl md:rounded-2xl">
+            <h3 className="text-white text-[10px] md:text-xs font-bold truncate mb-0.5 md:mb-1">{media.title}</h3>
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--color-primary)] text-[8px] md:text-[9px] font-black uppercase tracking-widest">{media.category}</span>
+              <span className="text-white/60 text-[8px] md:text-[9px]">{media.year}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </SwiperSlide>
+  ))}
+</Swiper>
+
+
             )}
           </div>
         </section>
@@ -489,19 +486,39 @@ export default function HomePage() {
         </div>
 
         {isFilterOpen && (
-          <FilterSidebar
-            textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
-            singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
-            multiSelects={[
-              { key: "category", label: "Categorías", value: filterCategory, options: [{value: "Películas", label: "Películas"}, {value: "Series", label: "Series"}] },
-              { key: "genre", label: "Géneros", value: filterGenre, options: [{value: "Acción", label: "Acción"}] }
-            ]}
-            onApply={handleApplyFilters}
-            onReset={handleResetFilters}
-            isMobile={true}
-            onCloseMobile={() => setIsFilterOpen(false)}
-          />
-        )}
+  <FilterSidebar
+    textInputs={[
+      { key: "title", label: "Título", value: filterTitle }
+    ]}
+    singleSelects={[
+      {
+        key: "year",
+        label: "Año",
+        value: filterYear.toString(),
+        options: yearOptions
+      }
+    ]}
+    multiSelects={[
+      {
+        key: "category",
+        label: "Categorías",
+        value: filterCategory,
+        options: categoryOptions
+      },
+      {
+        key: "genre",
+        label: "Géneros",
+        value: filterGenre,
+        options: genreOptions
+      }
+    ]}
+    onApply={handleApplyFilters}
+    onReset={handleResetFilters}
+    isMobile
+    onCloseMobile={() => setIsFilterOpen(false)}
+  />
+)}
+
       </div>
     </div>
   );
