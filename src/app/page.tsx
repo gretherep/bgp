@@ -25,10 +25,12 @@ export default function HomePage() {
   const [recent, setRecent] = useState<MediaItem[]>([]);
   const [loadingTop, setLoadingTop] = useState(true);
   const [loadingRecent, setLoadingRecent] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+
 
   const [page, setPage] = useState(1);
   const pageSize = 20;
-
+  const totalPages = Math.ceil(totalCount / pageSize);
   const [filterTitle, setFilterTitle] = useState("");
   const [filterYear, setFilterYear] = useState<number | "">("");
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
@@ -41,102 +43,98 @@ export default function HomePage() {
   }, [page, filterTitle, filterYear, filterCategory, filterGenre]);
 
   /** ⭐ TOP 10 MEJOR VALORADAS */
-  async function fetchTopRated() {
-    setLoadingTop(true);
-    const { data: ratingsData, error: ratingsError } = await supabase
-      .from("ratings")
-      .select("media_id, rating");
+async function fetchTopRated() {
+  setLoadingTop(true);
+  
+  // 1. Obtener ratings
+  const { data: ratingsData, error: ratingsError } = await supabase
+    .from("ratings")
+    .select("media_id, rating");
 
-    if (ratingsError) {
-      console.error("Error ratings:", ratingsError);
-      setLoadingTop(false);
-      return;
-    }
+  if (ratingsError || !ratingsData) {
+    setLoadingTop(false);
+    return;
+  }
 
-    const avgMap: Record<string, number> = {};
-    const countMap: Record<string, number> = {};
+  // 2. Calcular promedios (Agregamos tipos aquí)
+  const avgMap: Record<string, number> = {};
+  const countMap: Record<string, number> = {};
 
-    for (const r of ratingsData) {
-      avgMap[r.media_id] = (avgMap[r.media_id] || 0) + r.rating;
-      countMap[r.media_id] = (countMap[r.media_id] || 0) + 1;
-    }
+  ratingsData.forEach((r: { media_id: string; rating: number }) => {
+    avgMap[r.media_id] = (avgMap[r.media_id] || 0) + r.rating;
+    countMap[r.media_id] = (countMap[r.media_id] || 0) + 1;
+  });
 
-    const avgArray = Object.entries(avgMap).map(([mediaId, total]) => ({
+  const top10Ids = Object.entries(avgMap)
+    .map(([mediaId, total]) => ({
       media_id: mediaId,
       avg_rating: total / countMap[mediaId],
-    }));
+    }))
+    .sort((a, b) => b.avg_rating - a.avg_rating)
+    .slice(0, 10);
 
-    const top10Ids = avgArray
-      .sort((a, b) => b.avg_rating - a.avg_rating)
-      .slice(0, 10);
-
-    if (!top10Ids.length) {
-      setTopRated([]);
-      setLoadingTop(false);
-      return;
-    }
-
-    const { data: mediaData, error: mediaError } = await supabase
-      .from("media")
-      .select(`
-        id,
-        title,
-        synopsis,
-        genre,
-        category,
-        poster_url,
-        year,
-        created_at,
-        updated_at,
-        slug
-      `)
-      .in("id", top10Ids.map((i) => i.media_id));
-
-    if (mediaError) {
-      console.error("Error media:", mediaError);
-      setLoadingTop(false);
-      return;
-    }
-
-    const finalTop = mediaData.map((m) => ({
-      ...m,
-      avg_rating: top10Ids.find((t) => t.media_id === m.id)?.avg_rating || 0,
-    }));
-
-    finalTop.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
-    setTopRated(finalTop);
+  if (!top10Ids.length) {
+    setTopRated([]);
     setLoadingTop(false);
+    return;
   }
 
-  /** ⭐ RECIENTES PAGINADOS CON FILTROS MULTI */
-  async function fetchRecent() {
-    setLoadingRecent(true);
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
+  // 3. Obtener Media (Asegúrate de incluir 'estreno')
+  const { data: mediaData, error: mediaError } = await supabase
+    .from("media")
+    .select("id, title, synopsis, genre, category, poster_url, year, estreno,idioma, created_at, updated_at, slug")
+    .in("id", top10Ids.map((i) => i.media_id));
 
-    let query = supabase
-      .from("media")
-      .select("id, title, synopsis, poster_url, genre, year, category, created_at, updated_at, slug")
-      .order("created_at", { ascending: false })
-      .range(from, to);
+  if (mediaError || !mediaData) {
+    setLoadingTop(false);
+    return;
+  }
 
-    if (filterTitle) query = query.ilike("title", `%${filterTitle}%`);
-    if (filterYear) query = query.eq("year", filterYear);
-    if (filterCategory.length) query = query.in("category", filterCategory);
-    if (filterGenre.length) query = query.in("genre", filterGenre);
+  // 4. Mapeo final (Casteamos mediaData a Media[] para evitar el error de ts)
+  const finalTop = (mediaData as Media[]).map((m) => ({
+    ...m,
+    avg_rating: top10Ids.find((t) => t.media_id === m.id)?.avg_rating || 0,
+  }));
 
-    const { data, error } = await query;
+  finalTop.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+  setTopRated(finalTop as MediaItem[]);
+  setLoadingTop(false);
+}
 
-    if (error) {
-      console.error("Error loading recent:", error);
-      setLoadingRecent(false);
-      return;
-    }
+ /** ⭐ RECIENTES PAGINADOS CON FILTROS MULTI */
+async function fetchRecent() {
+  setLoadingRecent(true);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-    setRecent(data);
+  let query = supabase
+    .from("media")
+    .select("id, title, synopsis, poster_url, genre, year, category, estreno, created_at, updated_at, slug, idioma", { count: "exact" })
+    // 1. Prioridad: Los que son 'estreno' (true arriba)
+    .order("estreno", { ascending: false }) 
+    // 2. Segunda prioridad: Por año (del más nuevo al más viejo)
+    .order("year", { ascending: false })
+    // 3. Tercera prioridad: Por fecha de creación (opcional, por si coinciden en año)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (filterTitle) query = query.ilike("title", `%${filterTitle}%`);
+  if (filterYear) query = query.eq("year", filterYear);
+  if (filterCategory.length) query = query.in("category", filterCategory);
+  if (filterGenre.length) query = query.in("genre", filterGenre);
+
+  const { data, error, count } = await query; // Extraemos 'count'
+
+  if (error) {
+    console.error("Error loading recent:", error);
     setLoadingRecent(false);
+    return;
   }
 
+  setRecent(data as MediaItem[]);
+  setTotalCount(count || 0); // Guardamos el total
+  setLoadingRecent(false);
+}
 const startYear = 1960;
 const currentYear = new Date().getFullYear();
 
@@ -436,49 +434,59 @@ const yearOptions = Array.from(
         </motion.div>
       )}
 
-      {/* Paginación Estilizada */}
-{/* Paginación Estilizada y Responsive */}
 {recent.length > 0 && (
-  <div className="flex justify-center items-center gap-2 md:gap-6 mt-12 md:mt-16 pb-12">
+  <div className="flex flex-col items-center gap-4 mt-12 md:mt-16 pb-12">
     
-    {/* Botón Anterior */}
-    <button
-      disabled={page === 1}
-      onClick={() => {
-        setPage(page - 1);
-        window.scrollTo({ top: 400, behavior: 'smooth' });
-      }}
-      className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 border border-white/10 text-white"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-      </svg>
-      <span className="hidden sm:inline">Anterior</span>
-    </button>
-    
-    {/* Indicador de Página Compacto */}
-    <div className="flex items-center px-4 py-2 md:py-3 bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl">
-      <span className="text-white/40 text-[10px] md:text-sm font-medium mr-2 uppercase tracking-tighter">Pág</span>
-      <span className="text-[var(--color-primary)] text-sm md:text-lg font-black min-w-[20px] text-center">
-        {page}
-      </span>
+    {/* Texto informativo superior */}
+    <p className="text-[var(--color-accent)] text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">
+      Mostrando {recent.length} de {totalCount} resultados
+    </p>
+
+    <div className="flex justify-center items-center gap-2 md:gap-6">
+      {/* Botón Anterior */}
+      <button
+        disabled={page === 1}
+        onClick={() => {
+          setPage(page - 1);
+          window.scrollTo({ top: 400, behavior: 'smooth' });
+        }}
+        className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        <span className="hidden sm:inline">Anterior</span>
+      </button>
+      
+      {/* Indicador de Página de Total */}
+      <div className="flex items-center px-4 py-2 md:py-3 bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl">
+        <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
+           <span className="text-white/40 text-[9px] md:text-xs font-bold uppercase tracking-tighter">Pág</span>
+           <div className="flex items-center gap-1.5">
+              <span className="text-[var(--color-primary)] text-sm md:text-lg font-black">{page}</span>
+              <span className="text-white/20 text-xs md:text-base">/</span>
+              <span className="text-white/60 text-sm md:text-lg font-bold">{totalPages || 1}</span>
+           </div>
+        </div>
+      </div>
+      
+      {/* Botón Siguiente */}
+      <button
+        disabled={page >= totalPages} // Ahora es mucho más preciso
+        onClick={() => {
+          setPage(page + 1);
+          window.scrollTo({ top: 400, behavior: 'smooth' });
+        }}
+        className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-[var(--color-primary)] hover:shadow-[0_0_20px_rgba(249,195,164,0.4)] text-black"
+      >
+        <span className="hidden sm:inline">Siguiente</span>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
-    
-    {/* Botón Siguiente */}
-    <button
-      disabled={recent.length < pageSize}
-      onClick={() => {
-        setPage(page + 1);
-        window.scrollTo({ top: 400, behavior: 'smooth' });
-      }}
-      className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-[var(--color-primary)] hover:shadow-[0_0_20px_rgba(249,195,164,0.4)] text-black"
-    >
-      <span className="hidden sm:inline">Siguiente</span>
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
-    </button>
   </div>
+
 )}
     </>
   )}

@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 import { Session, AuthChangeEvent } from "@supabase/supabase-js";
 
-// SVG Icons (Mantengo tus iconos igual)
 interface IconProps { size?: number; className?: string; }
 const MenuIcon: React.FC<IconProps> = ({ size = 24 }) => (
   <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -37,7 +36,7 @@ const LogoutIcon: React.FC<IconProps> = ({ size = 24 }) => (
 interface NavbarProps {
   onOpenLogin: () => void;
   onShowMessage: (msg: string) => void;
-  onConfirmLogout: () => void; // ✅ Prop corregida
+  onConfirmLogout: () => void;
 }
 
 export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
@@ -65,10 +64,9 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // ✅ Ahora solo avisamos al Layout que queremos mostrar el popup de confirmación
   const handleLogoutClick = () => {
     onConfirmLogout();
-    setIsMenuOpen(false); // Cerramos el menú móvil si estaba abierto
+    setIsMenuOpen(false);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {

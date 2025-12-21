@@ -9,6 +9,8 @@ export interface Media {
   genre: MediaGenre;
   year: number;
   category: MediaCategory;
+  estreno?: boolean | null; 
+  idioma?: string | null;
   created_at: string;
   updated_at: string;
   slug: string;

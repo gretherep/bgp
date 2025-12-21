@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 import Image from "next/image";
-import { Upload, ImageIcon, Loader2, X, ArrowLeft } from "lucide-react";
+import { Upload, ImageIcon, Loader2, X, ArrowLeft, Star, Languages } from "lucide-react";
+import { useToast } from "@/app/context/ToastContext";
 
 const POSTER_BUCKET = "posters";
 
@@ -22,6 +23,7 @@ export default function EditMediaPage() {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -30,6 +32,8 @@ export default function EditMediaPage() {
     genre: "",
     year: "",
     category: "",
+    idioma: "",    // ✅ Nueva propiedad
+    estreno: false, // ✅ Nueva propiedad
   });
 
   useEffect(() => {
@@ -53,18 +57,31 @@ export default function EditMediaPage() {
         genre: data.genre,
         year: data.year.toString(),
         category: data.category,
+        idioma: data.idioma || "",    // ✅ Carga idioma
+        estreno: !!data.estreno,      // ✅ Carga estreno
       });
       setImagePreviewUrl(data.poster_url || null);
     } catch (err: any) {
       alert("Error al cargar media: " + err.message);
+      showToast("¡Contenido actualizado correctamente!", false);
       router.push("/admin/media");
+      showToast(`Error: ${err.message || "No se pudo actualizar el contenido"}`, true);
     } finally {
       setFetchLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    
+    // Manejo especial para el checkbox si fuera uno estándar, 
+    // pero usaremos un div clickeable para el switch.
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // ✅ Función para toggle del switch de estreno
+  const toggleEstreno = () => {
+    setFormData(prev => ({ ...prev, estreno: !prev.estreno }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,9 +90,6 @@ export default function EditMediaPage() {
       setPosterFile(file);
       setImagePreviewUrl(URL.createObjectURL(file));
       setFormData((prev) => ({ ...prev, poster_url: "" }));
-    } else {
-      setPosterFile(null);
-      setImagePreviewUrl(formData.poster_url || null);
     }
   };
 
@@ -92,19 +106,11 @@ export default function EditMediaPage() {
 
     const { error: uploadError } = await supabase.storage
       .from(POSTER_BUCKET)
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
+      .upload(filePath, file, { cacheControl: "3600", upsert: true });
 
-    if (uploadError) {
-      throw new Error("Error al subir el archivo: " + uploadError.message);
-    }
+    if (uploadError) throw new Error("Error al subir el archivo: " + uploadError.message);
 
-    const { data: publicUrlData } = supabase.storage
-      .from(POSTER_BUCKET)
-      .getPublicUrl(filePath);
-
+    const { data: publicUrlData } = supabase.storage.from(POSTER_BUCKET).getPublicUrl(filePath);
     return publicUrlData.publicUrl;
   };
 
@@ -127,6 +133,8 @@ export default function EditMediaPage() {
           genre: formData.genre,
           year: parseInt(formData.year),
           category: formData.category,
+          idioma: formData.idioma || null, // ✅ Guarda idioma
+          estreno: formData.estreno,       // ✅ Guarda estreno
         })
         .eq("id", id);
 
@@ -143,208 +151,125 @@ export default function EditMediaPage() {
   if (fetchLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="text-center">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-500 mx-auto mb-2" />
-          <p className="text-gray-400">Cargando contenido...</p>
-        </div>
+        <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 min-h-screen bg-gray-950">
-      {/* Botón de volver */}
       <div className="mb-8 mt-6">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-medium"
-        >
+        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
           Volver a Media
         </button>
       </div>
 
-      {/* Título */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
           <Upload className="w-7 h-7 text-indigo-400" />
           Editar Contenido
         </h1>
-        <p className="text-gray-500 mt-1 text-sm">Actualiza los detalles de <span className="font-medium text-white">{formData.title}</span></p>
       </div>
 
-      {/* Formulario */}
       <form onSubmit={handleSubmit} className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 sm:p-6 md:p-8 shadow-xl">
-        {/* Sección de imagen */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Preview */}
+        
+        {/* Sección de imagen - Se mantiene igual */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 border-b border-gray-700/50 pb-8">
           <div className="flex flex-col">
             <label className="block text-white font-medium mb-3 flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-indigo-400" />
               Vista previa del póster
             </label>
-            <div className="relative w-full max-w-xs mx-auto">
-              <div className="relative w-full aspect-[2/3] bg-gray-700 rounded-xl overflow-hidden border-2 border-dashed border-gray-600 flex items-center justify-center">
+            <div className="relative w-full max-w-[200px] mx-auto lg:mx-0 aspect-[2/3] bg-gray-700 rounded-xl overflow-hidden border-2 border-dashed border-gray-600">
                 {imagePreviewUrl ? (
-                  <div className="w-full h-full relative">
-                    <Image
-                      src={imagePreviewUrl}
-                      alt="Poster Preview"
-                      fill
-                      className="object-cover transition-opacity duration-300"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-lg transition-all duration-200 z-10"
-                      title="Eliminar imagen"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <>
+                    <Image src={imagePreviewUrl} alt="Poster" fill className="object-cover" />
+                    <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full z-10"><X className="w-4 h-4 text-white" /></button>
+                  </>
                 ) : (
-                  <div className="text-center text-gray-400">
-                    <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-60" />
-                    <p className="text-sm">Sin imagen</p>
-                  </div>
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500"><ImageIcon className="w-8 h-8 mb-2" /><p className="text-xs">Sin imagen</p></div>
                 )}
-              </div>
             </div>
           </div>
 
-          {/* Upload / URL */}
           <div className="space-y-5">
             <div>
               <label className="block text-white font-medium mb-2">Subir nueva imagen</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="w-full text-sm text-gray-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 file:transition-colors bg-gray-700 rounded-lg px-3 py-2.5 cursor-pointer"
-              />
-              <p className="text-xs text-gray-500 mt-1">Reemplaza el póster actual (JPG, PNG, WEBP)</p>
+              <input type="file" accept="image/*" onChange={handleFileChange} className="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:bg-indigo-600 file:text-white bg-gray-700 rounded-lg p-2" />
             </div>
-
-            <div className="border-t border-gray-700/50 pt-5">
+            <div>
               <label className="block text-white font-medium mb-2">O usar URL externa</label>
-              <input
-                type="url"
-                name="poster_url"
-                value={formData.poster_url}
-                onChange={(e) => {
-                  handleChange(e);
-                  setPosterFile(null);
-                  setImagePreviewUrl(e.target.value);
-                }}
-                disabled={!!posterFile}
-                className={`w-full px-4 py-2.5 bg-gray-700 border ${
-                  posterFile
-                    ? "border-gray-600 text-gray-500 bg-gray-800 cursor-not-allowed"
-                    : "border-gray-600 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                } rounded-lg transition-colors`}
-                placeholder="https://ejemplo.com/poster.jpg"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {posterFile ? "Deshabilitado al subir archivo" : "Opcional si no subes una imagen"}
-              </p>
+              <input type="url" name="poster_url" value={formData.poster_url} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="https://..." />
             </div>
           </div>
         </div>
 
-        {/* Campos de texto */}
+        {/* Campos de texto y Nuevas Propiedades */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-white font-medium mb-2">Título</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            <input type="text" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
+          </div>
+
+          {/* ✅ Nuevo Campo: Idioma */}
+          <div>
+            <label className="block text-white font-medium mb-2 flex items-center gap-2">
+              <Languages className="w-4 h-4 text-indigo-400" /> Idioma
+            </label>
+            <input 
+              type="text" 
+              name="idioma" 
+              value={formData.idioma} 
+              onChange={handleChange} 
+              placeholder="Latino, Subtitulado..." 
+              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" 
             />
           </div>
+
+          {/* ✅ Nuevo Campo: Estreno (Switch) */}
+          <div className="flex flex-col justify-center">
+            <label className="block text-white font-medium mb-2 flex items-center gap-2">
+              <Star className={`w-4 h-4 ${formData.estreno ? 'text-amber-400 fill-amber-400' : 'text-gray-500'}`} /> 
+              Marcar como Estreno
+            </label>
+            <div 
+              onClick={toggleEstreno}
+              className={`relative w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${formData.estreno ? 'bg-indigo-600' : 'bg-gray-600'}`}
+            >
+              <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${formData.estreno ? 'translate-x-7' : 'translate-x-0'}`} />
+            </div>
+          </div>
+
           <div>
             <label className="block text-white font-medium mb-2">Género</label>
-            <input
-              type="text"
-              name="genre"
-              value={formData.genre}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-            />
+            <input type="text" name="genre" value={formData.genre} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
           </div>
+
           <div>
             <label className="block text-white font-medium mb-2">Año</label>
-            <input
-              type="number"
-              name="year"
-              min="1900"
-              max={new Date().getFullYear() + 1}
-              value={formData.year}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-            />
+            <input type="number" name="year" value={formData.year} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
           </div>
-          <div>
+
+          <div className="md:col-span-2">
             <label className="block text-white font-medium mb-2">Categoría</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors appearance-none"
-            >
-              <option value="" disabled>Seleccionar</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat} className="bg-gray-800">
-                  {cat}
-                </option>
-              ))}
+            <select name="category" value={formData.category} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors">
+              {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
         </div>
 
         <div className="mb-8">
           <label className="block text-white font-medium mb-2">Sinopsis</label>
-          <textarea
-            name="synopsis"
-            value={formData.synopsis}
-            onChange={handleChange}
-            rows={4}
-            required
-            className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-          />
+          <textarea name="synopsis" value={formData.synopsis} onChange={handleChange} rows={4} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
         </div>
 
-        {/* Botones */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-lg disabled:opacity-60 w-full sm:w-auto"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Actualizando...
-              </>
-            ) : (
-              <>
-                <Upload className="w-5 h-5" />
-                Actualizar Contenido
-              </>
-            )}
+          <button type="submit" disabled={loading} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-60 w-full sm:w-auto">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+            Actualizar Contenido
           </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors w-full sm:w-auto"
-          >
-            Cancelar
-          </button>
+          <button type="button" onClick={() => router.back()} className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl w-full sm:w-auto">Cancelar</button>
         </div>
       </form>
     </div>
