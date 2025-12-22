@@ -288,6 +288,8 @@ export default function HomePage() {
                   { name: "Series", href: "/category/series", icon: "📺" },
                   { name: "Anime", href: "/category/anime", icon: "🍱" },
                   { name: "Novelas", href: "/category/novelas", icon: "🎭" },
+                  { name: "Reality", href: "/category/reality", icon: "✨" },
+                  { name: "Info", href: "/descripcion", icon: "📝" },
                 ].map((item) => (
                   <Link key={item.name} href={item.href} className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap">
                     <span className="text-xs font-bold text-white/90">{item.name}</span>
