@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation"; // ✅ Importado useSearchParams
 import { supabase } from "@/utils/supabaseClient";
 import Image from "next/image";
 import { Upload, ImageIcon, Loader2, X, ArrowLeft, Star, Languages } from "lucide-react";
@@ -17,13 +17,18 @@ const categories = [
 export default function EditMediaPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams(); // ✅ Inicializado para leer la URL
   const id = params.id as string;
+  const { showToast } = useToast();
+
+  // ✅ CAPTURAMOS LOS PARÁMETROS DE RETORNO (Página y Búsqueda)
+  const returnPage = searchParams.get("returnPage") || "1";
+  const returnSearch = searchParams.get("returnSearch") || "";
 
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -32,9 +37,19 @@ export default function EditMediaPage() {
     genre: "",
     year: "",
     category: "",
-    idioma: "",    // ✅ Nueva propiedad
-    estreno: false, // ✅ Nueva propiedad
+    idioma: "",
+    estreno: false,
   });
+
+  // ✅ FUNCIÓN DE NAVEGACIÓN INTELIGENTE
+  // Esta función construye la URL de vuelta con los parámetros guardados
+  const handleGoBack = useCallback(() => {
+    const params = new URLSearchParams();
+    params.set("page", returnPage);
+    if (returnSearch) params.set("search", returnSearch);
+    
+    router.push(`/admin/media?${params.toString()}`);
+  }, [router, returnPage, returnSearch]);
 
   useEffect(() => {
     fetchMedia();
@@ -57,29 +72,23 @@ export default function EditMediaPage() {
         genre: data.genre,
         year: data.year.toString(),
         category: data.category,
-        idioma: data.idioma || "",    // ✅ Carga idioma
-        estreno: !!data.estreno,      // ✅ Carga estreno
+        idioma: data.idioma || "",
+        estreno: !!data.estreno,
       });
       setImagePreviewUrl(data.poster_url || null);
     } catch (err: any) {
-      alert("Error al cargar media: " + err.message);
-      showToast("¡Contenido actualizado correctamente!", false);
-      router.push("/admin/media");
-      showToast(`Error: ${err.message || "No se pudo actualizar el contenido"}`, true);
+      showToast(`Error: ${err.message}`, true);
+      handleGoBack(); // Si falla la carga, volvemos a la tabla
     } finally {
       setFetchLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    
-    // Manejo especial para el checkbox si fuera uno estándar, 
-    // pero usaremos un div clickeable para el switch.
+    const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // ✅ Función para toggle del switch de estreno
   const toggleEstreno = () => {
     setFormData(prev => ({ ...prev, estreno: !prev.estreno }));
   };
@@ -133,16 +142,20 @@ export default function EditMediaPage() {
           genre: formData.genre,
           year: parseInt(formData.year),
           category: formData.category,
-          idioma: formData.idioma || null, // ✅ Guarda idioma
-          estreno: formData.estreno,       // ✅ Guarda estreno
+          idioma: formData.idioma || null,
+          estreno: formData.estreno,
         })
         .eq("id", id);
 
       if (error) throw error;
 
-      router.push("/admin/media");
+      showToast("¡Contenido actualizado correctamente!", false);
+      
+      // ✅ IMPORTANTE: Al terminar, usamos nuestra función para volver a la página correcta
+      handleGoBack(); 
+
     } catch (err: any) {
-      alert("Error al actualizar media: " + err.message);
+      showToast(`Error al actualizar: ${err.message}`, true);
     } finally {
       setLoading(false);
     }
@@ -159,7 +172,8 @@ export default function EditMediaPage() {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 min-h-screen bg-gray-950">
       <div className="mb-8 mt-6">
-        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+        {/* ✅ CAMBIO: Botón volver ahora usa handleGoBack */}
+        <button onClick={handleGoBack} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
           Volver a Media
         </button>
@@ -174,7 +188,7 @@ export default function EditMediaPage() {
 
       <form onSubmit={handleSubmit} className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 sm:p-6 md:p-8 shadow-xl">
         
-        {/* Sección de imagen - Se mantiene igual */}
+        {/* Sección de imagen */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 border-b border-gray-700/50 pb-8">
           <div className="flex flex-col">
             <label className="block text-white font-medium mb-3 flex items-center gap-2">
@@ -205,14 +219,13 @@ export default function EditMediaPage() {
           </div>
         </div>
 
-        {/* Campos de texto y Nuevas Propiedades */}
+        {/* Campos de texto */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
           <div className="md:col-span-2">
             <label className="block text-white font-medium mb-2">Título</label>
             <input type="text" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
           </div>
 
-          {/* ✅ Nuevo Campo: Idioma */}
           <div>
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
               <Languages className="w-4 h-4 text-indigo-400" /> Idioma
@@ -227,7 +240,6 @@ export default function EditMediaPage() {
             />
           </div>
 
-          {/* ✅ Nuevo Campo: Estreno (Switch) */}
           <div className="flex flex-col justify-center">
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
               <Star className={`w-4 h-4 ${formData.estreno ? 'text-amber-400 fill-amber-400' : 'text-gray-500'}`} /> 
@@ -269,7 +281,8 @@ export default function EditMediaPage() {
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
             Actualizar Contenido
           </button>
-          <button type="button" onClick={() => router.back()} className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl w-full sm:w-auto">Cancelar</button>
+          {/* ✅ CAMBIO: Botón cancelar usa handleGoBack */}
+          <button type="button" onClick={handleGoBack} className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl w-full sm:w-auto">Cancelar</button>
         </div>
       </form>
     </div>

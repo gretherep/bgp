@@ -117,7 +117,7 @@ export default function AboutPage() {
         </motion.div>
       </section>
 
-      {/* 🏷️ LISTADO DE PRECIOS */}
+{/* 🏷️ LISTADO DE PRECIOS */}
 <section className="max-w-6xl mx-auto px-6 py-10">
   <div className="flex items-center gap-4 mb-12">
     <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">
@@ -128,8 +128,11 @@ export default function AboutPage() {
 
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
     {pricing
-      .filter((p) => p.is_active)
+      // 1. Filtramos solo las que están activas
+      .filter((item) => item.is_active === true)
+      // 2. Ordenamos por display_order de menor a mayor
       .sort((a, b) => a.display_order - b.display_order)
+      // 3. Renderizamos
       .map((item, index) => (
         <motion.div
           key={item.id}
@@ -139,6 +142,7 @@ export default function AboutPage() {
           viewport={{ once: true }}
           className="group relative bg-white/[0.03] border border-white/5 hover:border-[var(--color-primary)]/30 rounded-[1.8rem] p-6 transition-all duration-300"
         >
+          {/* ... resto del contenido del card (h3, precio, descripción) igual ... */}
           <div className="flex justify-between items-start mb-4">
             <h3 className="text-sm font-black text-[var(--color-accent)] group-hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
               {item.category}
@@ -148,7 +152,6 @@ export default function AboutPage() {
 
           <div className="flex items-baseline gap-2 mb-4">
             <span className="text-3xl font-black text-white">
-              {/* Formateo de precio simple */}
               {item.price.toLocaleString()}
             </span>
             <span className="text-[var(--color-primary)] text-sm font-bold uppercase">
@@ -162,7 +165,6 @@ export default function AboutPage() {
             </p>
           )}
 
-          {/* Efecto de resplandor al hacer hover */}
           <div className="absolute inset-0 rounded-[1.8rem] bg-[var(--color-primary)]/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         </motion.div>
       ))}

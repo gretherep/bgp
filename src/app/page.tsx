@@ -3,20 +3,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, FreeMode  } from "swiper/modules";
+import { Autoplay, FreeMode } from "swiper/modules";
 import MediaCard from "@/components/MediaCard";
 import { Media } from "@/app/models/media";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterSidebar from "@/components/FilterSidebar";
-import 'swiper/css';
-import 'swiper/css/autoplay';
-
-// Importar estilos de Swiper para asegurar funcionamiento
-import 'swiper/css';
-import 'swiper/css/free-mode';
-import Link from "next/link";
 import ShootingStars from "@/components/ShootingStars";
 import { categoryOptions, genreOptions } from "@/utils/filter-options";
+import Link from "next/link";
+
+// Estilos de Swiper
+import 'swiper/css';
+import 'swiper/css/autoplay';
+import 'swiper/css/free-mode';
 
 type MediaItem = Media & { avg_rating?: number | null };
 
@@ -27,126 +26,114 @@ export default function HomePage() {
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
-
+  // Estados de Paginación y Filtros
   const [page, setPage] = useState(1);
   const pageSize = 20;
   const totalPages = Math.ceil(totalCount / pageSize);
+
   const [filterTitle, setFilterTitle] = useState("");
   const [filterYear, setFilterYear] = useState<number | "">("");
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
   const [filterGenre, setFilterGenre] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  // 1. EFECTO CARGA INICIAL: Solo para el Top 10 (Se ejecuta una sola vez)
   useEffect(() => {
     fetchTopRated();
+  }, []);
+
+  // 2. EFECTO DE PAGINACIÓN Y FILTROS: Solo para Recientes
+  useEffect(() => {
     fetchRecent();
   }, [page, filterTitle, filterYear, filterCategory, filterGenre]);
 
-  /** ⭐ TOP 10 MEJOR VALORADAS */
-async function fetchTopRated() {
-  setLoadingTop(true);
-  
-  // 1. Obtener ratings
-  const { data: ratingsData, error: ratingsError } = await supabase
-    .from("ratings")
-    .select("media_id, rating");
+  /** ⭐ FETCH TOP 10 (Independiente) */
+  async function fetchTopRated() {
+    setLoadingTop(true);
+    try {
+      const { data: ratingsData, error: ratingsError } = await supabase
+        .from("ratings")
+        .select("media_id, rating");
 
-  if (ratingsError || !ratingsData) {
-    setLoadingTop(false);
-    return;
+      if (ratingsError || !ratingsData) return;
+
+      const avgMap: Record<string, number> = {};
+      const countMap: Record<string, number> = {};
+
+      ratingsData.forEach((r) => {
+        avgMap[r.media_id] = (avgMap[r.media_id] || 0) + r.rating;
+        countMap[r.media_id] = (countMap[r.media_id] || 0) + 1;
+      });
+
+      const top10Ids = Object.entries(avgMap)
+        .map(([mediaId, total]) => ({
+          media_id: mediaId,
+          avg_rating: total / countMap[mediaId],
+        }))
+        .sort((a, b) => b.avg_rating - a.avg_rating)
+        .slice(0, 10);
+
+      const { data: mediaData } = await supabase
+        .from("media")
+        .select("id, title, synopsis, genre, category, poster_url, year, estreno, idioma, created_at, updated_at, slug")
+        .in("id", top10Ids.map((i) => i.media_id));
+
+      if (mediaData) {
+        const finalTop = (mediaData as Media[]).map((m) => ({
+          ...m,
+          avg_rating: top10Ids.find((t) => t.media_id === m.id)?.avg_rating || 0,
+        }));
+        finalTop.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+        setTopRated(finalTop as MediaItem[]);
+      }
+    } catch (err) {
+      console.error("Top Rated Error:", err);
+    } finally {
+      setLoadingTop(false);
+    }
   }
 
-  // 2. Calcular promedios (Agregamos tipos aquí)
-  const avgMap: Record<string, number> = {};
-  const countMap: Record<string, number> = {};
+  /** ⭐ FETCH RECIENTES (Con lógica anti-recarga total) */
+  async function fetchRecent() {
+    setLoadingRecent(true);
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
 
-  ratingsData.forEach((r: { media_id: string; rating: number }) => {
-    avgMap[r.media_id] = (avgMap[r.media_id] || 0) + r.rating;
-    countMap[r.media_id] = (countMap[r.media_id] || 0) + 1;
-  });
+    try {
+      let query = supabase
+        .from("media")
+        .select("id, title, synopsis, poster_url, genre, year, category, estreno, created_at, updated_at, slug, idioma", { count: "exact" })
+        .order("estreno", { ascending: false }) 
+        .order("year", { ascending: false })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
-  const top10Ids = Object.entries(avgMap)
-    .map(([mediaId, total]) => ({
-      media_id: mediaId,
-      avg_rating: total / countMap[mediaId],
-    }))
-    .sort((a, b) => b.avg_rating - a.avg_rating)
-    .slice(0, 10);
+      if (filterTitle) query = query.ilike("title", `%${filterTitle}%`);
+      if (filterYear) query = query.eq("year", filterYear);
+      if (filterCategory.length) query = query.in("category", filterCategory);
+      if (filterGenre.length) query = query.in("genre", filterGenre);
 
-  if (!top10Ids.length) {
-    setTopRated([]);
-    setLoadingTop(false);
-    return;
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      setRecent(data as MediaItem[]);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error("Error loading recent:", error);
+    } finally {
+      setLoadingRecent(false);
+      // Solo scroll si no es la primera carga
+      if (page > 1 || filterTitle || filterCategory.length > 0) {
+        const element = document.getElementById("main-content-anchor");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
   }
 
-  // 3. Obtener Media (Asegúrate de incluir 'estreno')
-  const { data: mediaData, error: mediaError } = await supabase
-    .from("media")
-    .select("id, title, synopsis, genre, category, poster_url, year, estreno,idioma, created_at, updated_at, slug")
-    .in("id", top10Ids.map((i) => i.media_id));
-
-  if (mediaError || !mediaData) {
-    setLoadingTop(false);
-    return;
-  }
-
-  // 4. Mapeo final (Casteamos mediaData a Media[] para evitar el error de ts)
-  const finalTop = (mediaData as Media[]).map((m) => ({
-    ...m,
-    avg_rating: top10Ids.find((t) => t.media_id === m.id)?.avg_rating || 0,
-  }));
-
-  finalTop.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0));
-  setTopRated(finalTop as MediaItem[]);
-  setLoadingTop(false);
-}
-
- /** ⭐ RECIENTES PAGINADOS CON FILTROS MULTI */
-async function fetchRecent() {
-  setLoadingRecent(true);
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  let query = supabase
-    .from("media")
-    .select("id, title, synopsis, poster_url, genre, year, category, estreno, created_at, updated_at, slug, idioma", { count: "exact" })
-    // 1. Prioridad: Los que son 'estreno' (true arriba)
-    .order("estreno", { ascending: false }) 
-    // 2. Segunda prioridad: Por año (del más nuevo al más viejo)
-    .order("year", { ascending: false })
-    // 3. Tercera prioridad: Por fecha de creación (opcional, por si coinciden en año)
-    .order("created_at", { ascending: false })
-    .range(from, to);
-
-  if (filterTitle) query = query.ilike("title", `%${filterTitle}%`);
-  if (filterYear) query = query.eq("year", filterYear);
-  if (filterCategory.length) query = query.in("category", filterCategory);
-  if (filterGenre.length) query = query.in("genre", filterGenre);
-
-  const { data, error, count } = await query; // Extraemos 'count'
-
-  if (error) {
-    console.error("Error loading recent:", error);
-    setLoadingRecent(false);
-    return;
-  }
-
-  setRecent(data as MediaItem[]);
-  setTotalCount(count || 0); // Guardamos el total
-  setLoadingRecent(false);
-}
-const startYear = 1960;
-const currentYear = new Date().getFullYear();
-
-const yearOptions = Array.from(
-  { length: currentYear - startYear + 1 },
-  (_, i) => {
-    const year = startYear + i;
-    return { value: year.toString(), label: year.toString() };
-  }
-).reverse();
-
-
+  // Handlers de Filtros
   const handleApplyFilters = (filters: Record<string, string | string[]>) => {
     setFilterTitle(filters.title as string || "");
     setFilterYear(filters.year ? Number(filters.year) : "");
@@ -165,9 +152,17 @@ const yearOptions = Array.from(
     setIsFilterOpen(false);
   };
 
+  const startYear = 1960;
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: currentYear - startYear + 1 }, (_, i) => {
+    const year = startYear + i;
+    return { value: year.toString(), label: year.toString() };
+  }).reverse();
+
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)] overflow-x-hidden">
       
+      {/* SECCIÓN HERO */}
       <section className="relative w-full pt-28 pb-12 overflow-hidden">
         <ShootingStars />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
@@ -176,48 +171,26 @@ const yearOptions = Array.from(
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <motion.span 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20"
-            >
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            <span className="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20">
               Explora • Califica • Disfruta
-            </motion.span>
-            
+            </span>
             <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tighter leading-none">
               Bienvenido a <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
                 Tu Catálogo Favorito
               </span>
             </h1>
-
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-              className="max-w-2xl mx-auto text-base md:text-lg text-[var(--color-accent)] font-medium leading-relaxed mb-8 px-4"
-            >
+            <p className="max-w-2xl mx-auto text-base md:text-lg text-[var(--color-accent)] font-medium leading-relaxed mb-8 px-4">
               Descubre las producciones mejor valoradas por la comunidad y mantente al día con los estrenos más recientes.
-            </motion.p>
+            </p>
           </motion.div>
-          <motion.div 
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 1, duration: 1 }}
-              className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent mx-auto"
-            />
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* 🌟 TOP 10 - CORREGIDO PARA MÓVIL */}
+        {/* ⭐ SECCIÓN TOP 10 (ESTÁTICA DURANTE PAGINACIÓN) */}
         <section className="mb-14 mt-8 relative z-10">
           <div className="flex items-center justify-between mb-6 px-2 sm:px-0">
             <div>
@@ -225,136 +198,98 @@ const yearOptions = Array.from(
                 <span className="bg-[var(--color-primary)] text-black px-2 py-0.5 rounded-md transform -rotate-2">TOP 10</span>
                 LO MÁS VISTO
               </h2>
-              <p className="text-[var(--color-accent)] text-[10px] md:text-xs font-medium ml-1">Actualizado hace instantes</p>
             </div>
           </div>
 
-          {/* Contenedor del Swiper con overflow controlado */}
           <div className="relative w-full overflow-visible">
             {loadingTop ? (
               <div className="flex gap-4 overflow-hidden">
-                {[...Array(3)].map((_, i) => (
+                {[...Array(5)].map((_, i) => (
                   <div key={i} className="min-w-[180px] h-[280px] bg-white/5 rounded-[2rem] animate-pulse" />
                 ))}
               </div>
             ) : (
-<Swiper
-  modules={[FreeMode, Autoplay]}
-  grabCursor
-  slidesPerView={1.3}      // móvil
-  spaceBetween={16}
-  loop
-  freeMode={false}
-  autoplay={{ delay: 2500, disableOnInteraction: false }}
-  speed={800}
-  breakpoints={{
-    480: { slidesPerView: 2.2, spaceBetween: 20 },  // móvil grande
-    768: { slidesPerView: 3.5, spaceBetween: 25 },  // tablet
-    1024: { slidesPerView: 4.5, spaceBetween: 30 }, // desktop
-  }}
-  className="!overflow-visible py-5"
->
-  {topRated.map((media, index) => (
-    <SwiperSlide key={media.id}>
-      <motion.div whileTap={{ scale: 0.95 }} className="relative group cursor-pointer">
-        <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
-          <img
-            src={media.poster_url || "/placeholder.jpg"}
-            alt={media.title}
-            loading="lazy"
-            className="w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-black/10 to-transparent" />
-
-          <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 shadow-lg z-20">
-            <span className="text-xs">🔥</span>
-            <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
-          </div>
-
-          <div className="absolute top-3 md:top-4 right-3 md:right-4 backdrop-blur-md bg-black/40 border border-white/20 px-2 py-0.5 md:py-1 rounded-xl flex items-center gap-1">
-            <span className="text-[var(--color-primary)] text-xs">★</span>
-            <span className="text-white text-[10px] font-bold">{(media.avg_rating || 0).toFixed(1)}</span>
-          </div>
-
-          <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 p-2 md:p-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl md:rounded-2xl">
-            <h3 className="text-white text-[10px] md:text-xs font-bold truncate mb-0.5 md:mb-1">{media.title}</h3>
-            <div className="flex items-center justify-between">
-              <span className="text-[var(--color-primary)] text-[8px] md:text-[9px] font-black uppercase tracking-widest">{media.category}</span>
-              <span className="text-white/60 text-[8px] md:text-[9px]">{media.year}</span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </SwiperSlide>
-  ))}
-</Swiper>
-
-
+              <Swiper
+                modules={[FreeMode, Autoplay]}
+                grabCursor
+                slidesPerView={1.3}
+                spaceBetween={16}
+                loop={topRated.length > 5}
+                autoplay={{ delay: 2500, disableOnInteraction: false }}
+                speed={800}
+                breakpoints={{
+                  480: { slidesPerView: 2.2, spaceBetween: 20 },
+                  768: { slidesPerView: 3.5, spaceBetween: 25 },
+                  1024: { slidesPerView: 4.5, spaceBetween: 30 },
+                }}
+                className="!overflow-visible py-5"
+              >
+                {topRated.map((media, index) => (
+                  <SwiperSlide key={`top-${media.id}`}>
+                    <motion.div whileTap={{ scale: 0.95 }} className="relative group cursor-pointer">
+                      <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
+                        <img
+                          src={media.poster_url || "/placeholder.jpg"}
+                          alt={media.title}
+                          className="w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-black/10 to-transparent" />
+                        <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 z-20">
+                          <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
+                        </div>
+                        <div className="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 p-2 md:p-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl md:rounded-2xl">
+                          <h3 className="text-white text-[10px] md:text-xs font-bold truncate mb-0.5">{media.title}</h3>
+                          <div className="flex items-center justify-between text-[8px] md:text-[9px]">
+                            <span className="text-[var(--color-primary)] font-black uppercase">{media.category}</span>
+                            <span className="text-white/60">{media.year}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             )}
           </div>
         </section>
 
-        <div className="my-10 h-px bg-white/10"></div>
+        <div className="my-10 h-px bg-white/10" id="main-content-anchor"></div>
 
         <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* SIDEBAR DESKTOP */}
           <div className="hidden lg:block">
             <FilterSidebar
               textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
               singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
               multiSelects={[
-                { 
-                  key: "category", label: "Categorías", value: filterCategory, 
-                  options: [
-                    {value: "Películas", label: "Películas"}, {value: "Series", label: "Series"},
-                    {value: "Novelas", label: "Novelas"}, {value: "Reality Shows", label: "Reality Shows"},
-                    {value: "MiniSeries", label: "MiniSeries"}, {value: "Series Animadas", label: "Series Animadas"},
-                    {value: "Películas Animadas", label: "Películas Animadas"}, {value: "Anime", label: "Anime"},
-                    {value: "Películas Anime", label: "Películas Anime"}
-                  ]
-                },
-                { 
-                  key: "genre", label: "Géneros", value: filterGenre, 
-                  options: [
-                    {value: "Acción", label: "Acción"}, {value: "Drama", label: "Drama"},
-                    {value: "Comedia", label: "Comedia"}, {value: "Terror", label: "Terror"},
-                    {value: "Romance", label: "Romance"}, {value: "Aventura", label: "Aventura"}
-                  ]
-                }
+                { key: "category", label: "Categorías", value: filterCategory, options: categoryOptions },
+                { key: "genre", label: "Géneros", value: filterGenre, options: genreOptions }
               ]}
               onApply={handleApplyFilters}
               onReset={handleResetFilters}
             />
           </div>
 
+          {/* NAVEGACIÓN MÓVIL */}
           <div className="lg:hidden flex flex-col mb-6">
             <div className="flex items-center gap-2 w-full">
-              
-              {/* 1. Botón de Filtros Integrado */}
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-90 transition-transform"
+                className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
                 </svg>
               </button>
-
-              {/* 2. Tabs de Navegación (Tus NavItems) */}
-              <div className="flex-1 flex overflow-x-auto gap-2 py-1 no-scrollbar select-none">
+              <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
                 {[
                   { name: "Películas", href: "/category/peliculas", icon: "🎬" },
                   { name: "Series", href: "/category/series", icon: "📺" },
                   { name: "Anime", href: "/category/anime", icon: "🍱" },
                   { name: "Novelas", href: "/category/novelas", icon: "🎭" },
-                  { name: "Reality", href: "/category/reality", icon: "✨" },
-                  { name: "Info", href: "/descripcion", icon: "📝" },
                 ].map((item) => (
-                  <Link 
-                    key={item.name} 
-                    href={item.href}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap active:bg-white/10 transition-colors"
-                  >
-                    <span className="text-sm">{item.icon}</span>
+                  <Link key={item.name} href={item.href} className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap">
                     <span className="text-xs font-bold text-white/90">{item.name}</span>
                   </Link>
                 ))}
@@ -362,171 +297,105 @@ const yearOptions = Array.from(
             </div>
           </div>
 
- {/* 📺 Contenido Principal */}
-<main className="flex-1 min-w-0">
-  <div className="flex items-center justify-between mb-8">
-    <div className="flex items-center">
-      <div className="w-1.5 h-8 bg-[var(--color-primary)] rounded-full mr-4 shadow-[0_0_15px_rgba(249,195,164,0.5)]" />
-      <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-        <span className="text-[var(--color-primary)]">CONTENIDO</span> RECIENTE
-      </h2>
-    </div>
-    
-    {/* Badge de cantidad (Opcional, se ve pro) */}
-    {!loadingRecent && recent.length > 0 && (
-      <span className="hidden sm:block px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-[var(--color-accent)] tracking-widest uppercase">
-        {recent.length} Resultados
-      </span>
-    )}
-  </div>
+          {/* 📺 SECCIÓN RECIENTES (ÚNICA QUE SE ACTUALIZA) */}
+          <main className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center">
+                <div className="w-1.5 h-8 bg-[var(--color-primary)] rounded-full mr-4 shadow-[0_0_15px_rgba(249,195,164,0.5)]" />
+                <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                  <span className="text-[var(--color-primary)]">CONTENIDO</span> RECIENTE
+                </h2>
+              </div>
+            </div>
 
-  {loadingRecent ? (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-      {[...Array(10)].map((_, i) => (
-        <div 
-          key={i} 
-          className="aspect-[2/3] rounded-[1.5rem] bg-gradient-to-br from-white/5 to-white/[0.02] animate-pulse border border-white/5" 
-        />
-      ))}
-    </div>
-  ) : (
-    <>
-      {recent.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-24 bg-white/[0.02] rounded-[3rem] border border-dashed border-white/10"
-        >
-          <div className="text-6xl mb-4 grayscale opacity-50">🎬</div>
-          <p className="text-xl font-medium text-[var(--color-accent)]">
-            No encontramos lo que buscas
-          </p>
-          <p className="text-sm text-white/40 mt-2">Prueba ajustando los filtros de búsqueda</p>
-        </motion.div>
-      ) : (
-        <motion.div 
-          layout // Para animar suavemente cuando cambian los filtros
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {recent.map((media, index) => (
-              <motion.div
-                key={media.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                whileHover={{ y: -8 }} // Sube un poco al pasar el mouse
-                className="relative"
-              >
-                {/* Aquí usamos tu MediaCard, pero le puedes pasar una clase 
-                   o envolverla para que herede el estilo premium 
-                */}
-                <div className="group relative transition-all duration-300">
-                  <MediaCard media={{ ...media }} />
-                  
-                  {/* Overlay sutil de brillo al hacer hover (opcional) */}
-                  <div className="absolute inset-0 rounded-xl md:rounded-[2rem] pointer-events-none group-hover:bg-gradient-to-t group-hover:from-[var(--color-primary)]/10 group-hover:to-transparent transition-all duration-500" />
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      )}
+            {loadingRecent ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="aspect-[2/3] rounded-[1.5rem] bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <>
+                {recent.length === 0 ? (
+                  <div className="text-center py-20 bg-white/[0.02] rounded-[3rem] border border-dashed border-white/10">
+                    <p className="text-[var(--color-accent)]">No hay resultados para esta búsqueda</p>
+                  </div>
+                ) : (
+                  <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+                    <AnimatePresence mode="popLayout">
+                      {recent.map((media, index) => (
+                        <motion.div
+                          key={`recent-${media.id}`}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.3, delay: index * 0.03 }}
+                        >
+                          <MediaCard media={media} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
 
-{recent.length > 0 && (
-  <div className="flex flex-col items-center gap-4 mt-12 md:mt-16 pb-12">
-    
-    {/* Texto informativo superior */}
-    <p className="text-[var(--color-accent)] text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">
-      Mostrando {recent.length} de {totalCount} resultados
-    </p>
+                {/* PAGINACIÓN ESTILIZADA */}
+                {recent.length > 0 && (
+                  <div className="flex flex-col items-center gap-4 mt-12 md:mt-16 pb-12">
+                    <p className="text-[var(--color-accent)] text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">
+                      Mostrando {recent.length} de {totalCount} resultados
+                    </p>
 
-    <div className="flex justify-center items-center gap-2 md:gap-6">
-      {/* Botón Anterior */}
-      <button
-        disabled={page === 1}
-        onClick={() => {
-          setPage(page - 1);
-          window.scrollTo({ top: 400, behavior: 'smooth' });
-        }}
-        className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 border border-white/10 text-white"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        <span className="hidden sm:inline">Anterior</span>
-      </button>
-      
-      {/* Indicador de Página de Total */}
-      <div className="flex items-center px-4 py-2 md:py-3 bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl">
-        <div className="flex flex-col md:flex-row items-center gap-1 md:gap-2">
-           <span className="text-white/40 text-[9px] md:text-xs font-bold uppercase tracking-tighter">Pág</span>
-           <div className="flex items-center gap-1.5">
-              <span className="text-[var(--color-primary)] text-sm md:text-lg font-black">{page}</span>
-              <span className="text-white/20 text-xs md:text-base">/</span>
-              <span className="text-white/60 text-sm md:text-lg font-bold">{totalPages || 1}</span>
-           </div>
-        </div>
-      </div>
-      
-      {/* Botón Siguiente */}
-      <button
-        disabled={page >= totalPages} // Ahora es mucho más preciso
-        onClick={() => {
-          setPage(page + 1);
-          window.scrollTo({ top: 400, behavior: 'smooth' });
-        }}
-        className="group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all disabled:opacity-10 disabled:cursor-not-allowed bg-[var(--color-primary)] hover:shadow-[0_0_20px_rgba(249,195,164,0.4)] text-black"
-      >
-        <span className="hidden sm:inline">Siguiente</span>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-  </div>
-
-)}
-    </>
-  )}
-</main>
+                    <div className="flex justify-center items-center gap-2 md:gap-6">
+                      <button
+                        disabled={page === 1 || loadingRecent}
+                        onClick={() => setPage(page - 1)}
+                        className="group flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl font-bold bg-white/5 border border-white/10 text-white disabled:opacity-20"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span className="hidden sm:inline">Anterior</span>
+                      </button>
+                      
+                      <div className="flex items-center px-4 py-2 bg-white/[0.03] border border-white/5 rounded-xl">
+                        <span className="text-[var(--color-primary)] text-sm md:text-lg font-black">{page}</span>
+                        <span className="text-white/20 mx-2">/</span>
+                        <span className="text-white/60 text-sm md:text-lg font-bold">{totalPages || 1}</span>
+                      </div>
+                      
+                      <button
+                        disabled={page >= totalPages || loadingRecent}
+                        onClick={() => setPage(page + 1)}
+                        className="group flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl font-bold bg-[var(--color-primary)] text-black disabled:opacity-20"
+                      >
+                        <span className="hidden sm:inline">Siguiente</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </main>
         </div>
 
+        {/* SIDEBAR MÓVIL */}
         {isFilterOpen && (
-  <FilterSidebar
-    textInputs={[
-      { key: "title", label: "Título", value: filterTitle }
-    ]}
-    singleSelects={[
-      {
-        key: "year",
-        label: "Año",
-        value: filterYear.toString(),
-        options: yearOptions
-      }
-    ]}
-    multiSelects={[
-      {
-        key: "category",
-        label: "Categorías",
-        value: filterCategory,
-        options: categoryOptions
-      },
-      {
-        key: "genre",
-        label: "Géneros",
-        value: filterGenre,
-        options: genreOptions
-      }
-    ]}
-    onApply={handleApplyFilters}
-    onReset={handleResetFilters}
-    isMobile
-    onCloseMobile={() => setIsFilterOpen(false)}
-  />
-)}
-
+          <FilterSidebar
+            textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
+            singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
+            multiSelects={[
+              { key: "category", label: "Categorías", value: filterCategory, options: categoryOptions },
+              { key: "genre", label: "Géneros", value: filterGenre, options: genreOptions }
+            ]}
+            onApply={handleApplyFilters}
+            onReset={handleResetFilters}
+            isMobile
+            onCloseMobile={() => setIsFilterOpen(false)}
+          />
+        )}
       </div>
     </div>
   );
