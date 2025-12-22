@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react"; // ✅ Añadido Suspense
 import { supabase } from "@/utils/supabaseClient";
 import { Media } from "@/app/models/media";
 import { useToast } from "@/app/context/ToastContext";
@@ -13,9 +13,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Film,
-  Tag,
-  Folder,
-  Star,
   Search,
   X,
   Loader2,
@@ -23,25 +20,23 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
-export default function AdminMediaPage() {
+// ✅ 1. CREAMOS UN COMPONENTE INTERNO CON TODA TU LÓGICA
+function MediaTableContent() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  // 1. Estados iniciales sincronizados con la URL (Solo al montar el componente)
   const [media, setMedia] = useState<Media[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Leemos valores de la URL directamente para usarlos en las consultas
   const currentPage = Number(searchParams.get("page")) || 1;
   const searchTerm = searchParams.get("search") || "";
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-  // 2. Función para actualizar la URL (Solo se llama en eventos de usuario)
   const createQueryString = useCallback(
     (page: number, search: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -56,17 +51,14 @@ export default function AdminMediaPage() {
     [searchParams]
   );
 
-  // 3. Carga de datos
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // Consulta de conteo
       let countQuery = supabase.from("media").select("*", { count: "exact", head: true });
       if (searchTerm) countQuery = countQuery.ilike("title", `%${searchTerm}%`);
       const { count } = await countQuery;
       setTotalItems(count || 0);
 
-      // Consulta de datos
       let dataQuery = supabase
         .from("media")
         .select("*")
@@ -85,16 +77,12 @@ export default function AdminMediaPage() {
     }
   }, [startIndex, searchTerm]);
 
-  // 4. Efecto: Solo carga datos cuando la URL cambia
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // --- MANEJADORES DE EVENTOS (Aquí es donde actualizamos la URL) ---
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Al buscar, reiniciamos a página 1 en la URL
     router.push(`${pathname}?${createQueryString(1, value)}`);
   };
 
@@ -128,8 +116,6 @@ export default function AdminMediaPage() {
   return (
     <div className="min-h-screen bg-gray-950 p-4 sm:p-6 mt-8">
       <div className="max-w-7xl mx-auto">
-        
-        {/* Header con Buscador */}
         <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
@@ -163,16 +149,13 @@ export default function AdminMediaPage() {
           </div>
         </div>
 
-        {/* Tabla / Lista */}
         <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 overflow-hidden shadow-xl">
           {loading ? (
              <div className="py-20 flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-2" />
-               
              </div>
           ) : (
             <>
-              {/* Vista Desktop */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
@@ -197,11 +180,11 @@ export default function AdminMediaPage() {
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
                               <Link 
-  href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`} 
-  className="p-2 rounded-lg bg-blue-600/90 text-white hover:bg-blue-600"
->
-  <Edit2 className="w-4 h-4" />
-</Link>
+                                href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`} 
+                                className="p-2 rounded-lg bg-blue-600/90 text-white hover:bg-blue-600"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Link>
                               <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-red-600/90 text-white hover:bg-red-600"><Trash2 className="w-4 h-4" /></button>
                             </div>
                           </td>
@@ -214,7 +197,6 @@ export default function AdminMediaPage() {
                 </table>
               </div>
 
-              {/* Vista Móvil */}
               <div className="md:hidden p-4 space-y-4">
                 {media.map((item) => (
                   <div key={item.id} className="bg-gray-700/60 rounded-xl p-4 border border-gray-600/50">
@@ -227,14 +209,18 @@ export default function AdminMediaPage() {
                       <span>{item.year}</span>
                     </div>
                     <div className="flex justify-end gap-2 pt-3 border-t border-gray-600/50">
-                      <Link href={`/admin/media/${item.id}/edit`} className="p-2 bg-blue-600 rounded-lg text-white"><Edit2 className="w-4 h-4" /></Link>
+                      <Link 
+                        href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`} 
+                        className="p-2 bg-blue-600 rounded-lg text-white"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Link>
                       <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-600 rounded-lg text-white"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Paginación */}
               <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-700/50 gap-4">
                 <div className="text-xs text-gray-400">
                   Mostrando <span className="text-white font-bold">{startIndex + 1}</span> a <span className="text-white font-bold">{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)}</span> de <span className="text-white font-bold">{totalItems}</span>
@@ -250,5 +236,18 @@ export default function AdminMediaPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ✅ 2. EL EXPORT DEFAULT AHORA ENVUELVE TODO EN SUSPENSE
+export default function AdminMediaPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    }>
+      <MediaTableContent />
+    </Suspense>
   );
 }
