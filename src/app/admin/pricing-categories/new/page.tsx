@@ -16,7 +16,7 @@ type MediaCategory =
   | "Series Animadas"
   | "Películas Animadas"
   | "Anime"
-  | "Películas Anime";
+
 
 const CATEGORIES: MediaCategory[] = [
   "Películas",
@@ -26,8 +26,8 @@ const CATEGORIES: MediaCategory[] = [
   "MiniSeries",
   "Series Animadas",
   "Películas Animadas",
-  "Anime",
-  "Películas Anime",
+  "Anime"
+
 ];
 
 export default function NewPricingCategoryPage() {
