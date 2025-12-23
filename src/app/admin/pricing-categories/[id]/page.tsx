@@ -16,12 +16,11 @@ type MediaCategory =
   | "Series Animadas"
   | "Películas Animadas"
   | "Anime"
-  | "Películas Anime";
+  
 
 const CATEGORIES: MediaCategory[] = [
   "Películas", "Series", "Novelas", "Reality Shows",
   "MiniSeries", "Series Animadas", "Películas Animadas",
-  "Anime", "Películas Anime",
 ];
 
 interface FormState {
