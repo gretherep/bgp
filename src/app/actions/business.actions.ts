@@ -1,20 +1,9 @@
 "use server";
 
 import { createServerClient } from "@/utils/supabaseServer";
+import { BusinessInfo } from "../models/businessInfo";
 
-// Tipo opcional (para autocompletado)
-export interface BusinessInfo {
-  id: string;
-  title: string;
-  image_url: string | null;
-  description: string | null;
-  price_basic: number | null;
-  price_standard: number | null;
-  price_premium: number | null;
-  whatsapp_url: string | null;
-  telegram_url: string | null;
-  updated_at: string;
-}
+
 
 // Obtener la información del negocio (solo 1 fila)
 export async function getBusinessInfo(): Promise<BusinessInfo | null> {

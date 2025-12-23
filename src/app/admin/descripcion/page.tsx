@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BusinessInfo, getBusinessInfo, updateBusinessInfo } from "@/app/actions/business.actions";
+import { getBusinessInfo, updateBusinessInfo } from "@/app/actions/business.actions";
 import { useToast } from "@/app/context/ToastContext";
 import { 
   Building, 
@@ -15,6 +15,7 @@ import {
   X, 
   Loader2 
 } from "lucide-react";
+import { BusinessInfo } from "@/app/models/businessInfo";
 
 export default function AdminBusinessPage() {
   const [info, setInfo] = useState<BusinessInfo | null>(null);

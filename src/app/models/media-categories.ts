@@ -7,7 +7,6 @@ export const MEDIA_CATEGORIES = [
   "Series Animadas",
   "Películas Animadas",
   "Anime",
-  "Películas Anime",
 ] as const;
 
 export type MediaCategory = typeof MEDIA_CATEGORIES[number];

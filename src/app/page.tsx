@@ -185,6 +185,12 @@ export default function HomePage() {
               Descubre las producciones mejor valoradas por la comunidad y mantente al día con los estrenos más recientes.
             </p>
           </motion.div>
+                    <motion.div 
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1, duration: 1 }}
+              className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent mx-auto"
+            />
         </div>
       </section>
 
