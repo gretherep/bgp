@@ -1,83 +1,75 @@
 "use client";
 
+import React, { useState, useEffect, useMemo } from "react";
 import { getAllMedia } from "@/app/actions/media.actions";
 import { Media } from "@/app/models/media";
 import MediaCard from "@/components/MediaCard";
-import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterSidebar from "@/components/FilterSidebar";
 import Link from "next/link";
+import ShootingStars from "@/components/ShootingStars";
 import { genreOptions } from "@/utils/filter-options";
+import { Sparkles, LayoutGrid, Film, Tv, Tent, JapaneseYen, Clapperboard } from "lucide-react";
 
-
-// ======================================================
 type MediaWithRating = Media & { avg_rating: number };
 
-// ======================================================
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) =>
-  (new Date().getFullYear() - i).toString()
-);
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => (new Date().getFullYear() - i).toString());
+
+const MOVIE_SUBTYPES = [
+  { value: "todo", label: "Todo" },
+  { value: "pelicula", label: "Películas" },
+  { value: "animada", label: "Animadas" },
+];
 
 // ======================================================
-// CARRUSEL PREMIUM (SIN CAMBIOS)
+// COMPONENTE: ICONO ANIMADO FLOTANTE
 // ======================================================
-const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
-  <section className="mb-12">
-    <div className="flex items-center gap-3 mb-6">
-      <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
-        </svg>
-      </div>
-      <h2 className="text-2xl font-black text-white tracking-tight uppercase italic">
-        Agregados <span className="text-[var(--color-primary)]">Recientemente</span>
-      </h2>
-    </div>
+const CategoryIcon = ({ category }: { category: string }) => {
+  const icons: Record<string, React.ElementType> = {
+    peliculas: Film,
+    series: Tv,
+    anime: JapaneseYen,
+    novelas: Clapperboard,
+    reality: Tent,
+  };
 
-    <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x">
-      {media.map(m => (
-        <motion.div key={m.id} whileHover={{ y: -8 }} className="flex-shrink-0 w-40 sm:w-48 snap-start group">
-          <MediaCard media={m} />
-        </motion.div>
-      ))}
-    </div>
-  </section>
-);
+  const IconComponent = icons[normalizeText(category)] || Film;
 
-// ======================================================
-// PAGE
-// ======================================================
+  return (
+    <motion.div 
+      animate={{ 
+        y: [0, -15, 0],
+        rotate: [0, 5, 0]
+      }}
+      transition={{ 
+        duration: 4, 
+        repeat: Infinity, 
+        ease: "easeInOut" 
+      }}
+      className="hidden md:block absolute right-10 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none"
+    >
+      <IconComponent size={200} strokeWidth={0.5} className="text-[var(--color-primary)]" />
+    </motion.div>
+  );
+};
+
 export default function CategoryPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const categoryParam = useMemo(
-    () => pathname.split("/").pop() || "",
-    [pathname]
-  );
-
   const [allMedia, setAllMedia] = useState<MediaWithRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // ======================================================
-  // PARAMS
-  // ======================================================
+  const categoryParam = useMemo(() => pathname.split("/").pop() || "", [pathname]);
   const currentYear = searchParams.get("year") || "";
+  const currentSubtype = searchParams.get("subtype") || "todo";
+  const currentGenres = useMemo(() => searchParams.get("genre")?.split(",") ?? [], [searchParams]);
 
-  const currentGenres = useMemo(
-    () => searchParams.get("genre")?.split(",") ?? [],
-    [searchParams]
-  );
-
-  // ======================================================
-  // FETCH
-  // ======================================================
   useEffect(() => {
     let active = true;
-
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -87,59 +79,40 @@ export default function CategoryPage() {
         if (active) setLoading(false);
       }
     };
-
     fetchData();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [categoryParam]);
 
-  // ======================================================
-  // FILTERING
-  // ======================================================
   const categoryMedia = useMemo(() => {
-    let filtered = allMedia.filter(
-      m => normalizeText(m.category) === normalizeText(categoryParam)
-    );
-
-    if (currentYear) {
-      filtered = filtered.filter(m => m.year?.toString() === currentYear);
+    let filtered = allMedia.filter((m) => {
+      const mediaCat = normalizeText(m.category);
+      const urlCat = normalizeText(categoryParam);
+      if (urlCat === "peliculas") return mediaCat.includes("pelicula");
+      return mediaCat === urlCat;
+    });
+    // ... (lógica de filtrado se mantiene igual)
+    if (categoryParam === "peliculas" && currentSubtype !== "todo") {
+      if (currentSubtype === "animada") filtered = filtered.filter(m => normalizeText(m.category).includes("animada"));
+      else if (currentSubtype === "pelicula") filtered = filtered.filter(m => !normalizeText(m.category).includes("animada"));
     }
-
+    if (currentYear) filtered = filtered.filter(m => m.year?.toString() === currentYear);
     if (currentGenres.length > 0) {
-      filtered = filtered.filter(m =>
-        currentGenres.some(g =>
-          normalizeText(m.genre).includes(normalizeText(g))
-        )
-      );
+      filtered = filtered.filter(m => currentGenres.some(g => normalizeText(m.genre).includes(normalizeText(g))));
     }
-
     return filtered;
-  }, [allMedia, categoryParam, currentYear, currentGenres]);
+  }, [allMedia, categoryParam, currentYear, currentGenres, currentSubtype]);
 
-  const top5Recent = useMemo(() => {
+  const topRecent = useMemo(() => {
     return [...categoryMedia]
-      .sort(
-        (a, b) =>
-          new Date(b.created_at || "").getTime() -
-          new Date(a.created_at || "").getTime()
-      )
-      .slice(0, 8);
+      .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime())
+      .slice(0, 10);
   }, [categoryMedia]);
 
-  // ======================================================
-  // FILTER HANDLER
-  // ======================================================
   const handleApplyFilters = (filters: any) => {
     const params = new URLSearchParams(searchParams.toString());
-
-    if (filters.year) params.set("year", filters.year);
-    else params.delete("year");
-
-    if (filters.genre?.length > 0)
-      params.set("genre", filters.genre.join(","));
-    else params.delete("genre");
-
+    if (filters.subtype && filters.subtype !== "todo") params.set("subtype", filters.subtype); else params.delete("subtype");
+    if (filters.year) params.set("year", filters.year); else params.delete("year");
+    if (filters.genre?.length > 0) params.set("genre", filters.genre.join(",")); else params.delete("genre");
     router.push(`${pathname}?${params.toString()}`);
     setIsFilterOpen(false);
   };
@@ -147,172 +120,128 @@ export default function CategoryPage() {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <div
-      className="min-h-screen bg-[#161616ff] text-[#DCDAD9]"
-      style={
-        {
-          "--color-primary": "#F9C3A4",
-          "--color-secondary": "#DCDAD9",
-          "--color-accent": "#95999E",
-        } as any
-      }
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12">
-        {/* HEADER */}
-        <motion.div
-          key={categoryParam}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
-        >
-          <h1 className="text-4xl md:text-6xl font-black text-white capitalize tracking-tighter italic">
-            {categoryParam.replace(/-/g, " ")}
-          </h1>
-          <div className="h-1 w-20 bg-[var(--color-primary)] mt-2 rounded-full shadow-[0_0_15px_rgba(249,195,164,0.4)]" />
-        </motion.div>
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
+      
+      {/* 1. HERO SECTION (ESTILO HOME) */}
+      <section className="relative w-full pt-32 pb-16 overflow-hidden">
+        <ShootingStars />
+        {/* Orbes de luz idénticos al Home */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[var(--color-primary)] blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[50%] rounded-full bg-indigo-600 blur-[100px] opacity-20" />
+        </div>
 
-        {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 relative">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl"
+          >
+            <span className="inline-block px-4 py-1.5 mb-4 text-[10px] font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20">
+              Explorando Categoría
+            </span>
+            <h1 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter leading-none italic uppercase">
+              {categoryParam.replace(/-/g, " ")}<br />
+              {/* <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
+                Premium.
+              </span> */}
+            </h1>
+            <p className="text-base md:text-lg text-[var(--color-accent)] font-medium leading-relaxed max-w-xl">
+              Descubre nuestra selección curada de {categoryParam}. Filtrado por calidad y las mejores valoraciones.
+            </p>
+          </motion.div>
 
-        <hr className="my-10 border-white/5" />
+          <CategoryIcon category={categoryParam} />
+        </div>
+      </section>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* DESKTOP FILTER */}
-          <div className="hidden lg:block">
-            <FilterSidebar
-              singleSelects={[
-                {
-                  key: "year",
-                  label: "Año",
-                  value: currentYear,
-                  options: [
-                    { value: "", label: "Todos" },
-                    ...YEAR_OPTIONS.map(y => ({ value: y, label: y })),
-                  ],
-                },
-              ]}
-              multiSelects={[
-                {
-                  key: "genre",
-                  label: "Géneros",
-                  value: currentGenres,
-                  options: genreOptions,
-                },
-              ]}
-              onApply={handleApplyFilters}
-              onReset={() => router.push(pathname)}
-            />
-          </div>
-
-          {/* MOBILE UI (SIN CAMBIOS VISUALES) */}
-          <div className="lg:hidden flex flex-col mb-6">
-            <div className="flex items-center gap-2 w-full">
-<button
-  onClick={() => setIsFilterOpen(true)}
-  className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-90 transition-transform"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-5 w-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth={2.5}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z"
-    />
-  </svg>
-</button>
-
-
-              <div className="flex-1 flex overflow-x-auto gap-2 py-1 no-scrollbar">
-                {[
-                  { name: "Películas", href: "/category/peliculas", icon: "🎬" },
-                  { name: "Series", href: "/category/series", icon: "📺" },
-                  { name: "Anime", href: "/category/anime", icon: "🍱" },
-                  { name: "Novelas", href: "/category/novelas", icon: "🎭" },
-                  { name: "Reality", href: "/category/reality", icon: "✨" },
-                  { name: "Info", href: "/descripcion", icon: "📝" },
-                ].map(item => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap"
-                  >
-                    <span>{item.icon}</span>
-                    <span className="text-xs font-bold">{item.name}</span>
-                  </Link>
-                ))}
-              </div>
+      {/* 2. ZONA DE CONTENIDO (Fondo igual al Home) */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 pb-20">
+        
+        {/* RECIENTES (Igual estilo que el Home) */}
+        {topRecent.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-1.5 h-6 bg-[var(--color-primary)] rounded-full shadow-[0_0_10px_rgba(249,195,164,0.5)]" />
+              <h2 className="text-xl font-black text-white tracking-tight uppercase">Estrenos de la semana</h2>
             </div>
-          </div>
+            <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x">
+              {topRecent.map(m => (
+                <div key={m.id} className="flex-shrink-0 w-40 md:w-48 snap-start">
+                  <MediaCard media={m} />
+                </div>
+              ))}
+            </div>
+            <div className="h-px w-full bg-white/5 mt-8" />
+          </section>
+        )}
 
-          {/* GRID */}
+        <div className="flex flex-col lg:flex-row gap-12 mt-10">
+          {/* SIDEBAR DESKTOP */}
+          <aside className="hidden lg:block shrink-0">
+            <div className="sticky top-32">
+              <FilterSidebar 
+                segmentedFilters={categoryParam === "peliculas" ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] : []}
+                singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))] }]}
+                multiSelects={[{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]}
+                onApply={handleApplyFilters}
+                onReset={() => router.push(pathname)}
+              />
+            </div>
+          </aside>
+
+          {/* MAIN */}
           <main className="flex-1">
+            {/* NAVEGACIÓN Y FILTROS MÓVIL (Único lugar donde aparecen los tabs) */}
+            <div className="lg:hidden flex flex-col gap-4 mb-8">
+               <div className="flex items-center gap-2">
+                 <button onClick={() => setIsFilterOpen(true)} className="w-12 h-12 flex items-center justify-center bg-[var(--color-primary)] text-black rounded-2xl shadow-lg">
+                    <LayoutGrid size={20} />
+                 </button>
+                 <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
+                    {["Películas", "Series", "Anime", "Novelas", "Reality"].map(name => (
+                      <Link 
+                        key={name} 
+                        href={`/category/${name.toLowerCase()}`}
+                        className={`px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border ${normalizeText(categoryParam) === normalizeText(name) ? 'bg-white/10 border-[var(--color-primary)] text-[var(--color-primary)]' : 'bg-white/5 border-white/10 text-white/40'}`}
+                      >
+                        {name}
+                      </Link>
+                    ))}
+                 </div>
+               </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-8 opacity-50">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{categoryMedia.length} Títulos encontrados</span>
+              <div className="h-px flex-1 mx-4 bg-white/5" />
+            </div>
+
             <AnimatePresence mode="wait">
-              {categoryMedia.length === 0 ? (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-20 bg-white/[0.02] rounded-[3rem] border border-dashed border-white/10"
-                >
-                  No se encontraron títulos.
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="grid"
-                  layout
-                  className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6"
-                >
-                  {categoryMedia.map(item => (
-                    <MediaCard key={item.id} media={item} />
-                  ))}
-                </motion.div>
-              )}
+              <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                {categoryMedia.map(item => <MediaCard key={item.id} media={item} />)}
+              </motion.div>
             </AnimatePresence>
           </main>
         </div>
       </div>
 
-      {/* MOBILE FILTER SIDEBAR */}
+      {/* MODAL MÓVIL REUTILIZANDO TU SIDEBAR */}
       {isFilterOpen && (
-        <FilterSidebar
-          singleSelects={[
-            {
-              key: "year",
-              label: "Año",
-              value: currentYear,
-              options: [
-                { value: "", label: "Todos" },
-                ...YEAR_OPTIONS.map(y => ({ value: y, label: y })),
-              ],
-            },
-          ]}
-          multiSelects={[
-            {
-              key: "genre",
-              label: "Géneros",
-              value: currentGenres,
-              options: genreOptions,
-            },
-          ]}
-          onApply={handleApplyFilters}
-          onReset={() => {
-            router.push(pathname);
-            setIsFilterOpen(false);
-          }}
-          isMobile
+        <FilterSidebar 
+          isMobile 
           onCloseMobile={() => setIsFilterOpen(false)}
+          segmentedFilters={categoryParam === "peliculas" ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] : []}
+          singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))] }]}
+          multiSelects={[{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]}
+          onApply={handleApplyFilters}
+          onReset={() => router.push(pathname)}
         />
       )}
     </div>
   );
 }
 
-// ======================================================
 function normalizeText(text?: string | null): string {
   if (!text) return "";
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -320,16 +249,8 @@ function normalizeText(text?: string | null): string {
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-[#161616ff] px-4 pt-32 max-w-7xl mx-auto">
-      <div className="h-12 w-64 bg-white/5 rounded-2xl animate-pulse mb-12" />
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="aspect-[2/3] bg-white/5 rounded-2xl animate-pulse"
-          />
-        ))}
-      </div>
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center">
+      <div className="w-12 h-12 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
