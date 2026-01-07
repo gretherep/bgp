@@ -50,15 +50,24 @@ export default function CategoryPage() {
   const [allMedia, setAllMedia] = useState<MediaWithRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const categoryParam = useMemo(() => pathname.split("/").pop() || "", [pathname]);
+  // Evitar errores de hidratación en producción
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const categoryParam = useMemo(() => pathname?.split("/").pop() || "", [pathname]);
   
-  // Extraer valores de la URL
   const currentYear = searchParams.get("year") || "";
   const currentSubtype = searchParams.get("subtype") || "todo";
   const currentGenres = useMemo(() => searchParams.get("genre")?.split(",").filter(Boolean) ?? [], [searchParams]);
 
-  // --- CONFIGURACIÓN DE FILTROS MEMOIZADA (Evita bucles infinitos) ---
+  // Lógica de Badge
+  const hasActiveFilters = useMemo(() => {
+    return currentYear !== "" || currentSubtype !== "todo" || currentGenres.length > 0;
+  }, [currentYear, currentSubtype, currentGenres]);
+
   const filterConfig = useMemo(() => {
     const years = [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))];
     return {
@@ -77,6 +86,8 @@ export default function CategoryPage() {
       try {
         const data = await getAllMedia();
         if (active) setAllMedia(data);
+      } catch (error) {
+        console.error("Error fetching media:", error);
       } finally {
         if (active) setLoading(false);
       }
@@ -111,20 +122,19 @@ export default function CategoryPage() {
   }, [categoryMedia]);
 
   const handleApplyFilters = (filters: any) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (filters.subtype && filters.subtype !== "todo") params.set("subtype", filters.subtype); else params.delete("subtype");
-    if (filters.year) params.set("year", filters.year); else params.delete("year");
-    if (filters.genre?.length > 0) params.set("genre", filters.genre.join(",")); else params.delete("genre");
+    const params = new URLSearchParams();
+    if (filters.subtype && filters.subtype !== "todo") params.set("subtype", filters.subtype);
+    if (filters.year) params.set("year", filters.year);
+    if (filters.genre?.length > 0) params.set("genre", filters.genre.join(","));
     
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
     setIsFilterOpen(false);
   };
 
-  if (loading) return <LoadingSkeleton />;
+  if (!mounted || loading) return <LoadingSkeleton />;
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
-      
       <section className="relative w-full pt-32 pb-16 overflow-hidden">
         <ShootingStars />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
@@ -136,7 +146,7 @@ export default function CategoryPage() {
             <span className="inline-block px-4 py-1.5 mb-4 text-[10px] font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20">
               Explorando Categoría
             </span>
-            <h1 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter leading-none italic uppercase">
+            <h1 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter leading-none italic uppercase text-white">
               {categoryParam.replace(/-/g, " ")}<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
                 Premium.
@@ -148,7 +158,6 @@ export default function CategoryPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 pb-20">
-        
         {topRecent.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center gap-3 mb-6">
@@ -181,15 +190,22 @@ export default function CategoryPage() {
           <main className="flex-1">
             <div className="lg:hidden flex flex-col gap-4 mb-8">
               <div className="flex items-center gap-2">
-                {/* BOTÓN FILTRO MÓVIL CON BADGE */}
-                <button
-                  onClick={() => setIsFilterOpen(true)}
-                  className="relative shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-95 transition-transform"
-                >
-                  <svg xmlns="http://www.w3.org/2000/center" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
-                  </svg>
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setIsFilterOpen(true)}
+                    className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-95 transition-transform"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/center" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
+                    </svg>
+                  </button>
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 z-30">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-[#22c55e] border-2 border-[#161214]"></span>
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
                   {["Películas", "Series", "Anime", "Novelas", "Reality"].map(name => (
@@ -212,8 +228,10 @@ export default function CategoryPage() {
 
             <AnimatePresence mode="wait">
               <motion.div 
-                key={categoryParam + currentSubtype + currentYear}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                key={categoryParam + currentSubtype + currentYear + currentGenres.join("-")}
+                initial={{ opacity: 0, y: 10 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: -10 }}
                 className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
               >
                 {categoryMedia.map(item => <MediaCard key={item.id} media={item} />)}
@@ -223,7 +241,6 @@ export default function CategoryPage() {
         </div>
       </div>
 
-      {/* MODAL MÓVIL */}
       <AnimatePresence>
         {isFilterOpen && (
           <FilterSidebar 
