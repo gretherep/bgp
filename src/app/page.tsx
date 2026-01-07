@@ -296,6 +296,7 @@ export default function HomePage() {
               <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
                 {[
                   { name: "Películas", href: "/category/peliculas" },
+                  { name: "Animados", href: "/category/animados" },
                   { name: "Series", href: "/category/series" },
                   { name: "Anime", href: "/category/anime" },
                   { name: "Novelas", href: "/category/novelas" },
