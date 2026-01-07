@@ -104,15 +104,27 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative w-full pt-28 pb-12 overflow-hidden">
         <ShootingStars />
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tighter italic">
-              BIENVENIDO A <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white uppercase">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[var(--color-primary)] blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[50%] rounded-full bg-indigo-600 blur-[100px] opacity-20" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+            <span className="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20">
+              Explora • Califica • Disfruta
+            </span>
+            <h1 className="text-4xl md:text-7xl font-black mb-6 tracking-tighter leading-none">
+              Bienvenido a <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
                 Tu Catálogo Favorito
               </span>
             </h1>
+            <p className="max-w-2xl mx-auto text-base md:text-lg text-[var(--color-accent)] font-medium leading-relaxed mb-8 px-4 text-white/70">
+              Descubre las producciones mejor valoradas por la comunidad y mantente al día con los estrenos más recientes.
+            </p>
           </motion.div>
+          <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 1, duration: 1 }} className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent mx-auto" />
         </div>
       </section>
 
