@@ -10,7 +10,7 @@ import FilterSidebar from "@/components/FilterSidebar";
 import Link from "next/link";
 import ShootingStars from "@/components/ShootingStars";
 import { genreOptions } from "@/utils/filter-options";
-import { Film, Tv, JapaneseYen, Clapperboard, Tent } from "lucide-react";
+import { Film, Tv, JapaneseYen, Clapperboard, Tent, Filter } from "lucide-react";
 
 type MediaWithRating = Media & { avg_rating: number };
 
@@ -21,6 +21,16 @@ const MOVIE_SUBTYPES = [
   { value: "pelicula", label: "Películas" },
   { value: "animada", label: "Animadas" },
 ];
+
+// FUNCIÓN DE NORMALIZACIÓN (Sincronizada para que no falle nada)
+function normalizeText(text?: string | null): string {
+  if (!text) return "";
+  return text
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: Record<string, React.ElementType> = {
@@ -52,7 +62,6 @@ export default function CategoryPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Evitar errores de hidratación en producción
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -63,21 +72,9 @@ export default function CategoryPage() {
   const currentSubtype = searchParams.get("subtype") || "todo";
   const currentGenres = useMemo(() => searchParams.get("genre")?.split(",").filter(Boolean) ?? [], [searchParams]);
 
-  // Lógica de Badge
   const hasActiveFilters = useMemo(() => {
     return currentYear !== "" || currentSubtype !== "todo" || currentGenres.length > 0;
   }, [currentYear, currentSubtype, currentGenres]);
-
-  const filterConfig = useMemo(() => {
-    const years = [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))];
-    return {
-      segmented: categoryParam === "peliculas" 
-        ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] 
-        : [],
-      single: [{ key: "year", label: "Año", value: currentYear, options: years }],
-      multi: [{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]
-    };
-  }, [categoryParam, currentSubtype, currentYear, currentGenres]);
 
   useEffect(() => {
     let active = true;
@@ -85,7 +82,7 @@ export default function CategoryPage() {
       setLoading(true);
       try {
         const data = await getAllMedia();
-        if (active) setAllMedia(data);
+        if (active) setAllMedia(data || []);
       } catch (error) {
         console.error("Error fetching media:", error);
       } finally {
@@ -96,24 +93,46 @@ export default function CategoryPage() {
     return () => { active = false; };
   }, [categoryParam]);
 
+  // LÓGICA DE FILTRADO CORREGIDA PARA MOSTRAR AMBAS CATEGORÍAS EN PELÍCULAS
   const categoryMedia = useMemo(() => {
-    let filtered = allMedia.filter((m) => {
-      const mediaCat = normalizeText(m.category);
-      const urlCat = normalizeText(categoryParam);
-      if (urlCat === "peliculas") return mediaCat.includes("pelicula");
-      return mediaCat === urlCat;
-    });
+    if (!allMedia.length) return [];
+    
+    const urlCat = normalizeText(categoryParam);
 
-    if (categoryParam === "peliculas" && currentSubtype !== "todo") {
-      if (currentSubtype === "animada") filtered = filtered.filter(m => normalizeText(m.category).includes("animada"));
-      else if (currentSubtype === "pelicula") filtered = filtered.filter(m => !normalizeText(m.category).includes("animada"));
-    }
-    if (currentYear) filtered = filtered.filter(m => m.year?.toString() === currentYear);
-    if (currentGenres.length > 0) {
-      filtered = filtered.filter(m => currentGenres.some(g => normalizeText(m.genre).includes(normalizeText(g))));
-    }
-    return filtered;
-  }, [allMedia, categoryParam, currentYear, currentGenres, currentSubtype]);
+    return allMedia.filter((m) => {
+      const mCat = normalizeText(m.category || "");
+      const mGenre = normalizeText(m.genre || "");
+
+      // 1. FILTRADO POR CATEGORÍA BASE
+      if (urlCat === "peliculas") {
+        // Acepta cualquier categoría que contenga "pelicula" (Peliculas y Peliculas Animadas)
+        if (!mCat.includes("pelicula")) return false;
+
+        // Filtro por Subtipo si el usuario lo pide
+        if (currentSubtype === "animada") {
+          if (!mCat.includes("animada")) return false;
+        } 
+        else if (currentSubtype === "pelicula") {
+          // Excluye las que digan "animada" para dejar solo imagen real
+          if (mCat.includes("animada")) return false;
+        }
+      } else {
+        // Para el resto (series, anime...), match exacto
+        if (mCat !== urlCat) return false;
+      }
+
+      // 2. FILTRO DE AÑO
+      if (currentYear && m.year?.toString() !== currentYear) return false;
+
+      // 3. FILTRO DE GÉNEROS
+      if (currentGenres.length > 0) {
+        const hasGenre = currentGenres.some(g => mGenre.includes(normalizeText(g)));
+        if (!hasGenre) return false;
+      }
+
+      return true;
+    });
+  }, [allMedia, categoryParam, currentYear, currentSubtype, JSON.stringify(currentGenres)]);
 
   const topRecent = useMemo(() => {
     return [...categoryMedia]
@@ -127,9 +146,20 @@ export default function CategoryPage() {
     if (filters.year) params.set("year", filters.year);
     if (filters.genre?.length > 0) params.set("genre", filters.genre.join(","));
     
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     setIsFilterOpen(false);
   };
+
+  const filterConfig = useMemo(() => {
+    const years = [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))];
+    return {
+      segmented: categoryParam === "peliculas" 
+        ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] 
+        : [],
+      single: [{ key: "year", label: "Año", value: currentYear, options: years }],
+      multi: [{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]
+    };
+  }, [categoryParam, currentSubtype, currentYear, currentGenres]);
 
   if (!mounted || loading) return <LoadingSkeleton />;
 
@@ -158,7 +188,7 @@ export default function CategoryPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 pb-20">
-        {topRecent.length > 0 && (
+        {topRecent.length > 0 && !hasActiveFilters && (
           <section className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-1.5 h-6 bg-[var(--color-primary)] rounded-full shadow-[0_0_10px_rgba(249,195,164,0.5)]" />
@@ -195,9 +225,7 @@ export default function CategoryPage() {
                     onClick={() => setIsFilterOpen(true)}
                     className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-95 transition-transform"
                   >
-                    <svg xmlns="http://www.w3.org/2000/center" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
-                    </svg>
+                    <Filter size={20} />
                   </button>
                   {hasActiveFilters && (
                     <span className="absolute -top-1 -right-1 flex h-3 w-3 z-30">
@@ -227,15 +255,21 @@ export default function CategoryPage() {
             </div>
 
             <AnimatePresence mode="wait">
-              <motion.div 
-                key={categoryParam + currentSubtype + currentYear + currentGenres.join("-")}
-                initial={{ opacity: 0, y: 10 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                exit={{ opacity: 0, y: -10 }}
-                className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
-              >
-                {categoryMedia.map(item => <MediaCard key={item.id} media={item} />)}
-              </motion.div>
+              {categoryMedia.length > 0 ? (
+                <motion.div 
+                  key={categoryParam + currentSubtype + currentYear + JSON.stringify(currentGenres)}
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: -10 }}
+                  className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+                >
+                  {categoryMedia.map(item => <MediaCard key={item.id} media={item} />)}
+                </motion.div>
+              ) : (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 opacity-30 text-xs uppercase tracking-widest font-black">
+                  No se encontraron resultados
+                </motion.div>
+              )}
             </AnimatePresence>
           </main>
         </div>
@@ -259,11 +293,6 @@ export default function CategoryPage() {
       </AnimatePresence>
     </div>
   );
-}
-
-function normalizeText(text?: string | null): string {
-  if (!text) return "";
-  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function LoadingSkeleton() {
