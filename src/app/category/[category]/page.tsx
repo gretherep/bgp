@@ -20,6 +20,28 @@ function normalizeText(text?: string | null): string {
   if (!text) return "";
   return text.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
+const TopRecentCarousel = ({ media }: { media: MediaWithRating[] }) => (
+  <section className="mb-12 mt-10">
+    <div className="flex items-center gap-3 mb-6">
+      <div className="p-2 rounded-xl bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" />
+        </svg>
+      </div>
+      <h2 className="text-2xl font-black text-white tracking-tight uppercase italic">
+        Agregados <span className="text-[var(--color-primary)]">Recientemente</span>
+      </h2>
+    </div>
+
+    <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide snap-x">
+      {media.map(m => (
+        <motion.div key={m.id} whileHover={{ y: -8 }} className="flex-shrink-0 w-40 sm:w-48 snap-start group">
+          <MediaCard media={m} />
+        </motion.div>
+      ))}
+    </div>
+  </section>
+);
 
 export default function CategoryPage() {
   const pathname = usePathname();
@@ -96,6 +118,12 @@ const categoryMedia = useMemo(() => {
     });
   }, [allMedia, categoryParam, currentYear, JSON.stringify(currentGenres)]);
 
+    const top5Recent = useMemo(() => {
+    return [...categoryMedia]
+      .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime())
+      .slice(0, 8);
+  }, [categoryMedia]);
+
   const handleApplyFilters = (filters: any) => {
     const params = new URLSearchParams();
     if (filters.year) params.set("year", filters.year);
@@ -124,6 +152,8 @@ const categoryMedia = useMemo(() => {
               </span>
             </h1>
           </motion.div>
+             {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
+
         </div>
       </section>
 
