@@ -8,6 +8,7 @@ import { useToast } from "@/app/context/ToastContext";
 import { useUserMediaRating } from "@/hooks/useUserMediaRating";
 import { Languages, X, Layers } from "lucide-react"; 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function MediaModal() {
   const { selectedMedia, closeModal } = useMediaModal();
@@ -81,15 +82,22 @@ export default function MediaModal() {
         </button>
 
         <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8 overflow-y-auto max-h-[90vh] no-scrollbar">
-          <div className="md:w-1/3 flex-shrink-0">
-            <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#0e0e0e] border border-white/10 shadow-2xl shadow-black">
+<div className="md:w-1/3 flex-shrink-0">
+            <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#0e0e0e] border border-white/10 shadow-2xl shadow-black relative">
               {imageError || !selectedMedia.poster_url ? (
                 <div className="flex flex-col items-center justify-center h-full text-center p-2">
                   <div className="text-4xl mb-2">🎬</div>
                   <span className="text-indigo-400 text-xs font-bold">Sin póster</span>
                 </div>
               ) : (
-                <img src={selectedMedia.poster_url} alt={selectedMedia.title} className="w-full h-full object-cover" onError={() => setImageError(true)} />
+                <Image 
+                  src={selectedMedia.poster_url} 
+                  alt={selectedMedia.title} 
+                  fill
+                  unoptimized={true} // <--- CLAVE: No gasta transformaciones
+                  className="object-cover"
+                  onError={() => setImageError(true)} 
+                />
               )}
             </div>
           </div>

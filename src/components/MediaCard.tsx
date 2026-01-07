@@ -38,6 +38,7 @@ export default function MediaCard({ media, index = 0 }: MediaCardProps) {
           src={media.poster_url || "https://placehold.co/300x450/161616/DCDAD9?text=Sin+Poster"}
           alt={media.title}
           fill
+          unoptimized={true}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           sizes="(max-width: 768px) 50vw, 300px"
           priority={index < 5}

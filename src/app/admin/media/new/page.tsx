@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Loader2, X, ArrowLeft, Plus, ImageIcon, Star, Languages, Layers } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { Media } from "@/app/models/media";
+import imageCompression from 'browser-image-compression';
 // Importamos tu interfaz para no repetir código
 
 
@@ -89,23 +90,45 @@ export default function CreateMediaPage() {
     setFormData((prev) => ({ ...prev, poster_url: "" }));
   };
 
-  const uploadPoster = async (file: File, newRecordId: string): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${newRecordId}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(POSTER_BUCKET)
-      .upload(filePath, file, { cacheControl: "3600", upsert: true });
-
-    if (uploadError) throw new Error("Error al subir imagen: " + uploadError.message);
-
-    const { data: publicUrlData } = supabase.storage
-      .from(POSTER_BUCKET)
-      .getPublicUrl(filePath);
-
-    return publicUrlData.publicUrl;
+const uploadPoster = async (file: File, newRecordId: string): Promise<string> => {
+  // --- NUEVA LÓGICA DE COMPRESIÓN ---
+  const options = {
+    maxSizeMB: 0.2,           // Máximo 200KB (ideal para posters nítidos pero ligeros)
+    maxWidthOrHeight: 800,    // El alto máximo será 800px
+    useWebWorker: true,
+    fileType: 'image/webp'    // Convertimos a WebP (ahorra muchísimo espacio)
   };
+
+  let fileToUpload = file;
+  
+  try {
+    // Comprimimos antes de subir
+    fileToUpload = await imageCompression(file, options);
+  } catch (error) {
+    console.error("Error comprimiendo imagen, se subirá original:", error);
+  }
+  // ----------------------------------
+
+  // Cambiamos la extensión a .webp porque la librería lo convirtió
+  const fileName = `${newRecordId}.webp`; 
+  const filePath = `${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(POSTER_BUCKET)
+    .upload(filePath, fileToUpload, { 
+      cacheControl: "3600", 
+      upsert: true,
+      contentType: 'image/webp' // Aseguramos el tipo de contenido
+    });
+
+  if (uploadError) throw new Error("Error al subir imagen: " + uploadError.message);
+
+  const { data: publicUrlData } = supabase.storage
+    .from(POSTER_BUCKET)
+    .getPublicUrl(filePath);
+
+  return publicUrlData.publicUrl;
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

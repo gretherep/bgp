@@ -13,6 +13,7 @@ import FilterSidebar from "@/components/FilterSidebar";
 import ShootingStars from "@/components/ShootingStars";
 import { categoryOptions, genreOptions } from "@/utils/filter-options";
 import Link from "next/link";
+import Image from "next/image";
 
 import 'swiper/css';
 import 'swiper/css/autoplay';
@@ -22,7 +23,7 @@ type MediaItem = Media & { avg_rating?: number | null };
 
 export default function HomePage() {
   const [allMedia, setAllMedia] = useState<MediaItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading,] = useState(true);
   const { openModal } = useMediaModal();
 
   const [page, setPage] = useState(1);
@@ -135,43 +136,73 @@ export default function HomePage() {
             <span className="bg-[var(--color-primary)] text-black px-2 py-0.5 rounded-md transform -rotate-2 italic">TOP 10</span>
             LO MÁS VISTO
           </h2>
-          <Swiper
-                modules={[FreeMode, Autoplay]}
-                grabCursor
-                slidesPerView={1.3}
-                spaceBetween={16}
-                loop={topRated.length > 5}
-                autoplay={{ delay: 2500, disableOnInteraction: false }}
-                speed={800}
-                breakpoints={{
-                  480: { slidesPerView: 2.2, spaceBetween: 20 },
-                  768: { slidesPerView: 3.5, spaceBetween: 25 },
-                  1024: { slidesPerView: 4.5, spaceBetween: 30 },
-                }}
-                className="!overflow-visible py-5"
-              >
-                {topRated.map((media, index) => (
-                  <SwiperSlide key={`top-${media.id}`}>
-                    <motion.div 
-                      whileTap={{ scale: 0.95 }} 
-                      className="relative group cursor-pointer"
-                      onClick={() => openModal(media)}
-                    >
-                      <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
-                        <img
-                          src={media.poster_url || "/placeholder.jpg"}
-                          alt={media.title}
-                          className="w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t  to-transparent" />
-                        <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 z-20">
-                          <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </SwiperSlide>
+          <div className="relative w-full overflow-visible">
+            {loading ? (
+              <div className="flex gap-4 overflow-hidden">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="min-w-[180px] h-[280px] bg-white/5 rounded-[2rem] animate-pulse" />
                 ))}
+              </div>
+            ) : (
+          <Swiper
+            modules={[FreeMode, Autoplay]}
+            grabCursor
+            slidesPerView={1.3}
+            spaceBetween={16}
+            loop={topRated.length > 5}
+            // 1. VELOCIDAD PROFESIONAL: Transiciones de 1.2 segundos para mayor elegancia
+            speed={1200} 
+            autoplay={{ 
+              delay: 2500, // Un poco más de tiempo para apreciar el poster
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true 
+            }}
+            // 2. FÍSICA MEJORADA
+            freeMode={{
+              enabled: true,
+              sticky: true,
+              momentumRatio: 0.5,
+            }}
+            breakpoints={{
+              480: { slidesPerView: 2.2, spaceBetween: 20 },
+              768: { slidesPerView: 3.5, spaceBetween: 25 },
+              1024: { slidesPerView: 4.5, spaceBetween: 30 },
+            }}
+            className="!overflow-visible py-5"
+          >
+            {topRated.map((media, index) => (
+              <SwiperSlide key={`top-${media.id}`}>
+                <motion.div 
+                  whileHover={{ y: -12, scale: 1.03 }} // Elevación más pronunciada al estilo Netflix
+                  whileTap={{ scale: 0.95 }} 
+                  className="relative group cursor-pointer"
+                  onClick={() => openModal(media)}
+                >
+                  <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-shadow duration-500 group-hover:shadow-[var(--color-primary)]/10">
+                    
+                    {/* 3. OPTIMIZACIÓN VERCEL: Uso de next/image con unoptimized */}
+                    <Image
+                      src={media.poster_url || "/placeholder.jpg"}
+                      alt={media.title}
+                      fill
+                      unoptimized={true} // <--- Detiene el consumo de tu cuota de 5k
+                      className="object-cover opacity-95 transition-transform duration-1000 ease-out group-hover:scale-110"
+                    />
+
+                    {/* Overlay sutil */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                    
+                    {/* Badge TOP con degradado */}
+                    <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 z-20 shadow-lg">
+                      <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </SwiperSlide>
+            ))}
           </Swiper>
+                      )}
+          </div>
         </section>
 
         <div className="my-10 h-px bg-white/10" id="main-content-anchor"></div>
