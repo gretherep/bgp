@@ -5,8 +5,6 @@ import { supabase } from "@/utils/supabaseClient";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
 import MediaCard from "@/components/MediaCard";
-import MediaModal from "@/components/MediaModal"; 
-import { useMediaModal } from "@/app/context/MediaModalContext"; // Importamos tu contexto
 import { Media } from "@/app/models/media";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterSidebar from "@/components/FilterSidebar";
@@ -28,9 +26,6 @@ export default function HomePage() {
   const [loadingRecent, setLoadingRecent] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Extraemos la función openModal de tu contexto
-  const { openModal } = useMediaModal();
-
   // Estados de Paginación y Filtros
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -42,7 +37,7 @@ export default function HomePage() {
   const [filterGenre, setFilterGenre] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // 1. EFECTO CARGA INICIAL: Solo para el Top 10
+  // 1. EFECTO CARGA INICIAL: Solo para el Top 10 (Se ejecuta una sola vez)
   useEffect(() => {
     fetchTopRated();
   }, []);
@@ -52,7 +47,7 @@ export default function HomePage() {
     fetchRecent();
   }, [page, filterTitle, filterYear, filterCategory, filterGenre]);
 
-  /** ⭐ FETCH TOP 10 */
+  /** ⭐ FETCH TOP 10 (Independiente) */
   async function fetchTopRated() {
     setLoadingTop(true);
     try {
@@ -98,7 +93,7 @@ export default function HomePage() {
     }
   }
 
-  /** ⭐ FETCH RECIENTES */
+  /** ⭐ FETCH RECIENTES (Con lógica anti-recarga total) */
   async function fetchRecent() {
     setLoadingRecent(true);
     const from = (page - 1) * pageSize;
@@ -119,6 +114,7 @@ export default function HomePage() {
       if (filterGenre.length) query = query.in("genre", filterGenre);
 
       const { data, error, count } = await query;
+
       if (error) throw error;
 
       setRecent(data as MediaItem[]);
@@ -127,6 +123,7 @@ export default function HomePage() {
       console.error("Error loading recent:", error);
     } finally {
       setLoadingRecent(false);
+      // Solo scroll si no es la primera carga
       if (page > 1 || filterTitle || filterCategory.length > 0) {
         const element = document.getElementById("main-content-anchor");
         if (element) {
@@ -165,9 +162,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)] overflow-x-hidden">
       
-      {/* EL MODAL INTELIGENTE (Usa contexto, no props) */}
-      <MediaModal />
-
       {/* SECCIÓN HERO */}
       <section className="relative w-full pt-28 pb-12 overflow-hidden">
         <ShootingStars />
@@ -191,13 +185,18 @@ export default function HomePage() {
               Descubre las producciones mejor valoradas por la comunidad y mantente al día con los estrenos más recientes.
             </p>
           </motion.div>
-          <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 1, duration: 1 }} className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent mx-auto" />
+                    <motion.div 
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1, duration: 1 }}
+              className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent mx-auto"
+            />
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* ⭐ SECCIÓN TOP 10 */}
+        {/* ⭐ SECCIÓN TOP 10 (ESTÁTICA DURANTE PAGINACIÓN) */}
         <section className="mb-14 mt-8 relative z-10">
           <div className="flex items-center justify-between mb-6 px-2 sm:px-0">
             <div>
@@ -233,11 +232,7 @@ export default function HomePage() {
               >
                 {topRated.map((media, index) => (
                   <SwiperSlide key={`top-${media.id}`}>
-                    <motion.div 
-                      whileTap={{ scale: 0.95 }} 
-                      className="relative group cursor-pointer"
-                      onClick={() => openModal(media)} // <--- ESTO ACTIVA TU MEDIA MODAL
-                    >
+                    <motion.div whileTap={{ scale: 0.95 }} className="relative group cursor-pointer">
                       <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
                         <img
                           src={media.poster_url || "/placeholder.jpg"}
@@ -271,7 +266,6 @@ export default function HomePage() {
           {/* SIDEBAR DESKTOP */}
           <div className="hidden lg:block">
             <FilterSidebar
-              textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
               singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
               multiSelects={[
                 { key: "category", label: "Categorías", value: filterCategory, options: categoryOptions },
@@ -295,12 +289,12 @@ export default function HomePage() {
               </button>
               <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
                 {[
-                  { name: "Películas", href: "/category/peliculas" },
-                  { name: "Series", href: "/category/series" },
-                  { name: "Anime", href: "/category/anime" },
-                  { name: "Novelas", href: "/category/novelas" },
-                  { name: "Reality", href: "/category/reality" },
-                  { name: "Info", href: "/descripcion" },
+                  { name: "Películas", href: "/category/peliculas", icon: "🎬" },
+                  { name: "Series", href: "/category/series", icon: "📺" },
+                  { name: "Anime", href: "/category/anime", icon: "🍱" },
+                  { name: "Novelas", href: "/category/novelas", icon: "🎭" },
+                  { name: "Reality", href: "/category/reality", icon: "✨" },
+                  { name: "Info", href: "/descripcion", icon: "📝" },
                 ].map((item) => (
                   <Link key={item.name} href={item.href} className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.05] border border-white/10 rounded-xl whitespace-nowrap">
                     <span className="text-xs font-bold text-white/90">{item.name}</span>
@@ -310,7 +304,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 📺 SECCIÓN RECIENTES */}
+          {/* 📺 SECCIÓN RECIENTES (ÚNICA QUE SE ACTUALIZA) */}
           <main className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center">
@@ -351,7 +345,7 @@ export default function HomePage() {
                   </motion.div>
                 )}
 
-                {/* PAGINACIÓN */}
+                {/* PAGINACIÓN ESTILIZADA */}
                 {recent.length > 0 && (
                   <div className="flex flex-col items-center gap-4 mt-12 md:mt-16 pb-12">
                     <p className="text-[var(--color-accent)] text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60">
@@ -364,6 +358,9 @@ export default function HomePage() {
                         onClick={() => setPage(page - 1)}
                         className="group flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl font-bold bg-white/5 border border-white/10 text-white disabled:opacity-20"
                       >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
                         <span className="hidden sm:inline">Anterior</span>
                       </button>
                       
@@ -379,6 +376,9 @@ export default function HomePage() {
                         className="group flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl font-bold bg-[var(--color-primary)] text-black disabled:opacity-20"
                       >
                         <span className="hidden sm:inline">Siguiente</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -391,7 +391,6 @@ export default function HomePage() {
         {/* SIDEBAR MÓVIL */}
         {isFilterOpen && (
           <FilterSidebar
-            textInputs={[{ key: "title", label: "Título", value: filterTitle }]}
             singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: yearOptions }]}
             multiSelects={[
               { key: "category", label: "Categorías", value: filterCategory, options: categoryOptions },

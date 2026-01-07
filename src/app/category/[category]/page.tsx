@@ -10,7 +10,7 @@ import FilterSidebar from "@/components/FilterSidebar";
 import Link from "next/link";
 import ShootingStars from "@/components/ShootingStars";
 import { genreOptions } from "@/utils/filter-options";
-import { Sparkles, LayoutGrid, Film, Tv, Tent, JapaneseYen, Clapperboard } from "lucide-react";
+import { Film, Tv, JapaneseYen, Clapperboard, Tent } from "lucide-react";
 
 type MediaWithRating = Media & { avg_rating: number };
 
@@ -22,9 +22,6 @@ const MOVIE_SUBTYPES = [
   { value: "animada", label: "Animadas" },
 ];
 
-// ======================================================
-// COMPONENTE: ICONO ANIMADO FLOTANTE
-// ======================================================
 const CategoryIcon = ({ category }: { category: string }) => {
   const icons: Record<string, React.ElementType> = {
     peliculas: Film,
@@ -33,20 +30,11 @@ const CategoryIcon = ({ category }: { category: string }) => {
     novelas: Clapperboard,
     reality: Tent,
   };
-
   const IconComponent = icons[normalizeText(category)] || Film;
-
   return (
     <motion.div 
-      animate={{ 
-        y: [0, -15, 0],
-        rotate: [0, 5, 0]
-      }}
-      transition={{ 
-        duration: 4, 
-        repeat: Infinity, 
-        ease: "easeInOut" 
-      }}
+      animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       className="hidden md:block absolute right-10 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none"
     >
       <IconComponent size={200} strokeWidth={0.5} className="text-[var(--color-primary)]" />
@@ -64,9 +52,23 @@ export default function CategoryPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const categoryParam = useMemo(() => pathname.split("/").pop() || "", [pathname]);
+  
+  // Extraer valores de la URL
   const currentYear = searchParams.get("year") || "";
   const currentSubtype = searchParams.get("subtype") || "todo";
-  const currentGenres = useMemo(() => searchParams.get("genre")?.split(",") ?? [], [searchParams]);
+  const currentGenres = useMemo(() => searchParams.get("genre")?.split(",").filter(Boolean) ?? [], [searchParams]);
+
+  // --- CONFIGURACIÓN DE FILTROS MEMOIZADA (Evita bucles infinitos) ---
+  const filterConfig = useMemo(() => {
+    const years = [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))];
+    return {
+      segmented: categoryParam === "peliculas" 
+        ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] 
+        : [],
+      single: [{ key: "year", label: "Año", value: currentYear, options: years }],
+      multi: [{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]
+    };
+  }, [categoryParam, currentSubtype, currentYear, currentGenres]);
 
   useEffect(() => {
     let active = true;
@@ -90,7 +92,7 @@ export default function CategoryPage() {
       if (urlCat === "peliculas") return mediaCat.includes("pelicula");
       return mediaCat === urlCat;
     });
-    // ... (lógica de filtrado se mantiene igual)
+
     if (categoryParam === "peliculas" && currentSubtype !== "todo") {
       if (currentSubtype === "animada") filtered = filtered.filter(m => normalizeText(m.category).includes("animada"));
       else if (currentSubtype === "pelicula") filtered = filtered.filter(m => !normalizeText(m.category).includes("animada"));
@@ -113,7 +115,8 @@ export default function CategoryPage() {
     if (filters.subtype && filters.subtype !== "todo") params.set("subtype", filters.subtype); else params.delete("subtype");
     if (filters.year) params.set("year", filters.year); else params.delete("year");
     if (filters.genre?.length > 0) params.set("genre", filters.genre.join(",")); else params.delete("genre");
-    router.push(`${pathname}?${params.toString()}`);
+    
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
     setIsFilterOpen(false);
   };
 
@@ -122,43 +125,30 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
       
-      {/* 1. HERO SECTION (ESTILO HOME) */}
       <section className="relative w-full pt-32 pb-16 overflow-hidden">
         <ShootingStars />
-        {/* Orbes de luz idénticos al Home */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] rounded-full bg-[var(--color-primary)] blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[50%] rounded-full bg-indigo-600 blur-[100px] opacity-20" />
         </div>
 
         <div className="max-w-7xl mx-auto px-6 sm:px-8 relative">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
             <span className="inline-block px-4 py-1.5 mb-4 text-[10px] font-bold tracking-widest uppercase bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full border border-[var(--color-primary)]/20">
               Explorando Categoría
             </span>
             <h1 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter leading-none italic uppercase">
               {categoryParam.replace(/-/g, " ")}<br />
-              {/* <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] via-[#f9c3a4] to-white">
                 Premium.
-              </span> */}
+              </span>
             </h1>
-            <p className="text-base md:text-lg text-[var(--color-accent)] font-medium leading-relaxed max-w-xl">
-              Descubre nuestra selección curada de {categoryParam}. Filtrado por calidad y las mejores valoraciones.
-            </p>
           </motion.div>
-
           <CategoryIcon category={categoryParam} />
         </div>
       </section>
 
-      {/* 2. ZONA DE CONTENIDO (Fondo igual al Home) */}
       <div className="max-w-7xl mx-auto px-6 sm:px-8 pb-20">
         
-        {/* RECIENTES (Igual estilo que el Home) */}
         {topRecent.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center gap-3 mb-6">
@@ -172,53 +162,60 @@ export default function CategoryPage() {
                 </div>
               ))}
             </div>
-            <div className="h-px w-full bg-white/5 mt-8" />
           </section>
         )}
 
         <div className="flex flex-col lg:flex-row gap-12 mt-10">
-          {/* SIDEBAR DESKTOP */}
           <aside className="hidden lg:block shrink-0">
             <div className="sticky top-32">
               <FilterSidebar 
-                segmentedFilters={categoryParam === "peliculas" ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] : []}
-                singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))] }]}
-                multiSelects={[{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]}
+                segmentedFilters={filterConfig.segmented}
+                singleSelects={filterConfig.single}
+                multiSelects={filterConfig.multi}
                 onApply={handleApplyFilters}
                 onReset={() => router.push(pathname)}
               />
             </div>
           </aside>
 
-          {/* MAIN */}
           <main className="flex-1">
-            {/* NAVEGACIÓN Y FILTROS MÓVIL (Único lugar donde aparecen los tabs) */}
             <div className="lg:hidden flex flex-col gap-4 mb-8">
-               <div className="flex items-center gap-2">
-                 <button onClick={() => setIsFilterOpen(true)} className="w-12 h-12 flex items-center justify-center bg-[var(--color-primary)] text-black rounded-2xl shadow-lg">
-                    <LayoutGrid size={20} />
-                 </button>
-                 <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
-                    {["Películas", "Series", "Anime", "Novelas", "Reality"].map(name => (
-                      <Link 
-                        key={name} 
-                        href={`/category/${name.toLowerCase()}`}
-                        className={`px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border ${normalizeText(categoryParam) === normalizeText(name) ? 'bg-white/10 border-[var(--color-primary)] text-[var(--color-primary)]' : 'bg-white/5 border-white/10 text-white/40'}`}
-                      >
-                        {name}
-                      </Link>
-                    ))}
-                 </div>
-               </div>
+              <div className="flex items-center gap-2">
+                {/* BOTÓN FILTRO MÓVIL CON BADGE */}
+                <button
+                  onClick={() => setIsFilterOpen(true)}
+                  className="relative shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--color-primary)] text-black shadow-lg active:scale-95 transition-transform"
+                >
+                  <svg xmlns="http://www.w3.org/2000/center" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v5.882a1 1 0 01-.76 1.057l-2.983.596A1 1 0 018 20.5v-5.882a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
+                  </svg>
+                </button>
+
+                <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar">
+                  {["Películas", "Series", "Anime", "Novelas", "Reality"].map(name => (
+                    <Link 
+                      key={name} 
+                      href={`/category/${name.toLowerCase()}`}
+                      className={`px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap border ${normalizeText(categoryParam) === normalizeText(name) ? 'bg-white/10 border-[var(--color-primary)] text-[var(--color-primary)]' : 'bg-white/5 border-white/10 text-white/40'}`}
+                    >
+                      {name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between mb-8 opacity-50">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{categoryMedia.length} Títulos encontrados</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{categoryMedia.length} Títulos</span>
               <div className="h-px flex-1 mx-4 bg-white/5" />
             </div>
 
             <AnimatePresence mode="wait">
-              <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              <motion.div 
+                key={categoryParam + currentSubtype + currentYear}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+              >
                 {categoryMedia.map(item => <MediaCard key={item.id} media={item} />)}
               </motion.div>
             </AnimatePresence>
@@ -226,18 +223,23 @@ export default function CategoryPage() {
         </div>
       </div>
 
-      {/* MODAL MÓVIL REUTILIZANDO TU SIDEBAR */}
-      {isFilterOpen && (
-        <FilterSidebar 
-          isMobile 
-          onCloseMobile={() => setIsFilterOpen(false)}
-          segmentedFilters={categoryParam === "peliculas" ? [{ key: "subtype", label: "Contenido", value: currentSubtype, options: MOVIE_SUBTYPES }] : []}
-          singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))] }]}
-          multiSelects={[{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]}
-          onApply={handleApplyFilters}
-          onReset={() => router.push(pathname)}
-        />
-      )}
+      {/* MODAL MÓVIL */}
+      <AnimatePresence>
+        {isFilterOpen && (
+          <FilterSidebar 
+            isMobile 
+            onCloseMobile={() => setIsFilterOpen(false)}
+            segmentedFilters={filterConfig.segmented}
+            singleSelects={filterConfig.single}
+            multiSelects={filterConfig.multi}
+            onApply={handleApplyFilters}
+            onReset={() => {
+              router.push(pathname);
+              setIsFilterOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
