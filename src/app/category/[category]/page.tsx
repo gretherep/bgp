@@ -50,11 +50,12 @@ export default function CategoryPage() {
     fetchData();
   }, [categoryParam]);
 
-  const categoryMedia = useMemo(() => {
+const categoryMedia = useMemo(() => {
     if (!allMedia.length) return [];
     const urlParam = normalizeText(categoryParam);
 
-    return allMedia.filter((m) => {
+    const filtered = allMedia.filter((m) => {
+      // 1. Lógica de Categoría (Tu lógica original de normalización)
       const mCat = normalizeText(m.category || "");
       if (urlParam === "animados") {
         if (!mCat.includes("animada")) return false;
@@ -63,12 +64,35 @@ export default function CategoryPage() {
       } else {
         if (mCat !== urlParam) return false;
       }
+
+      // 2. Filtro de Año
       if (currentYear && m.year?.toString() !== currentYear) return false;
+
+      // 3. FILTRO DE GÉNEROS (CORREGIDO)
       if (currentGenres.length > 0) {
-        const mGenre = normalizeText(m.genre || "");
-        if (!currentGenres.some(g => mGenre.includes(normalizeText(g)))) return false;
+        // Convertimos "terror-ficcion" en ["terror", "ficcion"]
+        const mediaGenresArray = m.genre 
+          ? normalizeText(m.genre).split(/[- ,]+/) 
+          : [];
+        
+        // Verificamos si AL MENOS UNO de los géneros seleccionados en el filtro
+        // está incluido en el array de géneros de la película
+        const hasMatch = currentGenres.some(g => 
+          mediaGenresArray.includes(normalizeText(g))
+        );
+        
+        if (!hasMatch) return false;
       }
+
       return true;
+    });
+
+    // 4. Ordenamiento
+    return filtered.sort((a, b) => {
+      if (a.estreno === b.estreno) {
+        return (Number(b.year) || 0) - (Number(a.year) || 0);
+      }
+      return a.estreno ? -1 : 1;
     });
   }, [allMedia, categoryParam, currentYear, JSON.stringify(currentGenres)]);
 

@@ -26,6 +26,7 @@ export interface Media {
     | 'Películas Anime';
   created_at: string;
   updated_at: string;
+  seasons?: number | null;
 }
 
 export interface Rating {

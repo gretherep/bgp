@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation"; // ✅ Importado useSearchParams
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 import Image from "next/image";
-import { Upload, ImageIcon, Loader2, X, ArrowLeft, Star, Languages } from "lucide-react";
+import { Upload, ImageIcon, Loader2, X, ArrowLeft, Star, Languages, Layers } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
+import { Media } from "@/app/models/media";
+// Importamos tu interfaz real
+
 
 const POSTER_BUCKET = "posters";
 
@@ -14,14 +17,19 @@ const categories = [
   "Series Animadas", "Películas Animadas", "Anime", "Películas Anime",
 ];
 
+// Reutilizamos la lógica de tipos: Omitimos lo innecesario y convertimos números a string para los inputs
+type MediaFormState = Omit<Media, "id" | "created_at" | "updated_at" | "slug" | "year" | "seasons"> & {
+  year: string;
+  seasons: string;
+};
+
 export default function EditMediaPage() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams(); // ✅ Inicializado para leer la URL
+  const searchParams = useSearchParams();
   const id = params.id as string;
   const { showToast } = useToast();
 
-  // ✅ CAPTURAMOS LOS PARÁMETROS DE RETORNO (Página y Búsqueda)
   const returnPage = searchParams.get("returnPage") || "1";
   const returnSearch = searchParams.get("returnSearch") || "";
 
@@ -30,32 +38,32 @@ export default function EditMediaPage() {
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<MediaFormState>({
     title: "",
     synopsis: "",
     poster_url: "",
-    genre: "",
+    genre: "" as any,
     year: "",
-    category: "",
+    category: "" as any,
     idioma: "",
     estreno: false,
+    seasons: "", // ✅ Ahora incluido
   });
 
-  // ✅ FUNCIÓN DE NAVEGACIÓN INTELIGENTE
-  // Esta función construye la URL de vuelta con los parámetros guardados
+  // Lógica para mostrar temporadas (igual que en Create)
+  const showSeasonsField = useMemo(() => {
+    const cat = formData.category?.toLowerCase() || "";
+    return cat.includes("serie") || cat.includes("anime") || cat.includes("novela") || cat.includes("reality");
+  }, [formData.category]);
+
   const handleGoBack = useCallback(() => {
     const params = new URLSearchParams();
     params.set("page", returnPage);
     if (returnSearch) params.set("search", returnSearch);
-    
     router.push(`/admin/media?${params.toString()}`);
   }, [router, returnPage, returnSearch]);
 
-  useEffect(() => {
-    fetchMedia();
-  }, [id]);
-
-  const fetchMedia = async () => {
+  const fetchMedia = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("media")
@@ -65,24 +73,31 @@ export default function EditMediaPage() {
 
       if (error) throw error;
 
-      setFormData({
-        title: data.title,
-        synopsis: data.synopsis,
-        poster_url: data.poster_url || "",
-        genre: data.genre,
-        year: data.year.toString(),
-        category: data.category,
-        idioma: data.idioma || "",
-        estreno: !!data.estreno,
-      });
-      setImagePreviewUrl(data.poster_url || null);
+      if (data) {
+        setFormData({
+          title: data.title,
+          synopsis: data.synopsis,
+          poster_url: data.poster_url || "",
+          genre: data.genre,
+          year: data.year.toString(),
+          category: data.category,
+          idioma: data.idioma || "",
+          estreno: !!data.estreno,
+          seasons: data.seasons?.toString() || "", // ✅ Mapeo de temporadas
+        });
+        setImagePreviewUrl(data.poster_url || null);
+      }
     } catch (err: any) {
       showToast(`Error: ${err.message}`, true);
-      handleGoBack(); // Si falla la carga, volvemos a la tabla
+      handleGoBack();
     } finally {
       setFetchLoading(false);
     }
-  };
+  }, [id, handleGoBack, showToast]);
+
+  useEffect(() => {
+    fetchMedia();
+  }, [fetchMedia]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -140,18 +155,17 @@ export default function EditMediaPage() {
           synopsis: formData.synopsis,
           poster_url: finalPosterUrl || null,
           genre: formData.genre,
-          year: parseInt(formData.year),
+          year: parseInt(formData.year) || 0,
           category: formData.category,
           idioma: formData.idioma || null,
           estreno: formData.estreno,
+          seasons: showSeasonsField ? (parseInt(formData.seasons) || null) : null, // ✅ Actualización de temporadas
         })
         .eq("id", id);
 
       if (error) throw error;
 
       showToast("¡Contenido actualizado correctamente!", false);
-      
-      // ✅ IMPORTANTE: Al terminar, usamos nuestra función para volver a la página correcta
       handleGoBack(); 
 
     } catch (err: any) {
@@ -172,7 +186,6 @@ export default function EditMediaPage() {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8 min-h-screen bg-gray-950">
       <div className="mb-8 mt-6">
-        {/* ✅ CAMBIO: Botón volver ahora usa handleGoBack */}
         <button onClick={handleGoBack} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
           Volver a Media
@@ -195,14 +208,19 @@ export default function EditMediaPage() {
               <ImageIcon className="w-5 h-5 text-indigo-400" />
               Vista previa del póster
             </label>
-            <div className="relative w-full max-w-[200px] mx-auto lg:mx-0 aspect-[2/3] bg-gray-700 rounded-xl overflow-hidden border-2 border-dashed border-gray-600">
+            <div className="relative w-full max-w-[200px] aspect-[2/3] bg-gray-700 rounded-xl overflow-hidden border-2 border-dashed border-gray-600 flex items-center justify-center">
                 {imagePreviewUrl ? (
-                  <>
+                  <div className="w-full h-full relative">
                     <Image src={imagePreviewUrl} alt="Poster" fill className="object-cover" />
-                    <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full z-10"><X className="w-4 h-4 text-white" /></button>
-                  </>
+                    <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full z-10 hover:bg-red-700 transition-colors">
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-500"><ImageIcon className="w-8 h-8 mb-2" /><p className="text-xs">Sin imagen</p></div>
+                  <div className="flex flex-col items-center justify-center text-gray-500">
+                    <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                    <p className="text-xs">Sin imagen</p>
+                  </div>
                 )}
             </div>
           </div>
@@ -214,7 +232,7 @@ export default function EditMediaPage() {
             </div>
             <div>
               <label className="block text-white font-medium mb-2">O usar URL externa</label>
-              <input type="url" name="poster_url" value={formData.poster_url} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="https://..." />
+              <input type="url" name="poster_url" value={formData.poster_url || ""} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="https://..." />
             </div>
           </div>
         </div>
@@ -230,14 +248,7 @@ export default function EditMediaPage() {
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
               <Languages className="w-4 h-4 text-indigo-400" /> Idioma
             </label>
-            <input 
-              type="text" 
-              name="idioma" 
-              value={formData.idioma} 
-              onChange={handleChange} 
-              placeholder="Latino, Subtitulado..." 
-              className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" 
-            />
+            <input type="text" name="idioma" value={formData.idioma || ""} onChange={handleChange} placeholder="Latino, Subtitulado..." className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
           </div>
 
           <div className="flex flex-col justify-center">
@@ -265,10 +276,19 @@ export default function EditMediaPage() {
 
           <div className="md:col-span-2">
             <label className="block text-white font-medium mb-2">Categoría</label>
-            <select name="category" value={formData.category} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors">
+            <select name="category" value={formData.category} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors appearance-none">
               {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
+
+          {showSeasonsField && (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-300 md:col-span-2">
+              <label className="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Layers className="w-3 h-3 text-indigo-400" /> Cantidad de Temporadas
+              </label>
+              <input type="number" name="seasons" value={formData.seasons} onChange={handleChange} min="1" placeholder="Ej: 3" className="w-full px-4 py-3 bg-white/5 border border-indigo-500/30 text-white rounded-xl focus:border-indigo-500 outline-none shadow-[0_0_15px_rgba(79,70,229,0.1)]" />
+            </div>
+          )}
         </div>
 
         <div className="mb-8">
@@ -276,13 +296,12 @@ export default function EditMediaPage() {
           <textarea name="synopsis" value={formData.synopsis} onChange={handleChange} rows={4} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500 transition-colors" />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700/50">
           <button type="submit" disabled={loading} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-60 w-full sm:w-auto">
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
             Actualizar Contenido
           </button>
-          {/* ✅ CAMBIO: Botón cancelar usa handleGoBack */}
-          <button type="button" onClick={handleGoBack} className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl w-full sm:w-auto">Cancelar</button>
+          <button type="button" onClick={handleGoBack} className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-xl w-full sm:w-auto transition-colors">Cancelar</button>
         </div>
       </form>
     </div>

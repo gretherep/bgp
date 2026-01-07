@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 import Image from "next/image";
-import { Loader2, X, ArrowLeft, Plus, ImageIcon, Star, Languages } from "lucide-react";
+import { Loader2, X, ArrowLeft, Plus, ImageIcon, Star, Languages, Layers } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
+import { Media } from "@/app/models/media";
+// Importamos tu interfaz para no repetir código
+
 
 const POSTER_BUCKET = "posters";
 
@@ -14,25 +17,40 @@ const categories = [
   "Series Animadas", "Películas Animadas", "Anime", "Películas Anime",
 ];
 
-const initialFormData = {
+/**
+ * Definimos el tipo del estado del formulario basado en Media.
+ * Omitimos campos de sistema y convertimos números a string para los inputs.
+ */
+type MediaFormState = Omit<Media, "id" | "created_at" | "updated_at" | "slug" | "year" | "seasons"> & {
+  year: string;
+  seasons: string;
+};
+
+const initialFormData: MediaFormState = {
   title: "",
   synopsis: "",
   poster_url: "",
-  genre: "",
+  genre: "" as any, // Cast para respetar MediaGenre
   year: new Date().getFullYear().toString(),
-  category: "",
-  idioma: "",    // ✅ Nuevo campo
-  estreno: false, // ✅ Nuevo campo
+  category: "" as any, // Cast para respetar MediaCategory
+  idioma: "",
+  estreno: false,
+  seasons: "", // ✅ Ahora TS reconoce la propiedad
 };
 
 export default function CreateMediaPage() {
   const router = useRouter();
-  const { showToast } = useToast(); // ✅ Hook de Toast listo
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState<MediaFormState>(initialFormData);
   const [posterFile, setPosterFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  const showSeasonsField = useMemo(() => {
+    const cat = formData.category?.toLowerCase() || "";
+    return cat.includes("serie") || cat.includes("anime") || cat.includes("novela") || cat.includes("reality");
+  }, [formData.category]);
 
   useEffect(() => {
     return () => {
@@ -46,7 +64,6 @@ export default function CreateMediaPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Función para el Switch de Estreno
   const toggleEstreno = () => {
     setFormData(prev => ({ ...prev, estreno: !prev.estreno }));
   };
@@ -95,7 +112,6 @@ export default function CreateMediaPage() {
     setLoading(true);
 
     try {
-      // 1. Insertar datos iniciales (incluyendo los nuevos campos)
       const { data: insertedData, error: insertError } = await supabase
         .from("media")
         .insert({
@@ -103,37 +119,31 @@ export default function CreateMediaPage() {
           synopsis: formData.synopsis,
           poster_url: formData.poster_url || null,
           genre: formData.genre,
-          year: parseInt(formData.year),
+          year: parseInt(formData.year) || 0,
           category: formData.category,
-          idioma: formData.idioma, // ✅ Nuevo
-          estreno: formData.estreno, // ✅ Nuevo
+          idioma: formData.idioma,
+          estreno: formData.estreno,
+          seasons: showSeasonsField ? parseInt(formData.seasons) || null : null,
         })
         .select()
         .single();
 
       if (insertError) throw insertError;
 
-      // 2. Si hay archivo, subirlo y actualizar el registro
-      if (posterFile) {
+      if (posterFile && insertedData) {
         const finalPosterUrl = await uploadPoster(posterFile, insertedData.id);
         const { error: updateError } = await supabase
           .from("media")
           .update({ poster_url: finalPosterUrl })
           .eq("id", insertedData.id);
-
         if (updateError) throw updateError;
       }
 
-      // ✅ Feedback de Éxito con Toast
       showToast(`"${formData.title}" se ha creado correctamente`, false);
-      
-      // Pequeño delay para que el usuario vea el éxito antes de redirigir
       setTimeout(() => router.push("/admin/media"), 1500);
 
     } catch (err: any) {
-      // ❌ Feedback de Error con Toast
       showToast(err.message || "Ocurrió un error al crear el contenido", true);
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -165,10 +175,15 @@ export default function CreateMediaPage() {
               {imagePreviewUrl ? (
                 <div className="w-full h-full relative">
                   <Image src={imagePreviewUrl} alt="Preview" fill className="object-cover" />
-                  <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full"><X className="w-4 h-4 text-white" /></button>
+                  <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full hover:bg-red-700 transition-colors">
+                    <X className="w-4 h-4 text-white" />
+                  </button>
                 </div>
               ) : (
-                <div className="text-center text-gray-500"><ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-50" /><p className="text-xs">Sin póster</p></div>
+                <div className="text-center text-gray-500">
+                  <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-50" />
+                  <p className="text-xs">Sin póster</p>
+                </div>
               )}
             </div>
           </div>
@@ -180,7 +195,7 @@ export default function CreateMediaPage() {
             </div>
             <div>
               <label className="block text-white font-medium mb-2">O URL directa</label>
-              <input type="url" name="poster_url" value={formData.poster_url} onChange={handleChange} disabled={!!posterFile} className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="https://..." />
+              <input type="url" name="poster_url" value={formData.poster_url || ""} onChange={handleChange} disabled={!!posterFile} className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 transition-colors" placeholder="https://..." />
             </div>
           </div>
         </div>
@@ -192,15 +207,13 @@ export default function CreateMediaPage() {
             <input type="text" name="title" value={formData.title} onChange={handleChange} required className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500" />
           </div>
 
-          {/* ✅ Nuevo: Idioma */}
           <div>
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
               <Languages className="w-4 h-4 text-indigo-400" /> Idioma
             </label>
-            <input type="text" name="idioma" value={formData.idioma} onChange={handleChange} placeholder="Ej: Latino, Subtitulado" className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500" />
+            <input type="text" name="idioma" value={formData.idioma || ""} onChange={handleChange} placeholder="Ej: Latino, Subtitulado" className="w-full px-4 py-2.5 bg-gray-700 border border-gray-600 text-white rounded-lg focus:border-indigo-500" />
           </div>
 
-          {/* ✅ Nuevo: Estreno (Switch) */}
           <div className="flex flex-col justify-center">
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
               <Star className={`w-4 h-4 ${formData.estreno ? 'text-amber-400 fill-amber-400' : 'text-gray-500'}`} /> Marcar como Estreno
@@ -230,6 +243,15 @@ export default function CreateMediaPage() {
               {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
+
+          {showSeasonsField && (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-300 md:col-span-2">
+              <label className="block text-gray-400 text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Layers className="w-3 h-3 text-indigo-400" /> Cantidad de Temporadas
+              </label>
+              <input type="number" name="seasons" value={formData.seasons} onChange={handleChange} min="1" placeholder="Ej: 3" className="w-full px-4 py-3 bg-white/5 border border-indigo-500/30 text-white rounded-xl focus:border-indigo-500 outline-none shadow-[0_0_15px_rgba(79,70,229,0.1)]" />
+            </div>
+          )}
         </div>
 
         <div className="mb-8">

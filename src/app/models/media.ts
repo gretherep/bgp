@@ -11,6 +11,7 @@ export interface Media {
   category: MediaCategory;
   estreno?: boolean | null; 
   idioma?: string | null;
+  seasons?: number | null;
   created_at: string;
   updated_at: string;
   slug: string;
