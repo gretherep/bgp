@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, ChevronDown, Filter } from "lucide-react";
+import { Check, X, ChevronDown, Filter, Search } from "lucide-react";
 
 interface Option { value: string; label: string; }
 
 interface FilterSidebarProps {
+  // Se agregó textInputs para solucionar el error de compilación
+  textInputs?: { key: string; label: string; value: string }[];
   segmentedFilters?: { key: string; label: string; value: string; options: Option[] }[];
   singleSelects?: { key: string; label: string; value: string; options: Option[] }[];
   multiSelects?: { key: string; label: string; value: string[]; options: Option[] }[];
@@ -17,6 +19,7 @@ interface FilterSidebarProps {
 }
 
 export default function FilterSidebar({
+  textInputs = [],
   segmentedFilters = [],
   singleSelects = [],
   multiSelects = [],
@@ -25,6 +28,14 @@ export default function FilterSidebar({
   isMobile = false,
   onCloseMobile,
 }: FilterSidebarProps) {
+  
+  // Estado para los inputs de texto (como el buscador de título)
+  const [localText, setLocalText] = useState<Record<string, string>>(() => {
+    const obj: any = {};
+    textInputs.forEach(f => obj[f.key] = f.value);
+    return obj;
+  });
+
   const [localSegmented, setLocalSegmented] = useState<Record<string, string>>(() => {
     const obj: any = {};
     segmentedFilters.forEach(f => obj[f.key] = f.value);
@@ -45,37 +56,36 @@ export default function FilterSidebar({
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // ==========================================
-  // LÓGICA PARA BOTÓN ATRÁS (SIDEBAR MÓVIL)
-  // ==========================================
+  // Sincronizar búsqueda de texto si cambia desde fuera (opcional pero recomendado)
   useEffect(() => {
-    // Solo activamos esta lógica si estamos en móvil y el sidebar está abierto
+    const obj: any = {};
+    textInputs.forEach(f => obj[f.key] = f.value);
+    setLocalText(obj);
+  }, [textInputs]);
+
+  useEffect(() => {
     if (isMobile) {
       window.history.pushState({ sidebarOpen: true }, "");
-
       const handlePopState = () => {
         if (onCloseMobile) onCloseMobile();
       };
-
       window.addEventListener("popstate", handlePopState);
-
       return () => {
         window.removeEventListener("popstate", handlePopState);
-        // Si el componente se desmonta (se cierra), limpiamos el estado del historial
         if (window.history.state?.sidebarOpen) {
           window.history.back();
         }
       };
     }
   }, [isMobile, onCloseMobile]);
-  // ==========================================
 
   const handleApply = () => {
-    onApply({ ...localSegmented, ...localSingle, ...localMulti });
+    onApply({ ...localText, ...localSegmented, ...localSingle, ...localMulti });
     if (isMobile && onCloseMobile) onCloseMobile();
   };
 
   const handleReset = () => {
+    setLocalText({});
     setLocalSegmented({});
     setLocalSingle({});
     setLocalMulti({});
@@ -105,6 +115,23 @@ export default function FilterSidebar({
       </div>
 
       <div className="space-y-8">
+        {/* TEXT INPUTS (BUSCADOR) */}
+        {textInputs.map((input) => (
+          <div key={input.key} className="space-y-3">
+            <span className="text-[10px] font-black uppercase tracking-[2px] text-[var(--color-accent)]">{input.label}</span>
+            <div className="relative">
+              <input
+                type="text"
+                value={localText[input.key] || ""}
+                onChange={(e) => setLocalText({ ...localText, [input.key]: e.target.value })}
+                placeholder="Buscar por nombre..."
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[var(--color-primary)]/50 transition-colors"
+              />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none" />
+            </div>
+          </div>
+        ))}
+
         {/* TABS SELECT */}
         {segmentedFilters.map((group) => (
           <div key={group.key} className="space-y-3">
@@ -146,7 +173,7 @@ export default function FilterSidebar({
           </div>
         ))}
 
-        {/* MULTI SELECT CON TABS INTERNOS */}
+        {/* MULTI SELECT */}
         {multiSelects.map((group) => (
           <div key={group.key} className="space-y-3 relative">
             <span className="text-[10px] font-black uppercase tracking-[2px] text-[var(--color-accent)]">{group.label}</span>
@@ -197,7 +224,7 @@ export default function FilterSidebar({
         <div className="flex flex-col gap-3 pt-6 border-t border-white/5 pb-10">
           <button
             onClick={handleApply}
-            className="w-full py-4 px-6 rounded-2xl text-[12px] font-black uppercase tracking-[2px] transition-all flex items-center justify-center gap-3 shadow-xl"
+            className="w-full py-4 px-6 rounded-2xl text-[12px] font-black uppercase tracking-[2px] transition-all flex items-center justify-center gap-3 shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             style={{ backgroundColor: 'var(--color-primary)', color: '#161214' }}
           >
             APLICAR FILTROS <Check className="w-4 h-4" />
