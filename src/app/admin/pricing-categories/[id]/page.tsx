@@ -20,7 +20,7 @@ type MediaCategory =
 
 const CATEGORIES: MediaCategory[] = [
   "Películas", "Series", "Novelas", "Reality Shows",
-  "MiniSeries", "Series Animadas", "Películas Animadas",
+  "MiniSeries", "Series Animadas", "Películas Animadas","Anime"
 ];
 
 interface FormState {
