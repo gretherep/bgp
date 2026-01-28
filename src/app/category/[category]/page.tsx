@@ -83,6 +83,8 @@ const categoryMedia = useMemo(() => {
         if (!mCat.includes("animada")) return false;
       } else if (urlParam === "peliculas") {
         if (!mCat.includes("pelicula") || mCat.includes("animada")) return false;
+      } else if (urlParam === "reality") {
+        if (!mCat.includes("reality")) return false;
       } else {
         if (mCat !== urlParam) return false;
       }
