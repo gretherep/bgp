@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { api } from "@/utils/apiClient";
 import { useMediaModal } from "@/app/context/MediaModalContext";
 import { useMediaRating } from "@/hooks/useMediaRating";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/app/context/ToastContext";
 import { useUserMediaRating } from "@/hooks/useUserMediaRating";
-import { Languages, X, Layers } from "lucide-react"; 
+import { Languages, X, Layers } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -40,15 +41,13 @@ export default function MediaModal() {
   const handleVote = async (value: number) => {
     if (!user) { showToast("Debes iniciar sesión para calificar", true); return; }
     try {
-      const res = await fetch("/api/ratings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mediaId: selectedMedia.id, rating: value, userId: user.id }),
-      });
+      await api.post("/api/ratings", { mediaId: selectedMedia.id, rating: value });
       setUserRating(value);
-      if (!res.ok) { showToast("Error al votar", true); return; }
       showToast("⭐ ¡Gracias por tu voto!", false);
-    } catch { showToast("❌ Error de conexión", true); }
+    } catch (err: any) {
+      console.error(err);
+      showToast("❌ Error al votar", true);
+    }
   };
 
   const vividColors = [
@@ -65,7 +64,7 @@ export default function MediaModal() {
   const genres = selectedMedia.genre ? selectedMedia.genre.split(",").map(g => g.trim()) : [];
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={closeModal}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={closeModal}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -82,7 +81,7 @@ export default function MediaModal() {
         </button>
 
         <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8 overflow-y-auto max-h-[90vh] no-scrollbar">
-<div className="md:w-1/3 flex-shrink-0">
+          <div className="md:w-1/3 flex-shrink-0">
             <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-[#0e0e0e] border border-white/10 shadow-2xl shadow-black relative">
               {imageError || !selectedMedia.poster_url ? (
                 <div className="flex flex-col items-center justify-center h-full text-center p-2">
@@ -90,13 +89,13 @@ export default function MediaModal() {
                   <span className="text-indigo-400 text-xs font-bold">Sin póster</span>
                 </div>
               ) : (
-                <Image 
-                  src={selectedMedia.poster_url} 
-                  alt={selectedMedia.title} 
+                <Image
+                  src={selectedMedia.poster_url}
+                  alt={selectedMedia.title}
                   fill
                   unoptimized={true} // <--- CLAVE: No gasta transformaciones
                   className="object-cover"
-                  onError={() => setImageError(true)} 
+                  onError={() => setImageError(true)}
                 />
               )}
             </div>
@@ -107,7 +106,7 @@ export default function MediaModal() {
               <h2 className="text-3xl md:text-4xl font-black text-white leading-tight italic uppercase tracking-tighter mb-1">
                 {selectedMedia.title}
               </h2>
-              
+
               {/* BLOQUE DE TEMPORADAS MEJORADO */}
               {selectedMedia.seasons && (
                 <div className="flex items-center gap-1.5 mb-3">
@@ -143,21 +142,21 @@ export default function MediaModal() {
             </div>
 
             <div className="flex items-center bg-white/5 self-start px-4 py-2 rounded-2xl border border-white/5">
-                <div className="flex space-x-1 mr-4">
-                 {Array.from({ length: 5 }, (_, i) => {
-                   const ratingValue = i + 1;
-                   const effectiveRating = hoverRating > 0 ? hoverRating : userRating ?? Math.round(avgRating || 0);
-                   const showFilled = ratingValue <= effectiveRating;
-                   return (
-                     <button key={i} onMouseEnter={() => setHoverRating(ratingValue)} onMouseLeave={() => setHoverRating(0)} onClick={() => handleVote(ratingValue)} className="transition-transform hover:scale-125">
-                       <svg className={`w-5 h-5 ${showFilled ? "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" : "text-white/10"}`} fill={showFilled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                       </svg>
-                     </button>
-                   );
-                 })}
-                </div>
-                <span className="text-sm font-black text-indigo-400 tracking-tighter italic">{avgRating ? avgRating.toFixed(1) : "0.0"}</span>
+              <div className="flex space-x-1 mr-4">
+                {Array.from({ length: 5 }, (_, i) => {
+                  const ratingValue = i + 1;
+                  const effectiveRating = hoverRating > 0 ? hoverRating : userRating ?? Math.round(avgRating || 0);
+                  const showFilled = ratingValue <= effectiveRating;
+                  return (
+                    <button key={i} onMouseEnter={() => setHoverRating(ratingValue)} onMouseLeave={() => setHoverRating(0)} onClick={() => handleVote(ratingValue)} className="transition-transform hover:scale-125">
+                      <svg className={`w-5 h-5 ${showFilled ? "text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]" : "text-white/10"}`} fill={showFilled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-sm font-black text-indigo-400 tracking-tighter italic">{avgRating ? avgRating.toFixed(1) : "0.0"}</span>
             </div>
 
             <div className="space-y-2">
