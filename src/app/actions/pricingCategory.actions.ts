@@ -1,80 +1,54 @@
 "use server";
 
-import { createServerClient } from "@/utils/supabaseServer";
+import * as PricingCategoryService from "@/services/pricingCategories";
 import { PricingCategory } from "@/app/models/pricingCategory";
+import { requireAdminAction } from "@/utils/auth";
 
 /**
  * Funciones públicas
  */
 export async function getActivePricingCategories(): Promise<PricingCategory[]> {
-  const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("pricing_categories")
-    .select("*")
-    .eq("is_active", true)
-    .order("display_order", { ascending: true });
-
-  if (error) {
+  try {
+    const data = await PricingCategoryService.getActivePricingCategories();
+    return data as PricingCategory[];
+  } catch (error: any) {
     console.error("Error al cargar pricing_categories:", error.message);
     return [];
   }
-
-  return data as PricingCategory[];
 }
 
 /**
  * Funciones admin
  */
 export async function getAllPricingCategories(): Promise<PricingCategory[]> {
-  const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("pricing_categories")
-    .select("*")
-    .order("display_order");
-
-  if (error) throw new Error(error.message);
+  await requireAdminAction();
+  const data = await PricingCategoryService.getAllPricingCategories();
   return data as PricingCategory[];
 }
 
 export async function getPricingCategoryById(id: string): Promise<PricingCategory | null> {
-  const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("pricing_categories")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+  await requireAdminAction();
+  const data = await PricingCategoryService.getPricingCategoryById(id);
+  return data as PricingCategory;
 }
 
 export async function createPricingCategory(data: Omit<PricingCategory, "id" | "created_at" | "updated_at">) {
-  const supabase = await createServerClient();
-  const { error } = await supabase.from("pricing_categories").insert(data);
-  if (error) throw new Error(error.message);
+  await requireAdminAction();
+  await PricingCategoryService.createPricingCategory(data);
 }
 
 export async function updatePricingCategory(id: string, data: Partial<PricingCategory>) {
-  const supabase = await createServerClient();
-  const { error } = await supabase
-    .from("pricing_categories")
-    .update(data)
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  await requireAdminAction();
+  await PricingCategoryService.updatePricingCategory(id, data);
 }
 
 export async function deletePricingCategory(id: string) {
-  const supabase = await createServerClient();
-  const { error } = await supabase
-    .from("pricing_categories")
-    .delete()
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  await requireAdminAction();
+  await PricingCategoryService.deletePricingCategory(id);
 }
 
 export async function reorderPricingCategories(updated: { id: string; display_order: number }[]) {
-  const supabase = await createServerClient();
-  const { error } = await supabase.from("pricing_categories").upsert(updated, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+  await requireAdminAction();
+  await PricingCategoryService.reorderPricingCategories(updated);
   return { success: true };
 }

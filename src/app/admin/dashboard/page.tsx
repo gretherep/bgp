@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabaseClient";
+import { api } from "@/utils/apiClient";
 import { TrendingUp, Users, Star, Film } from "lucide-react";
 import {
   LineChart,
@@ -37,86 +37,22 @@ export default function AdminDashboardPage() {
   const [weeklyMedia, setWeeklyMedia] = useState<any[]>([]);
 
   useEffect(() => {
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) return router.replace("/auth/login");
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.session.user.id)
-        .single();
-
-      if (profile?.role !== "admin") return router.replace("/");
-
-      await loadStats();
-      await loadCharts();
+    const fetchData = async () => {
+      try {
+        const data = await api.get("/api/admin/dashboard");
+        setStats(data.stats);
+        setWeeklyRatings(data.charts.weeklyRatings);
+        setWeeklyMedia(data.charts.weeklyMedia);
+      } catch (err: any) {
+        console.error("Dashboard error:", err);
+        if (err.message.includes("Unauthorized") || err.message.includes("Forbidden")) {
+          router.replace("/");
+        }
+      }
     };
 
-    init();
+    fetchData();
   }, [router]);
-
-  const loadStats = async () => {
-    const { count: totalMedia } = await supabase
-      .from("media")
-      .select("*", { count: "exact", head: true });
-
-    const { count: totalUsers } = await supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true });
-
-    const { count: totalRatings } = await supabase
-      .from("ratings")
-      .select("*", { count: "exact", head: true });
-
-    const { data: ratings } = await supabase.from("ratings").select("rating");
-
-    const avgRating = ratings?.length
-      ? ratings.reduce((a, b) => a + b.rating, 0) / ratings.length
-      : 0;
-
-    setStats({
-      totalMedia: totalMedia || 0,
-      totalUsers: totalUsers || 0,
-      totalRatings: totalRatings || 0,
-      avgRating: Number(avgRating.toFixed(2)),
-    });
-  };
-
-  const loadCharts = async () => {
-    const today = new Date();
-    const week = [...Array(7)]
-      .map((_, i) => {
-        const d = new Date();
-        d.setDate(today.getDate() - i);
-        return d.toISOString().split("T")[0];
-      })
-      .reverse();
-
-    const ratingsWeek: any[] = [];
-    const mediaWeek: any[] = [];
-
-    for (const date of week) {
-      const { data: ratings } = await supabase
-        .from("ratings")
-        .select("id")
-        .gte("created_at", date)
-        .lte("created_at", date + "T23:59:59");
-
-      const { data: media } = await supabase
-        .from("media")
-        .select("id")
-        .gte("created_at", date)
-        .lte("created_at", date + "T23:59:59");
-
-      const dayLabel = new Date(date).toLocaleDateString("es-ES", { weekday: "short" });
-      ratingsWeek.push({ day: dayLabel, value: ratings?.length || 0 });
-      mediaWeek.push({ day: dayLabel, value: media?.length || 0 });
-    }
-
-    setWeeklyRatings(ratingsWeek);
-    setWeeklyMedia(mediaWeek);
-  };
 
   if (!stats) {
     return (

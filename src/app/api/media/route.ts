@@ -1,64 +1,88 @@
-// app/api/media/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getAllMedia, createMedia, updateMedia, deleteMedia, getMediaById } from "@/app/actions/media.actions";
+import { getAuthenticatedUser, requireAdmin } from "@/utils/auth";
+import * as MediaService from "@/services/media";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  const search = searchParams.get("search");
+  const category = searchParams.get("category");
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "0");
+  const offset = (page - 1) * limit;
 
   try {
     if (id) {
-      const media = await getMediaById(id);
-      return NextResponse.json(media);
-    } else {
-      const media = await getAllMedia();
-      return NextResponse.json(media);
+      const data = await MediaService.getMediaById(id);
+      return NextResponse.json(data);
     }
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+
+    const [data, total] = await Promise.all([
+      MediaService.getAllMedia({
+        search: search || undefined,
+        category: category || undefined,
+        offset,
+        limit
+      }),
+      MediaService.countMedia({
+        search: search || undefined,
+        category: category || undefined
+      })
+    ]);
+
+    return NextResponse.json({ data, total });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const userId = formData.get("userId") as string;
-
-  if (!userId) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
 
   try {
-    await createMedia(formData, userId); // createMedia ya valida que sea admin
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 403 }); // no autorizado o error
+    const body = await request.json();
+    const data = await MediaService.createMedia(body);
+    return NextResponse.json(data, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function PUT(req: NextRequest) {
-  const formData = await req.formData();
-  const id = formData.get("id") as string;
-  const userId = formData.get("userId") as string;
-
-  if (!id || !userId) return NextResponse.json({ error: "ID and User ID are required" }, { status: 400 });
+export async function PATCH(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
 
   try {
-    await updateMedia(id, formData, userId); // updateMedia valida rol admin
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 403 });
+    const body = await request.json();
+    const { id, ...updates } = body;
+    if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
+
+    const data = await MediaService.updateMedia(id, updates);
+    return NextResponse.json(data);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+export async function DELETE(request: NextRequest) {
+  const auth = await requireAdmin(request);
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  const userId = searchParams.get("userId");
-
-  if (!id || !userId) return NextResponse.json({ error: "ID and User ID are required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
   try {
-    await deleteMedia(id, userId); // deleteMedia valida rol admin
+    await MediaService.deleteMedia(id);
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 403 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

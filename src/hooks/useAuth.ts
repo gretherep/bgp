@@ -18,11 +18,14 @@ export const useAuth = () => {
 
     const fetchProfile = async (sessionUser: any) => {
       try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("role, first_name, last_name")
-          .eq("id", sessionUser.id)
-          .single();
+        const response = await fetch("/api/users", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            "Content-Type": "application/json"
+          }
+        });
+        const profile = await response.json();
 
         if (mounted) {
           setUser({

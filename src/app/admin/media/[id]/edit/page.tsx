@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { supabase } from "@/utils/supabaseClient";
+import { api } from "@/utils/apiClient";
 import Image from "next/image";
 import { Upload, ImageIcon, Loader2, X, ArrowLeft, Star, Languages, Layers } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { Media } from "@/app/models/media";
-// Importamos tu interfaz real
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 
 const POSTER_BUCKET = "posters";
@@ -65,13 +67,7 @@ export default function EditMediaPage() {
 
   const fetchMedia = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("media")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
+      const data = await api.get(`/api/media?id=${id}`);
 
       if (data) {
         setFormData({
@@ -148,25 +144,21 @@ export default function EditMediaPage() {
         finalPosterUrl = await uploadPoster(posterFile);
       }
 
-      const { error } = await supabase
-        .from("media")
-        .update({
-          title: formData.title,
-          synopsis: formData.synopsis,
-          poster_url: finalPosterUrl || null,
-          genre: formData.genre,
-          year: parseInt(formData.year) || 0,
-          category: formData.category,
-          idioma: formData.idioma || null,
-          estreno: formData.estreno,
-          seasons: showSeasonsField ? (parseInt(formData.seasons) || null) : null, // ✅ Actualización de temporadas
-        })
-        .eq("id", id);
-
-      if (error) throw error;
+      await api.patch("/api/media", {
+        id,
+        title: formData.title,
+        synopsis: formData.synopsis,
+        poster_url: finalPosterUrl || null,
+        genre: formData.genre,
+        year: parseInt(formData.year) || 0,
+        category: formData.category,
+        idioma: formData.idioma || null,
+        estreno: formData.estreno,
+        seasons: showSeasonsField ? (parseInt(formData.seasons) || null) : null, // ✅ Actualización de temporadas
+      });
 
       showToast("¡Contenido actualizado correctamente!", false);
-      handleGoBack(); 
+      handleGoBack();
 
     } catch (err: any) {
       showToast(`Error al actualizar: ${err.message}`, true);
@@ -200,7 +192,7 @@ export default function EditMediaPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 sm:p-6 md:p-8 shadow-xl">
-        
+
         {/* Sección de imagen */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 border-b border-gray-700/50 pb-8">
           <div className="flex flex-col">
@@ -209,19 +201,19 @@ export default function EditMediaPage() {
               Vista previa del póster
             </label>
             <div className="relative w-full max-w-[200px] aspect-[2/3] bg-gray-700 rounded-xl overflow-hidden border-2 border-dashed border-gray-600 flex items-center justify-center">
-                {imagePreviewUrl ? (
-                  <div className="w-full h-full relative">
-                    <Image src={imagePreviewUrl} alt="Poster" fill className="object-cover" />
-                    <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full z-10 hover:bg-red-700 transition-colors">
-                      <X className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-gray-500">
-                    <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
-                    <p className="text-xs">Sin imagen</p>
-                  </div>
-                )}
+              {imagePreviewUrl ? (
+                <div className="w-full h-full relative">
+                  <Image src={imagePreviewUrl} alt="Poster" fill className="object-cover" />
+                  <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-red-600 p-1.5 rounded-full z-10 hover:bg-red-700 transition-colors">
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-gray-500">
+                  <ImageIcon className="w-8 h-8 mb-2 opacity-50" />
+                  <p className="text-xs">Sin imagen</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -253,10 +245,10 @@ export default function EditMediaPage() {
 
           <div className="flex flex-col justify-center">
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
-              <Star className={`w-4 h-4 ${formData.estreno ? 'text-amber-400 fill-amber-400' : 'text-gray-500'}`} /> 
+              <Star className={`w-4 h-4 ${formData.estreno ? 'text-amber-400 fill-amber-400' : 'text-gray-500'}`} />
               Marcar como Estreno
             </label>
-            <div 
+            <div
               onClick={toggleEstreno}
               className={`relative w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${formData.estreno ? 'bg-indigo-600' : 'bg-gray-600'}`}
             >

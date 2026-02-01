@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, Suspense } from "react"; // ✅ Añadido Suspense
-import { supabase } from "@/utils/supabaseClient";
+import { api } from "@/utils/apiClient";
 import { Media } from "@/app/models/media";
 import { useToast } from "@/app/context/ToastContext";
 import Link from "next/link";
@@ -54,28 +54,16 @@ function MediaTableContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      let countQuery = supabase.from("media").select("*", { count: "exact", head: true });
-      if (searchTerm) countQuery = countQuery.ilike("title", `%${searchTerm}%`);
-      const { count } = await countQuery;
-      setTotalItems(count || 0);
-
-      let dataQuery = supabase
-        .from("media")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(startIndex, startIndex + ITEMS_PER_PAGE - 1);
-
-      if (searchTerm) dataQuery = dataQuery.ilike("title", `%${searchTerm}%`);
-
-      const { data, error } = await dataQuery;
-      if (error) throw error;
-      setMedia(data || []);
+      const res = await api.get(`/api/media?page=${currentPage}&limit=${ITEMS_PER_PAGE}&search=${encodeURIComponent(searchTerm)}`);
+      setMedia(res.data || []);
+      setTotalItems(res.total || 0);
     } catch (err: any) {
       console.error("Error:", err.message);
+      showToast("Error al cargar datos", true);
     } finally {
       setLoading(false);
     }
-  }, [startIndex, searchTerm]);
+  }, [currentPage, searchTerm, showToast]);
 
   useEffect(() => {
     fetchData();
@@ -99,8 +87,7 @@ function MediaTableContent() {
   const handleDelete = async (id: string) => {
     if (!confirm("¿Seguro que quieres eliminar este contenido?")) return;
     try {
-      const { error } = await supabase.from("media").delete().eq("id", id);
-      if (error) throw error;
+      await api.delete(`/api/media?id=${id}`);
       showToast("Contenido eliminado", false);
       fetchData();
     } catch (err: any) {
@@ -151,9 +138,9 @@ function MediaTableContent() {
 
         <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 overflow-hidden shadow-xl">
           {loading ? (
-             <div className="py-20 flex flex-col items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-2" />
-             </div>
+            <div className="py-20 flex flex-col items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-2" />
+            </div>
           ) : (
             <>
               <div className="hidden md:block overflow-x-auto">
@@ -179,8 +166,8 @@ function MediaTableContent() {
                           <td className="px-6 py-4">{renderEstrenoBadge(item.estreno)}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
-                              <Link 
-                                href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`} 
+                              <Link
+                                href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`}
                                 className="p-2 rounded-lg bg-blue-600/90 text-white hover:bg-blue-600"
                               >
                                 <Edit2 className="w-4 h-4" />
@@ -209,8 +196,8 @@ function MediaTableContent() {
                       <span>{item.year}</span>
                     </div>
                     <div className="flex justify-end gap-2 pt-3 border-t border-gray-600/50">
-                      <Link 
-                        href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`} 
+                      <Link
+                        href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`}
                         className="p-2 bg-blue-600 rounded-lg text-white"
                       >
                         <Edit2 className="w-4 h-4" />

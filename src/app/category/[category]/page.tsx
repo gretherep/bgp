@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { getAllMedia } from "@/app/actions/media.actions";
+import { api } from "@/utils/apiClient";
 import { Media } from "@/app/models/media";
 import MediaCard from "@/components/MediaCard";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -65,46 +65,38 @@ export default function CategoryPage() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const data = await getAllMedia();
-      setAllMedia(data || []);
-      setLoading(false);
+      try {
+        const response = await api.get(`/api/media?category=${categoryParam}`);
+        setAllMedia(response.data || []);
+      } catch (err) {
+        console.error("Error fetching media:", err);
+        setAllMedia([]);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, [categoryParam]);
 
-const categoryMedia = useMemo(() => {
+  const categoryMedia = useMemo(() => {
     if (!allMedia.length) return [];
-    const urlParam = normalizeText(categoryParam);
 
     const filtered = allMedia.filter((m) => {
-      // 1. Lógica de Categoría (Tu lógica original de normalización)
-      const mCat = normalizeText(m.category || "");
-      if (urlParam === "animados") {
-        if (!mCat.includes("animada")) return false;
-      } else if (urlParam === "peliculas") {
-        if (!mCat.includes("pelicula") || mCat.includes("animada")) return false;
-      } else if (urlParam === "reality") {
-        if (!mCat.includes("reality")) return false;
-      } else {
-        if (mCat !== urlParam) return false;
-      }
+      // Note: Category filtering is now done in the backend, but we keep the other filters here
 
       // 2. Filtro de Año
       if (currentYear && m.year?.toString() !== currentYear) return false;
 
       // 3. FILTRO DE GÉNEROS (CORREGIDO)
       if (currentGenres.length > 0) {
-        // Convertimos "terror-ficcion" en ["terror", "ficcion"]
-        const mediaGenresArray = m.genre 
-          ? normalizeText(m.genre).split(/[- ,]+/) 
+        const mediaGenresArray = m.genre
+          ? normalizeText(m.genre).split(/[- ,]+/)
           : [];
-        
-        // Verificamos si AL MENOS UNO de los géneros seleccionados en el filtro
-        // está incluido en el array de géneros de la película
-        const hasMatch = currentGenres.some(g => 
+
+        const hasMatch = currentGenres.some(g =>
           mediaGenresArray.includes(normalizeText(g))
         );
-        
+
         if (!hasMatch) return false;
       }
 
@@ -118,9 +110,9 @@ const categoryMedia = useMemo(() => {
       }
       return a.estreno ? -1 : 1;
     });
-  }, [allMedia, categoryParam, currentYear, JSON.stringify(currentGenres)]);
+  }, [allMedia, currentYear, JSON.stringify(currentGenres)]);
 
-    const top5Recent = useMemo(() => {
+  const top5Recent = useMemo(() => {
     return [...categoryMedia]
       .sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime())
       .slice(0, 8);
@@ -138,7 +130,7 @@ const categoryMedia = useMemo(() => {
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[var(--color-secondary)] overflow-x-hidden">
-      
+
       {/* Header Estilo Home */}
       <section className="relative w-full pt-32 pb-8 overflow-hidden">
         <ShootingStars />
@@ -154,13 +146,13 @@ const categoryMedia = useMemo(() => {
               </span>
             </h1>
           </motion.div>
-             {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
+          {top5Recent.length > 0 && <TopRecentCarousel media={top5Recent} />}
 
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
+
         {/* NAVEGACIÓN MÓVIL Y BOTÓN FILTRO (Misma onda que Home) */}
         <div className="lg:hidden flex flex-col mb-10">
           <div className="flex items-center gap-2 w-full">
@@ -202,8 +194,8 @@ const categoryMedia = useMemo(() => {
           {/* Sidebar Desktop */}
           <aside className="hidden lg:block shrink-0">
             <div className="sticky top-32">
-              <FilterSidebar 
-                singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{value: "", label: "Todos"}, ...YEAR_OPTIONS.map(y => ({value:y, label:y}))] }]}
+              <FilterSidebar
+                singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))] }]}
                 multiSelects={[{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]}
                 onApply={handleApplyFilters}
                 onReset={() => router.push(pathname)}
@@ -248,7 +240,7 @@ const categoryMedia = useMemo(() => {
       <AnimatePresence>
         {isFilterOpen && (
           <FilterSidebar
-            singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{value: "", label: "Todos"}, ...YEAR_OPTIONS.map(y => ({value:y, label:y}))] }]}
+            singleSelects={[{ key: "year", label: "Año", value: currentYear, options: [{ value: "", label: "Todos" }, ...YEAR_OPTIONS.map(y => ({ value: y, label: y }))] }]}
             multiSelects={[{ key: "genre", label: "Géneros", value: currentGenres, options: genreOptions }]}
             onApply={handleApplyFilters}
             onReset={() => { router.push(pathname); setIsFilterOpen(false); }}

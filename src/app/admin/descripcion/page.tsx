@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { getBusinessInfo, updateBusinessInfo } from "@/app/actions/business.actions";
 import { useToast } from "@/app/context/ToastContext";
-import { 
-  Building, 
-  Image as ImageIcon, 
-  FileText, 
-  Wallet, 
-  Phone, 
-  MessageCircle, 
-  Edit2, 
-  Save, 
-  X, 
-  Loader2 
+import {
+  Building,
+  Image as ImageIcon,
+  FileText,
+  Wallet,
+  Phone,
+  MessageCircle,
+  Edit2,
+  Save,
+  X,
+  Loader2
 } from "lucide-react";
 import { BusinessInfo } from "@/app/models/businessInfo";
 
@@ -53,48 +53,48 @@ export default function AdminBusinessPage() {
   };
 
   const handleLogoChange = (file: File | null) => {
-  if (!file) return;
+    if (!file) return;
 
-  setLogoFile(file);
+    setLogoFile(file);
 
-  const previewUrl = URL.createObjectURL(file);
-  setLogoPreview(previewUrl);
-};
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+  };
 
-const handleSave = async () => {
-  if (!info) return;
-  setSaving(true);
+  const handleSave = async () => {
+    if (!info) return;
+    setSaving(true);
 
-  try {
-    const fd = new FormData();
-    fd.append("id", info.id);
-    fd.append("title", formData.title ?? "");
-    fd.append("description", formData.description ?? "");
-    fd.append("whatsapp_url", formData.whatsapp_url ?? "");
-    fd.append("telegram_url", formData.telegram_url ?? "");
-    fd.append("current_image", info.image_url ?? "");
+    try {
+      const fd = new FormData();
+      fd.append("id", info.id);
+      fd.append("title", formData.title ?? "");
+      fd.append("description", formData.description ?? "");
+      fd.append("whatsapp_url", formData.whatsapp_url ?? "");
+      fd.append("telegram_url", formData.telegram_url ?? "");
+      fd.append("current_image", info.image_url ?? "");
 
-    if (logoFile) {
-      fd.append("image", logoFile);
+      if (logoFile) {
+        fd.append("image", logoFile);
+      }
+
+      await updateBusinessInfo(fd);
+
+      showToast("Información actualizada con éxito", false);
+      setIsEditing(false);
+      fetchBusinessInfo();
+    } catch (err: any) {
+      showToast("Error al actualizar", true);
+    } finally {
+      setSaving(false);
     }
-
-    await updateBusinessInfo(fd);
-
-    showToast("Información actualizada con éxito", false);
-    setIsEditing(false);
-    fetchBusinessInfo();
-  } catch (err: any) {
-    showToast("Error al actualizar", true);
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
 
 
   if (loading) {
     return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500 mb-4"></div>
           <p className="text-gray-400">Cargando Descripcion...</p>
@@ -144,11 +144,10 @@ const handleSave = async () => {
             <h2 className="text-lg font-semibold text-white">Detalles</h2>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                isEditing
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${isEditing
+                ? "bg-red-600 hover:bg-red-700 text-white"
+                : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                }`}
             >
               {isEditing ? (
                 <>
@@ -183,32 +182,32 @@ const handleSave = async () => {
                 />
               </div>
 
-<div>
-  <label className="block text-white font-medium mb-2">
-    Logo
-  </label>
+              <div>
+                <label className="block text-white font-medium mb-2">
+                  Logo
+                </label>
 
-  {logoPreview || info?.image_url ? (
-    <img
-      src={logoPreview || info?.image_url!}
-      className="h-24 mb-3 rounded-lg object-contain bg-gray-700 p-2"
-    />
-  ) : null}
+                {logoPreview || info?.image_url ? (
+                  <img
+                    src={logoPreview || info?.image_url!}
+                    className="h-24 mb-3 rounded-lg object-contain bg-gray-700 p-2"
+                  />
+                ) : null}
 
-  <input
-    type="file"
-    accept="image/*"
-    disabled={!isEditing}
-    onChange={(e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={!isEditing}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
 
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
-    }}
-    className="block w-full text-sm text-gray-300"
-  />
-</div>
+                    setLogoFile(file);
+                    setLogoPreview(URL.createObjectURL(file));
+                  }}
+                  className="block w-full text-sm text-gray-300"
+                />
+              </div>
 
 
               {/* Descripción */}
@@ -238,7 +237,7 @@ const handleSave = async () => {
                   <div>
                     <label htmlFor="whatsapp_url" className="block text-gray-300 text-sm mb-1 flex items-center gap-1.5">
                       <MessageCircle className="w-3.5 h-3.5 text-green-400" />
-                      WhatsApp
+                      WhatsApp (Número o Link)
                     </label>
                     <input
                       id="whatsapp_url"
@@ -247,7 +246,7 @@ const handleSave = async () => {
                       onChange={(e) => handleChange("whatsapp_url", e.target.value)}
                       disabled={!isEditing}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      placeholder="https://wa.me/..."
+                      placeholder="Ej: 5351234567 o link completo"
                     />
                   </div>
                   <div>

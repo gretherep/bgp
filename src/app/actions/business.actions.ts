@@ -2,7 +2,7 @@
 
 import { createServerClient } from "@/utils/supabaseServer";
 import { BusinessInfo } from "../models/businessInfo";
-
+import { requireAdminAction } from "@/utils/auth";
 
 
 // Obtener la información del negocio (solo 1 fila)
@@ -23,6 +23,7 @@ export async function getBusinessInfo(): Promise<BusinessInfo | null> {
 }
 
 export async function updateBusinessInfo(formData: FormData) {
+  await requireAdminAction();
   const supabase = await createServerClient();
 
   const id = formData.get("id") as string;

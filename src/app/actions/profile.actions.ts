@@ -3,10 +3,11 @@
 import { createServerClient } from "@/utils/supabaseServer";
 import { Profile } from "@/app/models/profile";
 import { revalidatePath } from "next/cache";
+import { requireAdminAction } from "@/utils/auth";
 
 
-// Obtener todos los perfiles
 export async function getProfiles(): Promise<Profile[]> {
+  await requireAdminAction();
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -17,8 +18,8 @@ export async function getProfiles(): Promise<Profile[]> {
   return data || [];
 }
 
-// Obtener un perfil por id
 export async function getProfile(id: string): Promise<Profile | null> {
+  await requireAdminAction();
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -33,6 +34,7 @@ export async function getProfile(id: string): Promise<Profile | null> {
 export async function createProfile(
   profileData: Omit<Profile, "id" | "created_at" | "updated_at"> & { password: string }
 ): Promise<Profile> {
+  await requireAdminAction();
   const supabase = createServerClient();
 
   // 1️⃣ Crear usuario en Auth (esto ya crea el perfil por trigger)
@@ -66,11 +68,11 @@ export async function createProfile(
 
 
 
-// Actualizar datos del perfil
 export async function updateProfile(
   id: string,
   profileData: Partial<Omit<Profile, "id" | "created_at" | "updated_at">>
 ): Promise<Profile> {
+  await requireAdminAction();
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -85,8 +87,8 @@ export async function updateProfile(
   return data;
 }
 
-// Cambiar contraseña de un usuario
 export async function updateUserPassword(userId: string, newPassword: string) {
+  await requireAdminAction();
   const supabase = createServerClient();
 
   const { error } = await supabase.auth.admin.updateUserById(userId, {
@@ -101,8 +103,8 @@ export async function updateUserPassword(userId: string, newPassword: string) {
   return true;
 }
 
-// Eliminar perfil + usuario en Auth
 export async function deleteProfile(id: string): Promise<void> {
+  await requireAdminAction();
   const supabase = createServerClient();
 
   // Eliminar usuario en Auth

@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import { supabase } from "@/utils/supabaseClient";
+import { api } from "@/utils/apiClient";
 import MediaCard from "@/components/MediaCard";
 
 // 1. Creamos un componente interno que maneja la lógica de búsqueda
@@ -24,19 +24,15 @@ function SearchContent() {
 
   async function fetchResults() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("media")
-      .select("*")
-      .ilike("title", `%${query}%`)
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      const res = await api.get(`/api/media?search=${encodeURIComponent(query)}`);
+      setResults(res.data || []);
+    } catch (error) {
       console.error(error);
       setResults([]);
-    } else {
-      setResults(data);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

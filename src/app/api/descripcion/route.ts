@@ -1,33 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/utils/supabaseServer";
-
-// Helper para proteger rutas admin
-async function requireAdmin(req: NextRequest | Request) {
-  const supabase = createServerClient();
-
-  // Para NextRequest (GET) obtenemos token desde headers, para Request (PATCH) podrías enviar Authorization
-  const token = req instanceof NextRequest 
-    ? req.headers.get("Authorization")?.replace("Bearer ", "")
-    : null;
-
-  if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-
-  if (error || !user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || profile?.role !== "admin") {
-    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  }
-
-  return user;
-}
+import { requireAdmin } from "@/utils/auth";
 
 export async function GET(req: NextRequest) {
 
@@ -42,9 +15,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-export async function PATCH(req: Request) {
-  const user = await requireAdmin(req);
-  if (user instanceof NextResponse) return user;
+export async function PATCH(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
 
   try {
     const body = await req.json();

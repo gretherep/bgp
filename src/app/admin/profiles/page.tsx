@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabaseClient";
+import { api } from "@/utils/apiClient";
 import { Profile } from "@/app/models/profile";
-import { getProfiles, deleteProfile, updateUserPassword } from "@/app/actions/profile.actions";
 import Link from "next/link";
 import { Edit2, Trash2, ArrowLeft, ArrowRight, Lock, Key, User, Mail } from "lucide-react";
 
@@ -36,7 +35,7 @@ export default function AdminProfilesPage() {
 
   const fetchProfiles = async () => {
     try {
-      const data = await getProfiles();
+      const data = await api.get("/api/users");
       setProfiles(data);
     } catch (err: any) {
       setError(err.message);
@@ -64,7 +63,7 @@ export default function AdminProfilesPage() {
     if (!profileToDeleteId) return;
 
     try {
-      await deleteProfile(profileToDeleteId);
+      await api.delete(`/api/users?id=${profileToDeleteId}`);
       setProfiles((prev) => prev.filter((p) => p.id !== profileToDeleteId));
       if (currentProfiles.length === 1 && currentPage > 1 && totalPages > 1) {
         setCurrentPage(currentPage - 1);
@@ -100,7 +99,7 @@ export default function AdminProfilesPage() {
     setPasswordError(null);
 
     try {
-      await updateUserPassword(passwordModal.userId, newPassword);
+      await api.patch("/api/users", { id: passwordModal.userId, password: newPassword });
       setPasswordModal({ isOpen: false, userId: "", userName: "" });
       alert(`Contraseña de ${passwordModal.userName} actualizada con éxito.`);
     } catch (err: any) {
@@ -112,12 +111,12 @@ export default function AdminProfilesPage() {
 
   if (loading) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
-            <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500 mb-4"></div>
-            <p className="text-gray-400">Cargando profiles...</p>
-            </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500 mb-4"></div>
+          <p className="text-gray-400">Cargando profiles...</p>
         </div>
+      </div>
     );
   }
 
@@ -151,7 +150,7 @@ export default function AdminProfilesPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
- 
+
           </Link>
         </div>
 
@@ -358,11 +357,10 @@ export default function AdminProfilesPage() {
               <button
                 onClick={handleUpdatePassword}
                 disabled={isPasswordUpdating}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                  isPasswordUpdating
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${isPasswordUpdating
                     ? "bg-indigo-700 text-white cursor-not-allowed opacity-75"
                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                }`}
+                  }`}
               >
                 {isPasswordUpdating ? (
                   <>

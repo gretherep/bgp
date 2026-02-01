@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabaseClient";
+import { api } from "@/utils/apiClient";
 import Image from "next/image";
 import { Loader2, X, ArrowLeft, Plus, ImageIcon, Star, Languages, Layers } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { Media } from "@/app/models/media";
 import imageCompression from 'browser-image-compression';
-// Importamos tu interfaz para no repetir código
+import { createClient } from "@supabase/supabase-js"; // Solo para storage si es necesario, o usar api
 
+// Instancia mínima para storage si no queremos refactorizar storage a API aún
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 const POSTER_BUCKET = "posters";
 
@@ -90,76 +92,69 @@ export default function CreateMediaPage() {
     setFormData((prev) => ({ ...prev, poster_url: "" }));
   };
 
-const uploadPoster = async (file: File, newRecordId: string): Promise<string> => {
-  // --- NUEVA LÓGICA DE COMPRESIÓN ---
-  const options = {
-    maxSizeMB: 0.2,           // Máximo 200KB (ideal para posters nítidos pero ligeros)
-    maxWidthOrHeight: 800,    // El alto máximo será 800px
-    useWebWorker: true,
-    fileType: 'image/webp'    // Convertimos a WebP (ahorra muchísimo espacio)
+  const uploadPoster = async (file: File, newRecordId: string): Promise<string> => {
+    // --- NUEVA LÓGICA DE COMPRESIÓN ---
+    const options = {
+      maxSizeMB: 0.2,           // Máximo 200KB (ideal para posters nítidos pero ligeros)
+      maxWidthOrHeight: 800,    // El alto máximo será 800px
+      useWebWorker: true,
+      fileType: 'image/webp'    // Convertimos a WebP (ahorra muchísimo espacio)
+    };
+
+    let fileToUpload = file;
+
+    try {
+      // Comprimimos antes de subir
+      fileToUpload = await imageCompression(file, options);
+    } catch (error) {
+      console.error("Error comprimiendo imagen, se subirá original:", error);
+    }
+    // ----------------------------------
+
+    // Cambiamos la extensión a .webp porque la librería lo convirtió
+    const fileName = `${newRecordId}.webp`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(POSTER_BUCKET)
+      .upload(filePath, fileToUpload, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: 'image/webp' // Aseguramos el tipo de contenido
+      });
+
+    if (uploadError) throw new Error("Error al subir imagen: " + uploadError.message);
+
+    const { data: publicUrlData } = supabase.storage
+      .from(POSTER_BUCKET)
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
   };
-
-  let fileToUpload = file;
-  
-  try {
-    // Comprimimos antes de subir
-    fileToUpload = await imageCompression(file, options);
-  } catch (error) {
-    console.error("Error comprimiendo imagen, se subirá original:", error);
-  }
-  // ----------------------------------
-
-  // Cambiamos la extensión a .webp porque la librería lo convirtió
-  const fileName = `${newRecordId}.webp`; 
-  const filePath = `${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from(POSTER_BUCKET)
-    .upload(filePath, fileToUpload, { 
-      cacheControl: "3600", 
-      upsert: true,
-      contentType: 'image/webp' // Aseguramos el tipo de contenido
-    });
-
-  if (uploadError) throw new Error("Error al subir imagen: " + uploadError.message);
-
-  const { data: publicUrlData } = supabase.storage
-    .from(POSTER_BUCKET)
-    .getPublicUrl(filePath);
-
-  return publicUrlData.publicUrl;
-};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data: insertedData, error: insertError } = await supabase
-        .from("media")
-        .insert({
-          title: formData.title,
-          synopsis: formData.synopsis,
-          poster_url: formData.poster_url || null,
-          genre: formData.genre,
-          year: parseInt(formData.year) || 0,
-          category: formData.category,
-          idioma: formData.idioma,
-          estreno: formData.estreno,
-          seasons: showSeasonsField ? parseInt(formData.seasons) || null : null,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
+      const insertedData = await api.post("/api/media", {
+        title: formData.title,
+        synopsis: formData.synopsis,
+        poster_url: formData.poster_url || null,
+        genre: formData.genre,
+        year: parseInt(formData.year) || 0,
+        category: formData.category,
+        idioma: formData.idioma,
+        estreno: formData.estreno,
+        seasons: showSeasonsField ? parseInt(formData.seasons) || null : null,
+      });
 
       if (posterFile && insertedData) {
         const finalPosterUrl = await uploadPoster(posterFile, insertedData.id);
-        const { error: updateError } = await supabase
-          .from("media")
-          .update({ poster_url: finalPosterUrl })
-          .eq("id", insertedData.id);
-        if (updateError) throw updateError;
+        await api.patch("/api/media", {
+          id: insertedData.id,
+          poster_url: finalPosterUrl
+        });
       }
 
       showToast(`"${formData.title}" se ha creado correctamente`, false);
@@ -187,7 +182,7 @@ const uploadPoster = async (file: File, newRecordId: string): Promise<string> =>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-5 sm:p-6 md:p-8 shadow-xl">
-        
+
         {/* Sección de imagen */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 border-b border-gray-700/50 pb-8">
           <div className="flex flex-col">
@@ -241,7 +236,7 @@ const uploadPoster = async (file: File, newRecordId: string): Promise<string> =>
             <label className="block text-white font-medium mb-2 flex items-center gap-2">
               <Star className={`w-4 h-4 ${formData.estreno ? 'text-amber-400 fill-amber-400' : 'text-gray-500'}`} /> Marcar como Estreno
             </label>
-            <div 
+            <div
               onClick={toggleEstreno}
               className={`relative w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${formData.estreno ? 'bg-indigo-600' : 'bg-gray-600'}`}
             >

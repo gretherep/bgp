@@ -1,39 +1,33 @@
-import { NextResponse } from "next/server";
-import { createServerClient } from "@/utils/supabaseServer";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/utils/auth";
+import * as RatingsService from "@/services/ratings";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
-    const { mediaId, rating, userId } = await req.json();
+    const body = await req.json();
+    const { mediaId, rating } = body;
 
-    if (!mediaId || !rating || !userId) {
+    if (!mediaId || !rating) {
       return NextResponse.json(
-        { error: "mediaId, rating y userId son requeridos" },
+        { error: "mediaId and rating are required" },
         { status: 400 }
       );
     }
 
-    const supabase = createServerClient();
-
-    const { error } = await supabase.from("ratings").upsert(
-      {
-        media_id: mediaId,
-        user_id: userId,
-        rating,
-      },
-      {
-        onConflict: "media_id,user_id", // ✅ AQUÍ ESTABA EL ERROR
-      }
-    );
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    await RatingsService.upsertRating({
+      media_id: mediaId,
+      user_id: user.id,
+      rating,
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error(err);
     return NextResponse.json(
-      { error: err.message || "Error inesperado" },
+      { error: err.message || "Unexpected error" },
       { status: 500 }
     );
   }

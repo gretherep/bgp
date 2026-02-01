@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { getAllMedia } from "@/app/actions/media.actions"; 
+import { api } from "@/utils/apiClient";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, FreeMode } from "swiper/modules";
 import MediaCard from "@/components/MediaCard";
-import MediaModal from "@/components/MediaModal"; 
+import MediaModal from "@/components/MediaModal";
 import { useMediaModal } from "@/app/context/MediaModalContext";
 import { Media } from "@/app/models/media";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,9 +37,15 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const data = await getAllMedia();
-      setAllMedia((data as MediaItem[]) || []);
-      setLoading(false);
+      try {
+        const response = await api.get("/api/media?limit=0"); // limit=0 to get all for home page filtering
+        setAllMedia(response.data || []);
+      } catch (err) {
+        console.error("Error fetching media:", err);
+        setAllMedia([]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchData();
   }, []);
@@ -49,7 +55,7 @@ export default function HomePage() {
       const matchTitle = m.title.toLowerCase().includes(filterTitle.toLowerCase());
       const matchYear = filterYear ? m.year === filterYear : true;
       const matchCat = filterCategory.length ? filterCategory.includes(m.category) : true;
-      
+
       let matchGenre = true;
       if (filterGenre.length > 0) {
         const mediaGenres = m.genre ? m.genre.toLowerCase().split(/[- ,]+/) : [];
@@ -144,64 +150,64 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-          <Swiper
-            modules={[FreeMode, Autoplay]}
-            grabCursor
-            slidesPerView={1.3}
-            spaceBetween={16}
-            loop={topRated.length > 5}
-            // 1. VELOCIDAD PROFESIONAL: Transiciones de 1.2 segundos para mayor elegancia
-            speed={1200} 
-            autoplay={{ 
-              delay: 2500, // Un poco más de tiempo para apreciar el poster
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true 
-            }}
-            // 2. FÍSICA MEJORADA
-            freeMode={{
-              enabled: true,
-              sticky: true,
-              momentumRatio: 0.5,
-            }}
-            breakpoints={{
-              480: { slidesPerView: 2.2, spaceBetween: 20 },
-              768: { slidesPerView: 3.5, spaceBetween: 25 },
-              1024: { slidesPerView: 4.5, spaceBetween: 30 },
-            }}
-            className="!overflow-visible py-5"
-          >
-            {topRated.map((media, index) => (
-              <SwiperSlide key={`top-${media.id}`}>
-                <motion.div 
-                  whileHover={{ y: -12, scale: 1.03 }} // Elevación más pronunciada al estilo Netflix
-                  whileTap={{ scale: 0.95 }} 
-                  className="relative group cursor-pointer"
-                  onClick={() => openModal(media)}
-                >
-                  <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-shadow duration-500 group-hover:shadow-[var(--color-primary)]/10">
-                    
-                    {/* 3. OPTIMIZACIÓN VERCEL: Uso de next/image con unoptimized */}
-                    <Image
-                      src={media.poster_url || "/placeholder.jpg"}
-                      alt={media.title}
-                      fill
-                      unoptimized={true} // <--- Detiene el consumo de tu cuota de 5k
-                      className="object-cover opacity-95 transition-transform duration-1000 ease-out group-hover:scale-110"
-                    />
+              <Swiper
+                modules={[FreeMode, Autoplay]}
+                grabCursor
+                slidesPerView={1.3}
+                spaceBetween={16}
+                loop={topRated.length > 5}
+                // 1. VELOCIDAD PROFESIONAL: Transiciones de 1.2 segundos para mayor elegancia
+                speed={1200}
+                autoplay={{
+                  delay: 2500, // Un poco más de tiempo para apreciar el poster
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true
+                }}
+                // 2. FÍSICA MEJORADA
+                freeMode={{
+                  enabled: true,
+                  sticky: true,
+                  momentumRatio: 0.5,
+                }}
+                breakpoints={{
+                  480: { slidesPerView: 2.2, spaceBetween: 20 },
+                  768: { slidesPerView: 3.5, spaceBetween: 25 },
+                  1024: { slidesPerView: 4.5, spaceBetween: 30 },
+                }}
+                className="!overflow-visible py-5"
+              >
+                {topRated.map((media, index) => (
+                  <SwiperSlide key={`top-${media.id}`}>
+                    <motion.div
+                      whileHover={{ y: -12, scale: 1.03 }} // Elevación más pronunciada al estilo Netflix
+                      whileTap={{ scale: 0.95 }}
+                      className="relative group cursor-pointer"
+                      onClick={() => openModal(media)}
+                    >
+                      <div className="relative aspect-[2/3] rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-shadow duration-500 group-hover:shadow-[var(--color-primary)]/10">
 
-                    {/* Overlay sutil */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                    
-                    {/* Badge TOP con degradado */}
-                    <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 z-20 shadow-lg">
-                      <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-                      )}
+                        {/* 3. OPTIMIZACIÓN VERCEL: Uso de next/image con unoptimized */}
+                        <Image
+                          src={media.poster_url || "/placeholder.jpg"}
+                          alt={media.title}
+                          fill
+                          unoptimized={true} // <--- Detiene el consumo de tu cuota de 5k
+                          className="object-cover opacity-95 transition-transform duration-1000 ease-out group-hover:scale-110"
+                        />
+
+                        {/* Overlay sutil */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+
+                        {/* Badge TOP con degradado */}
+                        <div className="absolute top-3 md:top-4 left-0 bg-gradient-to-r from-[var(--color-primary)] to-[#e8b293] text-black pl-3 pr-4 py-1 rounded-r-full flex items-center gap-1.5 z-20 shadow-lg">
+                          <span className="text-[10px] md:text-[11px] font-black tracking-wider uppercase">TOP {index + 1}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
           </div>
         </section>
 
@@ -212,7 +218,7 @@ export default function HomePage() {
           <aside className="hidden lg:block shrink-0">
             <div className="sticky top-32">
               <FilterSidebar
-                singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: [{value: "", label: "Todos"}, ...yearOptions] }]}
+                singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: [{ value: "", label: "Todos" }, ...yearOptions] }]}
                 multiSelects={[
                   { key: "category", label: "Categorías", value: filterCategory, options: categoryOptions },
                   { key: "genre", label: "Géneros", value: filterGenre, options: genreOptions }
@@ -300,7 +306,7 @@ export default function HomePage() {
       <AnimatePresence>
         {isFilterOpen && (
           <FilterSidebar
-            singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: [{value: "", label: "Todos"}, ...yearOptions] }]}
+            singleSelects={[{ key: "year", label: "Año", value: filterYear.toString(), options: [{ value: "", label: "Todos" }, ...yearOptions] }]}
             multiSelects={[
               { key: "category", label: "Categorías", value: filterCategory, options: categoryOptions },
               { key: "genre", label: "Géneros", value: filterGenre, options: genreOptions }

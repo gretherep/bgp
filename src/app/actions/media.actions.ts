@@ -1,53 +1,23 @@
 "use server";
 
-import { createServerClient } from "@/utils/supabaseServer";
+import * as MediaService from "@/services/media";
+import * as RatingsService from "@/services/ratings";
 import { Media } from "../models/media";
+import { revalidatePath } from "next/cache";
+import { requireAdminAction } from "@/utils/auth";
+
 
 /**
  * Obtener todos los media (accesible para cualquier usuario)
  */
 export async function getAllMedia(): Promise<(Media & { avg_rating: number })[]> {
   try {
-    const supabase = await createServerClient();
-
-    // ✅ Consulta única optimizada: trae media y sus ratings de golpe
-    const { data: mediaData, error: mediaError } = await supabase
-      .from("media")
-      .select(`
-        *,
-        ratings (
-          rating
-        )
-      `);
-
-    if (mediaError) {
-      console.error("Supabase Error:", mediaError.message);
-      throw new Error(mediaError.message);
-    }
-
-    if (!mediaData) return [];
-
-    // ✅ Procesamos los datos en memoria (mucho más rápido que hacer 50 consultas)
-    const mediaWithRatings = mediaData.map((m: any) => {
-      const ratings = m.ratings || [];
-      const avg_rating =
-        ratings.length > 0
-          ? ratings.reduce((acc: number, r: any) => acc + r.rating, 0) / ratings.length
-          : 0;
-
-      // Eliminamos la propiedad ratings para no enviar datos extra innecesarios al cliente
-      const { ratings: _, ...mediaContent } = m;
-      
-      return {
-        ...mediaContent,
-        avg_rating,
-      };
-    });
-
-    return mediaWithRatings;
+    // MediaService.getAllMedia now handles average ratings internally in an optimized way
+    const mediaWithRatings = await MediaService.getAllMedia();
+    return mediaWithRatings as (Media & { avg_rating: number })[];
   } catch (error) {
     console.error("Critical error in getAllMedia:", error);
-    return []; // Retornamos array vacío para evitar que la página explote
+    return [];
   }
 }
 
@@ -55,49 +25,33 @@ export async function getAllMedia(): Promise<(Media & { avg_rating: number })[]>
  * Obtener un media por ID (accesible para cualquier usuario)
  */
 export async function getMediaById(id: string): Promise<Media | null> {
-  const supabase = await createServerClient();
-
-  const { data, error } = await supabase
-    .from("media")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
+  try {
+    return await MediaService.getMediaById(id);
+  } catch (error) {
+    return null;
+  }
 }
 
 // utils para generar slugs
 function slugify(text: string) {
   return text
     .toString()
-    .normalize("NFD")                // separa acentos
-    .replace(/[\u0300-\u036f]/g, "") // quita acentos
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, "-");           // espacios -> guiones
+    .replace(/\s+/g, "-");
 }
 
 /**
  * Crear un nuevo media (solo admin)
  */
-export async function createMedia(formData: FormData, userId: string) {
-  const supabase = await createServerClient();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  if (!profile || profile.role !== "admin") {
-    throw new Error("No autorizado");
-  }
-
+export async function createMedia(formData: FormData) {
+  await requireAdminAction();
   const category = String(formData.get("category") ?? "");
   const slug = slugify(category);
 
-  const { error } = await supabase.from("media").insert({
+  const mediaData = {
     title: String(formData.get("title") ?? ""),
     synopsis: String(formData.get("synopsis") ?? ""),
     poster_url: formData.get("poster_url") ? String(formData.get("poster_url")) : null,
@@ -105,61 +59,37 @@ export async function createMedia(formData: FormData, userId: string) {
     year: Number(formData.get("year") ?? 0),
     category,
     slug,
-  });
+  };
 
-  if (error) throw new Error(error.message);
+  await MediaService.createMedia(mediaData);
+  revalidatePath("/admin/media");
 }
 
 /**
  * Actualizar un media existente (solo admin)
  */
-export async function updateMedia(id: string, formData: FormData, userId: string): Promise<void> {
-  const supabase = await createServerClient();
+export async function updateMedia(id: string, formData: FormData): Promise<void> {
+  await requireAdminAction();
+  const updates = {
+    title: String(formData.get("title") ?? ""),
+    synopsis: String(formData.get("synopsis") ?? ""),
+    poster_url: formData.get("poster_url") ? String(formData.get("poster_url")) : null,
+    genre: String(formData.get("genre") ?? ""),
+    year: Number(formData.get("year") ?? 0),
+    category: String(formData.get("category") ?? ""),
+  };
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  if (!profile || profile.role !== "admin") {
-    throw new Error("No autorizado");
-  }
-
-  const { error } = await supabase
-    .from("media")
-    .update({
-      title: String(formData.get("title") ?? ""),
-      synopsis: String(formData.get("synopsis") ?? ""),
-      poster_url: formData.get("poster_url") ? String(formData.get("poster_url")) : null,
-      genre: String(formData.get("genre") ?? ""),
-      year: Number(formData.get("year") ?? 0),
-      category: String(formData.get("category") ?? ""),
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(error.message);
+  await MediaService.updateMedia(id, updates);
+  revalidatePath("/admin/media");
 }
 
 /**
  * Eliminar un media (solo admin)
  */
-export async function deleteMedia(id: string, userId: string): Promise<void> {
-  const supabase = await createServerClient();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  if (!profile || profile.role !== "admin") {
-    throw new Error("No autorizado");
-  }
-
-  const { error } = await supabase.from("media").delete().eq("id", id);
-
-  if (error) throw new Error(error.message);
+export async function deleteMedia(id: string): Promise<void> {
+  await requireAdminAction();
+  await MediaService.deleteMedia(id);
+  revalidatePath("/admin/media");
 }
 
 /**
@@ -167,18 +97,6 @@ export async function deleteMedia(id: string, userId: string): Promise<void> {
  */
 export async function createRating(mediaId: string, rating: number, userId: string) {
   if (!userId) throw new Error("Usuario no autenticado");
-
-  const supabase = await createServerClient();
-
-  const { error } = await supabase
-    .from("ratings")
-    .insert({
-      media_id: mediaId,
-      rating,
-      user_id: userId,
-    });
-
-  if (error) throw new Error(error.message);
-
+  await RatingsService.upsertRating({ media_id: mediaId, rating, user_id: userId });
   return { success: true };
 }
