@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data, total });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error in GET /api/media:", error);
+    return NextResponse.json({ error: error.message || "Fetch failed in API" }, { status: 500 });
   }
 }
 

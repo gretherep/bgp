@@ -39,22 +39,32 @@ export async function requireAdmin(request: NextRequest) {
  * Se utiliza para proteger Server Actions directamente
  */
 export async function requireAdminAction() {
-    const supabase = await createRequestClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    try {
+        const supabaseRequest = await createRequestClient();
+        const { data: { user }, error: authError } = await supabaseRequest.auth.getUser();
 
-    if (error || !user) {
-        throw new Error("No autorizado");
+        if (authError || !user) {
+            throw new Error("No autorizado: Sesión inválida o expirada");
+        }
+
+        const supabaseAdmin = createServerClient();
+        const { data: profile, error: profileError } = await supabaseAdmin
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
+        if (profileError || !profile) {
+            throw new Error("No autorizado: No se pudo verificar el perfil");
+        }
+
+        if (profile.role !== "admin") {
+            throw new Error("No autorizado: Se requiere rol de administrador");
+        }
+
+        return user;
+    } catch (err: any) {
+        console.error("Error in requireAdminAction:", err.message);
+        throw err;
     }
-
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-    if (profile?.role !== "admin") {
-        throw new Error("No autorizado: Se requiere rol de administrador");
-    }
-
-    return user;
 }

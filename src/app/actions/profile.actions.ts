@@ -19,16 +19,24 @@ export async function getProfiles(): Promise<Profile[]> {
 }
 
 export async function getProfile(id: string): Promise<Profile | null> {
-  await requireAdminAction();
-  const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    await requireAdminAction();
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  if (error) throw new Error(error.message);
-  return data;
+    if (error) {
+      console.error("Error fetching profile from DB:", error.message);
+      throw new Error(`Error al obtener perfil: ${error.message}`);
+    }
+    return data;
+  } catch (err: any) {
+    console.error("Critical error in getProfile action:", err.message);
+    throw err;
+  }
 }
 
 export async function createProfile(
@@ -72,52 +80,76 @@ export async function updateProfile(
   id: string,
   profileData: Partial<Omit<Profile, "id" | "created_at" | "updated_at">>
 ): Promise<Profile> {
-  await requireAdminAction();
-  const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .update(profileData)
-    .eq("id", id)
-    .select()
-    .single();
+  try {
+    await requireAdminAction();
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(profileData)
+      .eq("id", id)
+      .select()
+      .single();
 
-  if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Error updating profile in DB:", error.message);
+      throw new Error(`Error al actualizar perfil: ${error.message}`);
+    }
 
-  revalidatePath("/admin/profiles");
-  return data;
+    revalidatePath("/admin/profiles");
+    return data;
+  } catch (err: any) {
+    console.error("Critical error in updateProfile action:", err.message);
+    throw err;
+  }
 }
 
 export async function updateUserPassword(userId: string, newPassword: string) {
-  await requireAdminAction();
-  const supabase = createServerClient();
+  try {
+    await requireAdminAction();
+    const supabase = createServerClient();
 
-  const { error } = await supabase.auth.admin.updateUserById(userId, {
-    password: newPassword,
-  });
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
+      password: newPassword,
+    });
 
-  if (error) {
-    console.error("Error cambiando password:", error);
-    throw new Error("No se pudo actualizar la contraseña");
+    if (error) {
+      console.error("Error changing password in Auth:", error.message);
+      throw new Error(`No se pudo actualizar la contraseña: ${error.message}`);
+    }
+
+    return true;
+  } catch (err: any) {
+    console.error("Critical error in updateUserPassword action:", err.message);
+    throw err;
   }
-
-  return true;
 }
 
 export async function deleteProfile(id: string): Promise<void> {
-  await requireAdminAction();
-  const supabase = createServerClient();
+  try {
+    await requireAdminAction();
+    const supabase = createServerClient();
 
-  // Eliminar usuario en Auth
-  const { error: authError } = await supabase.auth.admin.deleteUser(id);
-  if (authError) throw new Error(authError.message);
+    // Eliminar usuario en Auth
+    const { error: authError } = await supabase.auth.admin.deleteUser(id);
+    if (authError) {
+      console.error("Error deleting user from Auth:", authError.message);
+      throw new Error(`Error al eliminar usuario de Auth: ${authError.message}`);
+    }
 
-  // Eliminar registro en profiles
-  const { error } = await supabase
-    .from("profiles")
-    .delete()
-    .eq("id", id);
+    // Eliminar registro en profiles
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", id);
 
-  if (error) throw new Error(error.message);
+    if (profileError) {
+      console.error("Error deleting profile from DB:", profileError.message);
+      throw new Error(`Error al eliminar perfil de la base de datos: ${profileError.message}`);
+    }
 
-  revalidatePath("/admin/profiles");
+    revalidatePath("/admin/profiles");
+  } catch (err: any) {
+    console.error("Critical error in deleteProfile action:", err.message);
+    throw err;
+  }
 }
