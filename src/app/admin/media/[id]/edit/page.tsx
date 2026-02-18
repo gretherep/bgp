@@ -7,12 +7,6 @@ import Image from "next/image";
 import { Upload, ImageIcon, Loader2, X, ArrowLeft, Star, Languages, Layers } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { Media } from "@/app/models/media";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
-
-const POSTER_BUCKET = "posters";
 
 const categories = [
   "Películas", "Series", "Novelas", "Reality Shows", "MiniSeries",
@@ -120,18 +114,15 @@ export default function EditMediaPage() {
   };
 
   const uploadPoster = async (file: File): Promise<string> => {
-    const fileExt = file.name.split(".").pop();
+    const fileExt = file.name.split(".").pop() || "jpg";
     const fileName = `${id}-${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from(POSTER_BUCKET)
-      .upload(filePath, file, { cacheControl: "3600", upsert: true });
+    const formData = new FormData();
+    formData.append("file", file, fileName);
+    formData.append("fileName", fileName);
 
-    if (uploadError) throw new Error("Error al subir el archivo: " + uploadError.message);
-
-    const { data: publicUrlData } = supabase.storage.from(POSTER_BUCKET).getPublicUrl(filePath);
-    return publicUrlData.publicUrl;
+    const { publicUrl } = await api.postForm("/api/media/poster", formData);
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -8,12 +8,8 @@ import { Loader2, X, ArrowLeft, Plus, ImageIcon, Star, Languages, Layers } from 
 import { useToast } from "@/app/context/ToastContext";
 import { Media } from "@/app/models/media";
 import imageCompression from 'browser-image-compression';
-import { createClient } from "@supabase/supabase-js"; // Solo para storage si es necesario, o usar api
 
-// Instancia mínima para storage si no queremos refactorizar storage a API aún
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-const POSTER_BUCKET = "posters";
 
 const categories = [
   "Películas", "Series", "Novelas", "Reality Shows", "MiniSeries",
@@ -113,23 +109,12 @@ export default function CreateMediaPage() {
 
     // Cambiamos la extensión a .webp porque la librería lo convirtió
     const fileName = `${newRecordId}.webp`;
-    const filePath = `${fileName}`;
+    const formData = new FormData();
+    formData.append("file", fileToUpload, fileName);
+    formData.append("fileName", fileName);
 
-    const { error: uploadError } = await supabase.storage
-      .from(POSTER_BUCKET)
-      .upload(filePath, fileToUpload, {
-        cacheControl: "3600",
-        upsert: true,
-        contentType: 'image/webp' // Aseguramos el tipo de contenido
-      });
-
-    if (uploadError) throw new Error("Error al subir imagen: " + uploadError.message);
-
-    const { data: publicUrlData } = supabase.storage
-      .from(POSTER_BUCKET)
-      .getPublicUrl(filePath);
-
-    return publicUrlData.publicUrl;
+    const { publicUrl } = await api.postForm("/api/media/poster", formData);
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

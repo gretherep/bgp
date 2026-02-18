@@ -8,7 +8,9 @@ export async function apiRequest(path: string, options: RequestInit = {}) {
     if (token) {
         headers.set("Authorization", `Bearer ${token}`);
     }
-    headers.set("Content-Type", "application/json");
+    if (!(options.body instanceof FormData)) {
+        headers.set("Content-Type", "application/json");
+    }
 
     const response = await fetch(path, {
         ...options,
@@ -34,6 +36,7 @@ export async function apiRequest(path: string, options: RequestInit = {}) {
 export const api = {
     get: (path: string) => apiRequest(path, { method: "GET" }),
     post: (path: string, body: any) => apiRequest(path, { method: "POST", body: JSON.stringify(body) }),
+    postForm: (path: string, body: FormData) => apiRequest(path, { method: "POST", body }),
     patch: (path: string, body: any) => apiRequest(path, { method: "PATCH", body: JSON.stringify(body) }),
     delete: (path: string) => apiRequest(path, { method: "DELETE" }),
 };
