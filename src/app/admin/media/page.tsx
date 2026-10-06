@@ -1,240 +1,132 @@
-"use client";
-
-import { useEffect, useState, useCallback, Suspense } from "react"; // ✅ Añadido Suspense
-import { api } from "@/utils/apiClient";
-import { Media } from "@/app/models/media";
-import { useToast } from "@/app/context/ToastContext";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import {
-  Plus,
-  Edit2,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Film,
-  Search,
-  X,
-  Loader2,
-} from "lucide-react";
+import { Pencil, Plus, Sparkles } from "lucide-react";
+import { createServerClient } from "@/utils/supabaseServer";
+import { MEDIA_CATEGORIES } from "@/app/models/media-categories";
+import { ButtonLink } from "@/components/ui/Button";
+import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
+import { BorrarTitulo, CorregirEspacios, EstrenoSwitch, FiltrosCatalogoAdmin } from "./ListaControles";
 
-const ITEMS_PER_PAGE = 10;
+export const metadata: Metadata = { title: "Catálogo" };
+export const dynamic = "force-dynamic";
 
-// ✅ 1. CREAMOS UN COMPONENTE INTERNO CON TODA TU LÓGICA
-function MediaTableContent() {
-  const { showToast } = useToast();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+const POR_PAGINA = 20;
 
-  const [media, setMedia] = useState<Media[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalItems, setTotalItems] = useState(0);
+type Fila = { id: string; title: string; year: number; category: string; poster_url: string | null; estreno: boolean | null; idioma: string | null; seasons: number | null };
+type Params = { q?: string; cat?: string; estreno?: string; page?: string };
 
-  const currentPage = Number(searchParams.get("page")) || 1;
-  const searchTerm = searchParams.get("search") || "";
+export default async function CatalogoAdminPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim();
+  const cat = MEDIA_CATEGORIES.find((c) => c === sp.cat) ?? null;
+  const soloEstrenos = sp.estreno === "1";
+  const pagina = Math.max(1, Math.min(parseInt(sp.page ?? "1", 10) || 1, 500));
 
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const sb = createServerClient();
+  let consulta = sb
+    .from("media")
+    .select("id,title,year,category,poster_url,estreno,idioma,seasons", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
+  if (q) consulta = consulta.ilike("title", `%${q.replace(/[%,()]/g, " ")}%`);
+  if (cat) consulta = consulta.eq("category", cat);
+  if (soloEstrenos) consulta = consulta.eq("estreno", true);
 
-  const createQueryString = useCallback(
-    (page: number, search: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("page", page.toString());
-      if (search) {
-        params.set("search", search);
-      } else {
-        params.delete("search");
-      }
-      return params.toString();
-    },
-    [searchParams]
-  );
+  const [lista, espIni, espFin] = await Promise.all([
+    consulta,
+    sb.from("media").select("id", { count: "exact", head: true }).like("title", " %"),
+    sb.from("media").select("id", { count: "exact", head: true }).like("title", "% "),
+  ]);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api.get(`/api/media?page=${currentPage}&limit=${ITEMS_PER_PAGE}&search=${encodeURIComponent(searchTerm)}`);
-      setMedia(res.data || []);
-      setTotalItems(res.total || 0);
-    } catch (err: any) {
-      console.error("Error:", err.message);
-      showToast("Error al cargar datos", true);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, searchTerm, showToast]);
+  const filas = (lista.data ?? []) as Fila[];
+  const total = lista.count ?? 0;
+  const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+  const conEspacios = (espIni.count ?? 0) + (espFin.count ?? 0);
+  const hayFiltros = !!(q || cat || soloEstrenos);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    router.push(`${pathname}?${createQueryString(1, value)}`);
-  };
-
-  const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      router.push(`${pathname}?${createQueryString(page, searchTerm)}`);
-    }
-  };
-
-  const clearSearch = () => {
-    router.push(`${pathname}?${createQueryString(1, "")}`);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Seguro que quieres eliminar este contenido?")) return;
-    try {
-      await api.delete(`/api/media?id=${id}`);
-      showToast("Contenido eliminado", false);
-      fetchData();
-    } catch (err: any) {
-      showToast("Error al eliminar: " + err.message, true);
-    }
-  };
-
-  const renderEstrenoBadge = (estreno: boolean | null | undefined) => {
-    if (estreno === true) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">Sí</span>;
-    return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-900/50 text-gray-400 border border-gray-800/50">No</span>;
+  // Conserva los filtros al ir a editar y al volver.
+  const volver = new URLSearchParams(Object.entries({ q, cat: cat ?? "", estreno: soloEstrenos ? "1" : "", page: pagina > 1 ? String(pagina) : "" }).filter(([, v]) => v)).toString();
+  const urlPagina = (n: number) => {
+    const p = new URLSearchParams(volver);
+    if (n > 1) p.set("page", String(n));
+    else p.delete("page");
+    const s = p.toString();
+    return s ? `/admin/media?${s}` : "/admin/media";
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 p-4 sm:p-6 mt-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
-              <div className="p-2 bg-indigo-600/20 rounded-xl text-indigo-400">
-                <Film className="w-6 h-6" />
-              </div>
-              Administrar Contenido
-            </h1>
-          </div>
+    <>
+      <PageHeader
+        titulo="Catálogo"
+        descripcion={`${total.toLocaleString("es")} ${total === 1 ? "título" : "títulos"}${hayFiltros ? " con estos filtros" : ""}. Lo que cambies aquí se ve en el sitio al guardar.`}
+        acciones={
+          <ButtonLink href="/admin/media/new">
+            <Plus className="h-4 w-4" aria-hidden="true" /> Agregar título
+          </ButtonLink>
+        }
+      />
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Buscar por título..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="w-full bg-gray-900/50 border border-gray-700 text-white pl-10 pr-10 py-2.5 rounded-xl focus:border-indigo-500 transition-all outline-none text-sm"
-              />
-              {searchTerm && (
-                <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+      {conEspacios > 0 && <CorregirEspacios cantidad={conEspacios} />}
 
-            <Link href="/admin/media/new" className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-amber-500 text-white font-medium px-4 py-2.5 rounded-xl w-full sm:w-auto">
-              <Plus className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
+      <FiltrosCatalogoAdmin q={q} cat={cat} soloEstrenos={soloEstrenos} categorias={[...MEDIA_CATEGORIES]} />
 
-        <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 overflow-hidden shadow-xl">
-          {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-2" />
-            </div>
-          ) : (
-            <>
-              <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full">
-                  <thead>
-                    <tr className="border-b border-gray-700/70 bg-gray-800/80 text-gray-400 text-xs uppercase font-semibold">
-                      <th className="px-6 py-4 text-left">Título</th>
-                      <th className="px-6 py-4 text-left">Categoría</th>
-                      <th className="px-6 py-4 text-left">Año</th>
-                      <th className="px-6 py-4 text-left text-amber-400">Estreno</th>
-                      <th className="px-6 py-4 text-left">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-700/40 text-white">
-                    {media.length > 0 ? (
-                      media.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-700/40 transition-colors">
-                          <td className="px-6 py-4 font-medium">{item.title}</td>
-                          <td className="px-6 py-4">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-indigo-900/50 text-indigo-300 border border-indigo-800/50">{item.category}</span>
-                          </td>
-                          <td className="px-6 py-4 text-amber-400 font-semibold">{item.year}</td>
-                          <td className="px-6 py-4">{renderEstrenoBadge(item.estreno)}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-2">
-                              <Link
-                                href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`}
-                                className="p-2 rounded-lg bg-blue-600/90 text-white hover:bg-blue-600"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Link>
-                              <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-red-600/90 text-white hover:bg-red-600"><Trash2 className="w-4 h-4" /></button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+      {filas.length === 0 ? (
+        <EmptyState
+          emoji="🎞️"
+          titulo={hayFiltros ? "No hay títulos con esos filtros" : "El catálogo está vacío"}
+          texto={hayFiltros ? "Prueba con otro nombre o quita los filtros." : "Agrega el primer título para que aparezca en el sitio."}
+          accion={<ButtonLink href={hayFiltros ? "/admin/media" : "/admin/media/new"} variante="secundario">{hayFiltros ? "Quitar filtros" : "Agregar título"}</ButtonLink>}
+        />
+      ) : (
+        <Card>
+          <ul className="divide-y divide-white/5">
+            {filas.map((m) => {
+              const editar = `/admin/media/${m.id}/edit${volver ? `?${volver}` : ""}`;
+              return (
+                <li key={m.id} className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
+                  <Link href={editar} className="shrink-0" aria-label={`Editar ${m.title}`}>
+                    {m.poster_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.poster_url} alt="" width={40} height={60} loading="lazy" decoding="async" className="h-[60px] w-10 rounded-md object-cover ring-1 ring-white/10" />
                     ) : (
-                      <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No hay resultados</td></tr>
+                      <span className="flex h-[60px] w-10 items-center justify-center rounded-md bg-offer/15 text-[9px] font-bold text-red-300 ring-1 ring-offer/30">Sin póster</span>
                     )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="md:hidden p-4 space-y-4">
-                {media.map((item) => (
-                  <div key={item.id} className="bg-gray-700/60 rounded-xl p-4 border border-gray-600/50">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-white">{item.title}</h3>
-                      {renderEstrenoBadge(item.estreno)}
-                    </div>
-                    <div className="flex gap-4 text-[10px] text-gray-400 uppercase mb-4">
-                      <span>{item.category}</span>
-                      <span>{item.year}</span>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-3 border-t border-gray-600/50">
-                      <Link
-                        href={`/admin/media/${item.id}/edit?returnPage=${currentPage}${searchTerm ? `&returnSearch=${encodeURIComponent(searchTerm)}` : ''}`}
-                        className="p-2 bg-blue-600 rounded-lg text-white"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Link>
-                      <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-600 rounded-lg text-white"><Trash2 className="w-4 h-4" /></button>
-                    </div>
+                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <Link href={editar} className="block truncate text-sm font-bold text-white hover:text-primary">
+                      {m.title}
+                    </Link>
+                    <p className="truncate text-xs text-accent">
+                      {m.year} · {m.category}
+                      {m.seasons ? ` · ${m.seasons} temp.` : ""}
+                      {m.idioma ? ` · ${m.idioma}` : ""}
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <EstrenoSwitch id={m.id} titulo={m.title} estreno={!!m.estreno} />
+                  <div className="flex shrink-0 items-center">
+                    <Link href={`/admin/portada?recomendar=${m.id}`} aria-label={`Recomendar ${m.title} esta semana`} title="Recomendar esta semana" className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-primary/15 hover:text-primary sm:flex">
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                    <Link href={editar} aria-label={`Editar ${m.title}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white">
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                    <BorrarTitulo id={m.id} titulo={m.title} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
 
-              <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-700/50 gap-4">
-                <div className="text-xs text-gray-400">
-                  Mostrando <span className="text-white font-bold">{startIndex + 1}</span> a <span className="text-white font-bold">{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)}</span> de <span className="text-white font-bold">{totalItems}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)} className="p-2 rounded-lg bg-gray-700 disabled:opacity-30"><ChevronLeft className="w-5 h-5 text-white" /></button>
-                  <span className="px-4 py-2 bg-indigo-600/20 text-indigo-300 font-bold rounded-lg text-sm">{currentPage} / {totalPages || 1}</span>
-                  <button disabled={currentPage >= totalPages} onClick={() => handlePageChange(currentPage + 1)} className="p-2 rounded-lg bg-gray-700 disabled:opacity-30"><ChevronRight className="w-5 h-5 text-white" /></button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ✅ 2. EL EXPORT DEFAULT AHORA ENVUELVE TODO EN SUSPENSE
-export default function AdminMediaPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-      </div>
-    }>
-      <MediaTableContent />
-    </Suspense>
+      {paginas > 1 && (
+        <nav className="mt-5 flex items-center justify-between gap-3" aria-label="Páginas">
+          {pagina > 1 ? <ButtonLink href={urlPagina(pagina - 1)} variante="secundario" tamano="sm">← Anterior</ButtonLink> : <span />}
+          <span className="text-sm font-semibold text-accent">Página {pagina} de {paginas}</span>
+          {pagina < paginas ? <ButtonLink href={urlPagina(pagina + 1)} variante="secundario" tamano="sm">Siguiente →</ButtonLink> : <span />}
+        </nav>
+      )}
+    </>
   );
 }
