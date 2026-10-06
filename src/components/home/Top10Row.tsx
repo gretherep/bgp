@@ -1,5 +1,6 @@
 import type { HomeMedia } from "@/lib/catalog";
 import PedidoToggle from "@/components/pedido/PedidoToggle";
+import { posterImg } from "@/lib/poster";
 import Carousel from "./Carousel";
 import OpenMedia from "./OpenMedia";
 
@@ -21,7 +22,7 @@ export default function Top10Row({ items, titulo = "🏆 Top 10 mejor valorados"
                   {m.poster_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={m.poster_url}
+                      {...posterImg(m, "tarjeta", "168px")}
                       alt={m.title}
                       width={168}
                       height={252}

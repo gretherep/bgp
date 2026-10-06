@@ -5,7 +5,7 @@ import type { Precio } from "./precios";
 
 // Campos que necesitan la tarjeta y el modal de detalle. Nunca "*": la tabla puede crecer.
 const MEDIA_FIELDS =
-  "id,slug,title,synopsis,poster_url,genre,year,category,estreno,idioma,seasons,created_at,updated_at,rating_avg,rating_count";
+  "id,slug,title,synopsis,poster_url,poster_thumb_url,poster_md_url,poster_full_url,poster_color,genre,year,category,estreno,idioma,seasons,created_at,updated_at,rating_avg,rating_count";
 
 export type HomeMedia = Media & { rating_avg: number; rating_count: number };
 

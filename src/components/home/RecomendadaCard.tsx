@@ -5,6 +5,7 @@ import { SITE } from "@/lib/site";
 import { waLink } from "@/lib/whatsapp";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import PedidoToggle from "@/components/pedido/PedidoToggle";
+import { posterImg } from "@/lib/poster";
 import OpenMedia from "./OpenMedia";
 
 // Respaldo cuando el admin no escribió razones: las 3 primeras sacadas de los datos.
@@ -56,7 +57,7 @@ export default function RecomendadaCard({
       {media.poster_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={media.poster_url}
+          {...posterImg(media, "mini")}
           alt=""
           aria-hidden="true"
           className="absolute inset-0 -z-10 hidden h-full w-full scale-125 object-cover opacity-30 blur-2xl sm:block"
@@ -83,7 +84,7 @@ export default function RecomendadaCard({
             {media.poster_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={media.poster_url}
+                {...posterImg(media, "grande", "(min-width: 1400px) 250px, (min-width: 1280px) 210px, (min-width: 1024px) 150px, (min-width: 640px) 176px, 118px")}
                 alt={media.title}
                 width={228}
                 height={342}

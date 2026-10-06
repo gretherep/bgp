@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const POR_PAGINA = 20;
 
-type Fila = { id: string; title: string; year: number; category: string; poster_url: string | null; estreno: boolean | null; idioma: string | null; seasons: number | null };
+type Fila = { id: string; title: string; year: number; category: string; poster_url: string | null; poster_thumb_url: string | null; estreno: boolean | null; idioma: string | null; seasons: number | null };
 type Params = { q?: string; cat?: string; estreno?: string; page?: string };
 
 export default async function CatalogoAdminPage({ searchParams }: { searchParams: Promise<Params> }) {
@@ -25,7 +25,7 @@ export default async function CatalogoAdminPage({ searchParams }: { searchParams
   const sb = createServerClient();
   let consulta = sb
     .from("media")
-    .select("id,title,year,category,poster_url,estreno,idioma,seasons", { count: "exact" })
+    .select("id,title,year,category,poster_url,poster_thumb_url,estreno,idioma,seasons", { count: "exact" })
     .order("created_at", { ascending: false })
     .order("id", { ascending: true })
     .range((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA - 1);
@@ -88,7 +88,7 @@ export default async function CatalogoAdminPage({ searchParams }: { searchParams
                   <Link href={editar} className="shrink-0" aria-label={`Editar ${m.title}`}>
                     {m.poster_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.poster_url} alt="" width={40} height={60} loading="lazy" decoding="async" className="h-[60px] w-10 rounded-md object-cover ring-1 ring-white/10" />
+                      <img src={m.poster_thumb_url || m.poster_url} alt="" width={40} height={60} loading="lazy" decoding="async" className="h-[60px] w-10 rounded-md object-cover ring-1 ring-white/10" />
                     ) : (
                       <span className="flex h-[60px] w-10 items-center justify-center rounded-md bg-offer/15 text-[9px] font-bold text-red-300 ring-1 ring-offer/30">Sin póster</span>
                     )}

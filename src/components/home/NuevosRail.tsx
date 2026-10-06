@@ -1,5 +1,6 @@
 import type { HomeMedia } from "@/lib/catalog";
 import PedidoToggle from "@/components/pedido/PedidoToggle";
+import { posterImg } from "@/lib/poster";
 import Carousel from "./Carousel";
 import OpenMedia from "./OpenMedia";
 
@@ -24,7 +25,7 @@ export default function NuevosRail({ items, titulo }: { items: HomeMedia[]; titu
                 {m.poster_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={m.poster_url}
+                    {...posterImg(m, "tarjeta", "128px")}
                     alt={m.title}
                     width={128}
                     height={192}

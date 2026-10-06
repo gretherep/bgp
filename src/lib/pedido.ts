@@ -79,6 +79,7 @@ export function aItemPedido(m: {
   category: string;
   seasons?: number | null;
   poster_url?: string | null;
+  poster_thumb_url?: string | null;
 }): ItemPedido {
   return {
     id: m.id,
@@ -86,6 +87,7 @@ export function aItemPedido(m: {
     year: m.year,
     category: m.category,
     seasons: m.seasons ? Number(m.seasons) : null,
-    poster_url: m.poster_url ?? null,
+    // En el panel se ve a 40 px: basta la miniatura de 320 px (~14 KB) en vez del original (~100 KB).
+    poster_url: m.poster_thumb_url || m.poster_url || null,
   };
 }

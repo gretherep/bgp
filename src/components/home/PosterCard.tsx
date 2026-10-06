@@ -1,18 +1,23 @@
 import type { HomeMedia } from "@/lib/catalog";
+import { posterImg } from "@/lib/poster";
 import PedidoToggle from "@/components/pedido/PedidoToggle";
 import OpenMedia from "./OpenMedia";
+
+// Ancho real de la columna (ver GRID_POSTERS): 2 columnas en el móvil, hasta 172 px en PC.
+const SIZES = "(min-width: 1024px) 172px, (min-width: 640px) 25vw, 48vw";
 
 // Tarjeta de catálogo: póster 2:3, cinta ESTRENO, año, categoría, título, calificación real y ＋ pedido.
 export default function PosterCard({ media, eager = false }: { media: HomeMedia; eager?: boolean }) {
   const votos = Number(media.rating_count ?? 0);
+  const img = posterImg(media, "tarjeta", SIZES);
   return (
     <div className="group relative">
       <OpenMedia media={media} label={`Ver ficha de ${media.title}`} className="block w-full text-left">
         <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-surface-2 transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-[0_18px_40px_-18px_rgba(249,195,164,0.35)]">
-          {media.poster_url ? (
+          {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={media.poster_url}
+              {...img}
               alt={media.title}
               width={190}
               height={285}

@@ -141,7 +141,7 @@ export default function RecomendadaEditor({
               <div className="flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/10 p-2.5">
                 {media.poster_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={media.poster_url} alt="" width={36} height={54} className="h-[54px] w-9 rounded-md object-cover" />
+                  <img src={media.poster_thumb_url || media.poster_url} alt="" width={36} height={54} className="h-[54px] w-9 rounded-md object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-white">{media.title.trim()}</p>
@@ -241,7 +241,7 @@ export default function RecomendadaEditor({
               <li key={r.id} className="flex items-center gap-3 py-2.5">
                 {r.media.poster_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.media.poster_url} alt="" width={28} height={42} loading="lazy" className="h-[42px] w-7 rounded object-cover" />
+                  <img src={r.media.poster_thumb_url || r.media.poster_url} alt="" width={28} height={42} loading="lazy" className="h-[42px] w-7 rounded object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-white/90">{r.media.title.trim()}</p>
@@ -320,7 +320,7 @@ function BuscadorTitulos({ onElegir }: { onElegir: (m: HomeMedia) => void }) {
               <button type="button" onClick={() => onElegir(m)} className="flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-white/[0.06]">
                 {m.poster_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.poster_url} alt="" width={28} height={42} loading="lazy" className="h-[42px] w-7 rounded object-cover" />
+                  <img src={m.poster_thumb_url || m.poster_url} alt="" width={28} height={42} loading="lazy" className="h-[42px] w-7 rounded object-cover" />
                 ) : (
                   <span className="h-[42px] w-7 rounded bg-white/10" />
                 )}

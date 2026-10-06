@@ -41,8 +41,8 @@ async function cargarResumen() {
   const [admin, reco, estrenoAuto, promos, total, nuevos, estrenos, sinPoster, espIni, espFin, usuarios, votos, votosSemana] =
     await Promise.all([
       getAdmin(),
-      sb.from("recomendacion").select("desde, hasta, media:media_id(title, poster_url)").eq("activa", true).maybeSingle(),
-      sb.from("media").select("title, poster_url").eq("estreno", true).not("poster_url", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      sb.from("recomendacion").select("desde, hasta, media:media_id(title, poster_url, poster_thumb_url)").eq("activa", true).maybeSingle(),
+      sb.from("media").select("title, poster_url, poster_thumb_url").eq("estreno", true).not("poster_url", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       sb.from("promos").select("id,kind,titulo,badge,desde,hasta,activa,prioridad").order("prioridad", { ascending: false }),
       sb.from("media").select("id", cuenta),
       sb.from("media").select("id", cuenta).gte("created_at", haceUnaSemana),
@@ -56,10 +56,10 @@ async function cargarResumen() {
     ]);
 
   // ── Lo que ve hoy el cliente ──
-  const recoData = reco.data as unknown as { desde: string; hasta: string | null; media: { title: string; poster_url: string | null } | null } | null;
+  const recoData = reco.data as unknown as { desde: string; hasta: string | null; media: { title: string; poster_url: string | null; poster_thumb_url: string | null } | null } | null;
   const recoVigencia = recoData ? estadoVigencia({ activa: true, desde: recoData.desde, hasta: recoData.hasta }, ahora) : null;
   const recoVisible = recoData?.media && recoVigencia === "activa" ? recoData.media : null;
-  const destacadaAuto = estrenoAuto.data as { title: string; poster_url: string | null } | null;
+  const destacadaAuto = estrenoAuto.data as { title: string; poster_url: string | null; poster_thumb_url: string | null } | null;
 
   const lista = (promos.data ?? []) as PromoResumen[];
   const conEstado = lista.map((p) => ({ ...p, estado: estadoVigencia(p, ahora) }));
@@ -166,7 +166,7 @@ function Resumen({
             <FilaPortada
               icono={<Sparkles className="h-4 w-4" aria-hidden="true" />}
               titulo="Recomendada de la semana"
-              poster={(recoVisible ?? destacadaAuto)?.poster_url ?? null}
+              poster={(recoVisible ?? destacadaAuto)?.poster_thumb_url || (recoVisible ?? destacadaAuto)?.poster_url || null}
               valor={recoVisible ? recoVisible.title.trim() : destacadaAuto ? `${destacadaAuto.title.trim()} (automática)` : "—"}
               detalle={recoVisible ? (recoHasta ? `Hasta el ${fechaCorta(recoHasta)}` : "Sin fecha de fin") : "Elegida por el sitio: el estreno más reciente"}
               estado={recoVisible ? <Badge tono="exito">Elegida</Badge> : <Badge tono="neutro">Automática</Badge>}

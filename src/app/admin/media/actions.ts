@@ -46,7 +46,15 @@ export type TituloInput = {
   idioma: string;
   seasons: number | null;
   estreno: boolean;
+  /**
+   * Versiones livianas del póster (docs/sql/005). undefined: no se tocan (el póster no cambió);
+   * null: se borran (póster nuevo sin versiones: el sitio usa el original hasta que corra el script).
+   */
+  variantes?: { thumb: string; md: string; full: string; color: string } | null;
 };
+
+const URL_HTTPS = /^https:\/\/\S+$/;
+const COLOR = /^rgb\(\d{1,3},\d{1,3},\d{1,3}\)$/;
 
 export async function guardarTitulo(input: TituloInput): Promise<Resultado<{ id: string }>> {
   return protegido(async () => {
@@ -71,14 +79,23 @@ export async function guardarTitulo(input: TituloInput): Promise<Resultado<{ id:
     if (fila.synopsis.length < 10) return { ok: false, error: "Escribe una sinopsis (mínimo 10 caracteres)." };
     if (fila.poster_url && !/^https:\/\//.test(fila.poster_url)) return { ok: false, error: "La URL del póster debe empezar con https://" };
 
+    const v = input.variantes;
+    if (v && (![v.thumb, v.md, v.full].every((u) => URL_HTTPS.test(u)) || !COLOR.test(v.color))) return { ok: false, error: "Las versiones del póster no son válidas." };
+    const variantes =
+      v === undefined
+        ? {}
+        : v === null
+          ? { poster_thumb_url: null, poster_md_url: null, poster_full_url: null, poster_color: null }
+          : { poster_thumb_url: v.thumb, poster_md_url: v.md, poster_full_url: v.full, poster_color: v.color };
+
     const sb = createServerClient();
     if (input.id) {
-      const { error } = await sb.from("media").update(fila).eq("id", input.id);
+      const { error } = await sb.from("media").update({ ...fila, ...variantes }).eq("id", input.id);
       if (error) throw error;
       refrescar();
       return { ok: true, data: { id: input.id } };
     }
-    const { data, error } = await sb.from("media").insert(fila).select("id").single();
+    const { data, error } = await sb.from("media").insert({ ...fila, ...variantes }).select("id").single();
     if (error) throw error;
     refrescar();
     return { ok: true, data: { id: data.id as string } };

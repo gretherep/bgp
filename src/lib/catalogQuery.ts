@@ -5,7 +5,7 @@ import type { HomeMedia } from "./catalog";
 
 // Mismos campos que el Inicio: tarjeta + modal de detalle.
 export const CARD_FIELDS =
-  "id,slug,title,synopsis,poster_url,genre,year,category,estreno,idioma,seasons,created_at,updated_at,rating_avg,rating_count";
+  "id,slug,title,synopsis,poster_url,poster_thumb_url,poster_md_url,poster_full_url,poster_color,genre,year,category,estreno,idioma,seasons,created_at,updated_at,rating_avg,rating_count";
 
 export type PaginaCatalogo = { items: HomeMedia[]; total: number; page: number; pageSize: number };
 

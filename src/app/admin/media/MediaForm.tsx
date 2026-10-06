@@ -14,7 +14,8 @@ import { Card, CardHeader } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { Switch } from "@/components/ui/Switch";
-import { borrarTitulo, guardarTitulo, subirPoster } from "./actions";
+import { borrarTitulo, guardarTitulo, subirPoster, type TituloInput } from "./actions";
+import { generarVariantes } from "./posterVariantes";
 
 export type TituloEditable = {
   id: string;
@@ -99,18 +100,30 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
     e.preventDefault();
     startTransition(async () => {
       let poster_url = f.poster_url;
+      // Sin cambios de póster: las versiones livianas se quedan como están.
+      let variantes: TituloInput["variantes"] = poster_url === (inicial?.poster_url ?? "") ? undefined : null;
+      const subir = async (blob: Blob, nombre: string) => {
+        const fd = new FormData();
+        fd.append("file", blob, nombre);
+        return subirPoster(fd);
+      };
       if (archivo) {
         setPaso("Comprimiendo póster…");
-        const liviano = await comprimir(archivo);
+        const [liviano, locales] = await Promise.all([comprimir(archivo), generarVariantes(archivo)]);
         setPaso(`Subiendo póster (${Math.round(liviano.size / 1024)} KB)…`);
-        const fd = new FormData();
-        fd.append("file", liviano, liviano.name || "poster.webp");
-        const subida = await subirPoster(fd);
+        const subida = await subir(liviano, liviano.name || "poster.webp");
         if (!subida.ok) {
           setPaso(null);
           return showToast(subida.error, true, 6000);
         }
         poster_url = subida.data!.url;
+        variantes = null;
+        if (locales) {
+          setPaso("Subiendo versiones para el móvil…");
+          const [t, m] = await Promise.all([subir(locales.thumb, "thumb.webp"), subir(locales.md, "md.webp")]);
+          // Si falla alguna, el póster se guarda igual (el sitio usa el original).
+          if (t.ok && m.ok) variantes = { thumb: t.data!.url, md: m.data!.url, full: poster_url, color: locales.color };
+        }
       }
       setPaso("Guardando…");
       const r = await guardarTitulo({
@@ -124,6 +137,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
         idioma: f.idioma,
         seasons: f.seasons ? Number(f.seasons) : null,
         estreno: f.estreno,
+        variantes,
       });
       setPaso(null);
       if (!r.ok) return showToast(r.error, true, 6000);

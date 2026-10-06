@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { HomeMedia, PedidoConfig } from "@/lib/catalog";
 import { CATEGORIAS } from "@/lib/categories";
 import { generosCortos, idiomaLegible, rutaTitulo } from "@/lib/format";
+import { posterImg } from "@/lib/poster";
 import { precioItem } from "@/lib/precios";
 import { SITE } from "@/lib/site";
 import { waLink } from "@/lib/whatsapp";
@@ -74,7 +75,7 @@ export default function FichaTitulo({
             </div>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={m.poster_url!} alt={`Póster de ${titulo}`} width={400} height={600} className="h-full w-full object-cover" onError={() => setSinPoster(true)} />
+            <img {...posterImg(m, "grande", variante === "modal" ? "(min-width: 640px) 280px, 150px" : "(min-width: 1024px) 380px, (min-width: 640px) 40vw, 260px")} alt={`Póster de ${titulo}`} width={400} height={600} decoding="async" fetchPriority={variante === "pagina" ? "high" : undefined} className="h-full w-full object-cover" onError={() => setSinPoster(true)} />
           )}
           {m.estreno && (
             <span className="absolute left-3 top-3 rounded-md bg-gradient-to-r from-red-600 to-orange-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-white shadow-md">

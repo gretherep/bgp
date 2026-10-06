@@ -5,6 +5,7 @@ import { getPedidoConfig } from "@/lib/catalog";
 import { getParecidos, getTituloPorRuta } from "@/lib/catalogQuery";
 import { CATEGORIAS } from "@/lib/categories";
 import { rutaTitulo } from "@/lib/format";
+import { posterImg } from "@/lib/poster";
 import { SITE } from "@/lib/site";
 import FichaTitulo from "@/components/ficha/FichaTitulo";
 import PosterCard from "@/components/home/PosterCard";
@@ -77,7 +78,7 @@ export default async function TituloPage({ params }: Props) {
         {/* Fondo: el póster muy difuminado le da el color de cada título */}
         {m.poster_url && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={m.poster_url} alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-20 blur-3xl" />
+          <img {...posterImg(m, "mini")} alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-20 blur-3xl" />
         )}
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-b from-background/40 via-background/80 to-background" />
 

@@ -359,7 +359,7 @@ Página `/admin/portada` → `RecomendadaEditor`.
 ### 1.5 Página de título compartible + modal interceptado
 - [ ] `(public)/titulo/[slug]/page.tsx`: página completa (póster, sinopsis, rating, CTA de pedido) con `generateMetadata` → **Open Graph** con póster: al pegar el link en WhatsApp sale la tarjeta con imagen.
 - [ ] `(public)/@modal/(.)titulo/[slug]/page.tsx`: **intercepting route** → al tocar una tarjeta dentro del sitio se abre como modal (URL real, botón "atrás" nativo, sin `pushState` manual); al abrir el link directo se ve la página completa.
-- [ ] Verificar `slug` único y no nulo en los 879 registros; generar los que falten.
+- ✅ Verificar `slug` único y no nulo en los registros; generar los que falten. *(SQL 004 ejecutado el 2026-10-06: 880/880 con slug, 0 repetidos, formato `[a-z0-9-]`, máx. 80. Choques resueltos: `it-1990`/`it-2017`, `s-w-a-t-2003`/`s-w-a-t-2017`, `la-maldicion-de-hill-house-2018-c80286`/`…-4e7df0`. En producción: `/titulo/tau` 200, el enlace por id redirige 308 a `/titulo/tau`, canonical y og:url con el slug, y las tarjetas de Inicio, Categoría y Búsqueda ya enlazan por nombre.)*
 
 **Hecho (2026-10-06), sin intercepting route:**
 - ✅ **`/titulo/[slug]`**: Server Component con ISR bajo demanda (`generateStaticParams` vacío + `revalidate = 300`; el panel la revalida al guardar títulos, precios o negocio). `generateMetadata` con **Open Graph del póster** (`video.movie`), canonical y **JSON-LD** (`Movie`/`TVSeries` + `aggregateRating`). Fondo con el póster difuminado, ruta Inicio › Categoría › Título y **"Si te gustó, mira también"** (`getParecidos`: misma categoría y grupo de género).
@@ -367,12 +367,12 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - ✅ **`FichaTitulo`** (un solo componente para la ventanita y la página): póster con ESTRENO, categoría (enlace) · año · temporadas, calificación guardada (sin pedir `/api/ratings/avg`), géneros, idioma legible, sinopsis, **precio** (`precioItem`, config compartida con "Mi pedido" vía `usePedidoConfig`), **Pedir por WhatsApp con el enlace de la ficha**, ＋ Mi pedido, **Compartir** (menú del teléfono o copiar enlace) y estrellas para votar (`Votar`, cargado aparte porque trae Supabase; sin sesión abre el login con `EVENTO_ABRIR_LOGIN`).
 - ✅ **`MediaModal`** rehecho con el sistema de diseño (hoja desde abajo en móvil, ventana en PC) usando `FichaTitulo` + "Ver la ficha completa →".
 - ✅ Las tarjetas (`OpenMedia`) son `<a href="/titulo/…">`: toque normal → ventanita; Ctrl/⌘+clic, clic central y buscadores → página.
-- ✅ **`docs/sql/004_slugs.sql`**: `slugify()` (sin tildes, máx. 80), relleno de los 880 (choques: "It", "S.W.A.T." y "La maldición de Hill House" llevan el año, y si aún chocan, 6 letras del id), índice único y trigger que pone el slug a los títulos nuevos sin cambiarlo al editar. ⬜ **Falta ejecutar el SQL 004.**
+- ✅ **`docs/sql/004_slugs.sql`**: `slugify()` (sin tildes, máx. 80), relleno de los 880 (choques: "It", "S.W.A.T." y "La maldición de Hill House" llevan el año, y si aún chocan, 6 letras del id), índice único y trigger que pone el slug a los títulos nuevos sin cambiarlo al editar. ✅ Ejecutado y verificado.
 - ✅ Se eliminaron `useMediaRating` y `/api/ratings/avg`.
 - ⬜ Intercepting route (`@modal/(.)titulo`) para que la ventanita tenga URL propia: queda para después; hoy la ventanita se cierra con "atrás" y comparte el enlace de la página.
 
 ### 1.6 Revalidación bajo demanda
-- 🔄 Las Server Actions del panel (Catálogo, Precios, Negocio) revalidan `/`, `/category/[category]` y `/descripcion` ✅; falta `/titulo/[slug]` cuando exista (1.5).
+- ✅ Las Server Actions del panel (Catálogo, Precios, Negocio) revalidan `/`, `/category/[category]`, `/titulo/[slug]` y `/descripcion`.
 
 ### 1.7 Auth fuera del bundle público
 - [ ] `apiClient`: solo adjunta token en mutaciones; los GET públicos no tocan Supabase.
@@ -456,7 +456,7 @@ Página `/admin/portada` → `RecomendadaEditor`.
   - **Búsqueda en vivo** (`BuscadorEnVivo`): al escribir (pausa de 350 ms, mín. 2 letras) cambia la URL y el servidor devuelve los resultados; Enter busca y cierra el teclado del teléfono; si llega otra búsqueda desde el menú, el campo la refleja.
   - Resultados con `PosterCard` en la misma cuadrícula del catálogo (`GRID_POSTERS`, compartida), hasta 48.
   - **Sin resultados**: "No tenemos «…» en el catálogo" + **"Pedir «…»" por WhatsApp con el nombre buscado** + "Quizás te interese" (lo último que entró). Sin búsqueda: chips de categorías y lo último que entró.
-  - `buscarCatalogo()` usa la RPC `buscar_media` (**`docs/sql/003_busqueda.sql`**: `unaccent` + `pg_trgm`, sin tildes y tolerante a errores: "hary poter" → Harry Potter). ⬜ **Falta ejecutar el SQL 003.** Mientras tanto, ilike con cada vocal como comodín ("accion" ya encuentra "Acción").
+  - `buscarCatalogo()` usa la RPC `buscar_media` (**`docs/sql/003_busqueda.sql`**: `unaccent` + `pg_trgm`, sin tildes y tolerante a errores: "hary poter" → Harry Potter). ✅ SQL 003 ejecutado ("hary poter" encuentra Harry Potter en producción). Mientras tanto, ilike con cada vocal como comodín ("accion" ya encuentra "Acción").
   - Se eliminaron `/api/media` (y `/api/media/poster`), `services/media.ts`, `actions/media.actions.ts`, `actions/ratings.actions.ts` y `MediaCard` (sin uso).
 - ✅ Tamaños reales en producción (transferidos, comprimidos): Inicio 30 KB, Películas 27 KB, Reality 13 KB, Precios 8 KB, búsqueda "harry" 18 KB.
 - [ ] Footer en PC (contacto, horario, categorías, precios); en móvil queda por encima del Bottom Nav.
@@ -495,6 +495,16 @@ Página `/admin/portada` → `RecomendadaEditor`.
 ### 3.3 Backfill de los pósters existentes
 - [ ] `scripts/backfill-posters.ts` con `sharp`: descarga original → genera `thumb`/`md`/`full` + color → sube con caché de 1 año → actualiza la fila. Idempotente (salta filas ya procesadas), con concurrencia 4 y log de errores.
 - [ ] Verificación posterior: 0 filas con `poster_thumb_url` nulo y póster existente; muestreo de pesos.
+
+**Hecho (2026-10-06)**
+- ✅ Medición inicial: 880 pósters (567 WebP, 295 JPG, 18 PNG/JPEG), mediana 103 KB (máx. 205), ~91 MB en total, `cache-control: max-age=3600` (1 hora).
+- ✅ `docs/sql/005_poster_variantes.sql` (ejecutado): `poster_thumb_url`, `poster_md_url`, `poster_full_url`, `poster_color`. `poster_url` (original) queda como respaldo.
+- ✅ `scripts/posters-variantes.mjs` (sharp): thumb 320×480 q55, md 480×720 q60, full 900 px alto q70 y color medio; sube a `posters/variantes/<id>/<tipo>-<hash>.webp` con caché de 1 año; guarda las 4 columnas solo si `poster_url` no cambió; reintentos ante cortes de red; idempotente; `--prueba` no sube nada. Prueba en 10 pósters: tarjetas del móvil −81 % (mediana thumb 14 KB, md 25 KB, full 32 KB).
+- ✅ `src/lib/poster.ts` → `posterImg(m, uso, sizes)`: `tarjeta` (srcset 320w/480w), `grande` (320w/480w/600w), `mini` (miniaturas); fondo `poster_color`; sin versiones usa el original. Aplicado en PosterCard, NuevosRail, Top10Row, RecomendadaCard, FichaTitulo, fondo de /titulo, "Mi pedido" (guarda la miniatura) y miniaturas del panel (Catálogo, Portada, Resumen).
+- ✅ Panel: al subir un póster, el navegador genera thumb y md (canvas → WebP) + color y los sube junto al póster comprimido (`full`); si cambia el póster por URL o se quita, se borran las versiones viejas. Si el navegador no sabe WebP, se guarda igual y queda para el script.
+- ✅ Logo de `business_info`: ya se comprime y sube con caché de 1 año (Fase A).
+- ⬜ **Ejecutar el script sobre los 880** (escribe en producción: pendiente de permiso).
+- ⬜ Borrar del bucket las versiones viejas al reemplazar un póster (hoy quedan huérfanas; ocupan poco).
 
 **Criterios de aceptación Fase 3**
 - Peso medio de póster en grid móvil ≤ 20 KB.
