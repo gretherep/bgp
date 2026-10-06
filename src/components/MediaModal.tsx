@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "@/utils/apiClient";
 import { useMediaModal } from "@/app/context/MediaModalContext";
 import { useMediaRating } from "@/hooks/useMediaRating";
@@ -8,8 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/app/context/ToastContext";
 import { useUserMediaRating } from "@/hooks/useUserMediaRating";
 import { Languages, X, Layers } from "lucide-react";
-import { motion } from "framer-motion";
 import Image from "next/image";
+import { useHojaModal } from "@/hooks/useHojaModal";
+import { waLink } from "@/lib/whatsapp";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import PedidoToggle from "@/components/pedido/PedidoToggle";
 
 export default function MediaModal() {
   const { selectedMedia, closeModal } = useMediaModal();
@@ -25,16 +28,9 @@ export default function MediaModal() {
   const [hoverRating, setHoverRating] = useState(0);
   const [imageError, setImageError] = useState(false);
 
-  useEffect(() => {
-    if (selectedMedia) {
-      window.history.pushState({ modalOpen: true }, "");
-      const handlePopState = () => closeModal();
-      window.addEventListener("popstate", handlePopState);
-      return () => {
-        window.removeEventListener("popstate", handlePopState);
-      };
-    }
-  }, [selectedMedia, closeModal]);
+  // Se monta solo mientras la ficha está abierta (MediaModalContext la carga bajo demanda).
+  // "Atrás", Esc, la ✕ y el clic fuera cierran por el mismo camino, sin dejar entradas en el historial.
+  const cerrar = useHojaModal(closeModal);
 
   if (!selectedMedia) return null;
 
@@ -44,7 +40,7 @@ export default function MediaModal() {
       await api.post("/api/ratings", { mediaId: selectedMedia.id, rating: value });
       setUserRating(value);
       showToast("⭐ ¡Gracias por tu voto!", false);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       showToast("❌ Error al votar", true);
     }
@@ -64,19 +60,20 @@ export default function MediaModal() {
   const genres = selectedMedia.genre ? selectedMedia.genre.split(",").map(g => g.trim()) : [];
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={closeModal}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[100] p-4" onClick={cerrar}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={selectedMedia.title}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl overflow-hidden rounded-3xl shadow-2xl text-gray-300"
+        className="relative w-full max-w-3xl animate-fade-up overflow-hidden rounded-3xl shadow-2xl text-gray-300 [animation-duration:250ms]"
         style={{
           backgroundColor: "rgba(15, 15, 15, 0.98)",
           border: "1px solid rgba(255, 255, 255, 0.1)",
           maxHeight: '90vh',
         }}
       >
-        <button onClick={closeModal} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center z-10 text-white transition-all active:scale-90">
+        <button onClick={cerrar} aria-label="Cerrar ficha" className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center z-10 text-white transition-all active:scale-90">
           <X size={20} />
         </button>
 
@@ -164,12 +161,21 @@ export default function MediaModal() {
               <p className="text-sm leading-relaxed text-white/80 font-medium max-h-40 overflow-y-auto no-scrollbar">{selectedMedia.synopsis || "Sinopsis no disponible."}</p>
             </div>
 
-            <div className="mt-auto pt-6 border-t border-white/5 flex justify-end items-center">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20">Lanzamiento oficial {selectedMedia.year}</p>
+            <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-white/5 pt-6">
+              <a
+                href={waLink(null, `Hola 👋 quiero: *${selectedMedia.title.trim()}* (${selectedMedia.year}) – ${selectedMedia.category}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-whatsapp px-5 py-2.5 text-sm font-black text-black shadow-lg shadow-whatsapp/20 transition hover:brightness-110 active:scale-[0.97]"
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                Pedir por WhatsApp
+              </a>
+              <PedidoToggle media={selectedMedia} variante="boton" />
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

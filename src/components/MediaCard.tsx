@@ -2,18 +2,18 @@
 
 import { Media } from "@/app/models/media";
 import { useMediaModal } from "@/app/context/MediaModalContext";
-import { useMediaRating } from "@/hooks/useMediaRating";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
 interface MediaCardProps {
-  media: Media;
+  media: Media & { avg_rating?: number | null; rating_avg?: number | null };
   index?: number;
 }
 
 export default function MediaCard({ media, index = 0 }: MediaCardProps) {
   const { openModal } = useMediaModal();
-  const avgRating = useMediaRating(media.id);
+  // El promedio ya viene en el listado (/api/media lo calcula); no se pide uno por tarjeta.
+  const avgRating = Number(media.rating_avg ?? media.avg_rating ?? 0);
 
   return (
     <motion.div

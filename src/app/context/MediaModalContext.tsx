@@ -1,8 +1,11 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { Media } from "@/app/models/media";
-import MediaModal from "@/components/MediaModal";
+
+// La ficha (con auth, votos y lucide) se descarga recién al abrir el primer título.
+const MediaModal = dynamic(() => import("@/components/MediaModal"), { ssr: false });
 
 type MediaItem = Media & { avg_rating?: number | null };
 
@@ -31,8 +34,8 @@ export const MediaModalProvider = ({ children }: { children: ReactNode }) => {
   return (
     <MediaModalContext.Provider value={{ selectedMedia, openModal, closeModal }}>
       {children}
-      {/* ✅ Usa tu componente bonito, no el modal inline */}
-      <MediaModal />
+      {/* Montada solo mientras hay un título abierto */}
+      {selectedMedia && <MediaModal />}
     </MediaModalContext.Provider>
   );
 };
