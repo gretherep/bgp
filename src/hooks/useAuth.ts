@@ -16,7 +16,7 @@ export const useAuth = () => {
   useEffect(() => {
     let mounted = true;
 
-    const fetchProfile = async (sessionUser: any) => {
+    const fetchProfile = async (sessionUser: User) => {
       try {
         const response = await fetch("/api/users", {
           method: "POST",

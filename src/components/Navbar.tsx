@@ -10,18 +10,9 @@ import { waLink } from "@/lib/whatsapp";
 import { useHojaModal } from "@/hooks/useHojaModal";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
-const EMOJI: Record<string, string> = {
-  peliculas: "🎬",
-  series: "📺",
-  animados: "🧸",
-  anime: "🎌",
-  novelas: "💞",
-  reality: "🎤",
-};
-
 const NAV = [
   { name: "Inicio", href: "/", emoji: "🏠" },
-  ...CATEGORIAS.map((c) => ({ name: c.label, href: `/category/${c.slug}`, emoji: EMOJI[c.slug] ?? "🎞️" })),
+  ...CATEGORIAS.map((c) => ({ name: c.label, href: `/category/${c.slug}`, emoji: c.emoji })),
   { name: "Precios", href: "/descripcion", emoji: "💰" },
 ];
 

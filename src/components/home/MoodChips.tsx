@@ -1,7 +1,7 @@
 "use client";
 
 import { GENEROS } from "@/lib/categories";
-import { EVENTO_FILTRAR } from "./catalogo/CatalogoInicio";
+import { EVENTO_FILTRAR } from "./catalogo/Catalogo";
 
 // Atajos por "estado de ánimo": filtran el catálogo de abajo por un grupo de géneros.
 export default function MoodChips() {

@@ -1,15 +1,24 @@
 // Filtros del catálogo compartidos por servidor y cliente (sin "server-only").
 
-export type CategoriaFiltro = { slug: string; label: string; categorias: string[] };
+export type CategoriaFiltro = {
+  slug: string;
+  label: string;
+  categorias: string[];
+  emoji: string;
+  /** Para frases como "Pedir una película": artículo + nombre en singular. */
+  una: string;
+  /** Qué incluye, en lenguaje del cliente (cabecera de la página de categoría). */
+  incluye: string;
+};
 
 /** Categorías navegables. Cada una agrupa uno o más valores de media.category. */
 export const CATEGORIAS: CategoriaFiltro[] = [
-  { slug: "peliculas", label: "Películas", categorias: ["Películas"] },
-  { slug: "series", label: "Series", categorias: ["Series", "MiniSeries"] },
-  { slug: "animados", label: "Animados", categorias: ["Películas Animadas", "Series Animadas"] },
-  { slug: "anime", label: "Anime", categorias: ["Anime", "Películas Anime"] },
-  { slug: "novelas", label: "Novelas", categorias: ["Novelas"] },
-  { slug: "reality", label: "Reality", categorias: ["Reality Shows"] },
+  { slug: "peliculas", label: "Películas", categorias: ["Películas"], emoji: "🎬", una: "una película", incluye: "Estrenos y clásicos, doblados o subtitulados." },
+  { slug: "series", label: "Series", categorias: ["Series", "MiniSeries"], emoji: "📺", una: "una serie", incluye: "Series y miniseries, por temporada completa." },
+  { slug: "animados", label: "Animados", categorias: ["Películas Animadas", "Series Animadas"], emoji: "🧸", una: "un animado", incluye: "Películas y series animadas para toda la familia." },
+  { slug: "anime", label: "Anime", categorias: ["Anime", "Películas Anime"], emoji: "🎌", una: "un anime", incluye: "Series y películas de anime." },
+  { slug: "novelas", label: "Novelas", categorias: ["Novelas"], emoji: "💞", una: "una novela", incluye: "Novelas completas o por capítulos." },
+  { slug: "reality", label: "Reality", categorias: ["Reality Shows"], emoji: "🎤", una: "un reality", incluye: "Realities y concursos, por capítulos." },
 ];
 
 export type GeneroFiltro = { slug: string; label: string; emoji: string; mood?: string; patrones: string[] };

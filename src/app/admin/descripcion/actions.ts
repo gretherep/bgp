@@ -27,6 +27,8 @@ async function protegido<T>(fn: () => Promise<Resultado<T>>): Promise<Resultado<
 // WhatsApp y horario salen en todo el sitio (Inicio, Mi pedido, promos) y en /descripcion.
 function refrescar() {
   revalidatePath("/");
+  revalidatePath("/category/[category]", "page");
+  revalidatePath("/titulo/[slug]", "page");
   revalidatePath("/descripcion");
   revalidatePath("/admin/descripcion");
   revalidatePath("/admin/portada");

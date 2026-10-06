@@ -27,6 +27,8 @@ async function protegido<T>(fn: () => Promise<Resultado<T>>): Promise<Resultado<
 // Los precios salen en el Inicio (tarjetas, Mi pedido), en Portada (vista previa) y en /descripcion.
 function refrescar() {
   revalidatePath("/");
+  revalidatePath("/category/[category]", "page");
+  revalidatePath("/titulo/[slug]", "page");
   revalidatePath("/descripcion");
   revalidatePath("/admin/pricing-categories");
   revalidatePath("/admin/portada");

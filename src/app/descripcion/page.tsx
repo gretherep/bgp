@@ -1,219 +1,195 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getPreciosPagina, type TarifaPublica } from "@/lib/catalog";
+import { CATEGORIAS } from "@/lib/categories";
+import { precioPaqueteDe, seccionesNegocio } from "@/lib/format";
+import { TARIFAS } from "@/lib/precios";
+import { SITE } from "@/lib/site";
+import { waLink } from "@/lib/whatsapp";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import OffersRow from "@/components/home/OffersRow";
 
-import { useEffect, useState } from "react";
-import { PricingCategory } from "@/app/models/pricingCategory";
-import { BusinessInfo } from "@/app/models/businessInfo"; // Usamos tu interfaz
-import { motion } from "framer-motion";
-import ShootingStars from "@/components/ShootingStars";
+// Estática y regenerada cada 5 min (y al guardar Precios o Negocio en el panel).
+export const revalidate = 300;
 
-export default function AboutPage() {
-  const [info, setInfo] = useState<BusinessInfo | null>(null);
-  const [pricing, setPricing] = useState<PricingCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+export const metadata: Metadata = {
+  title: "Precios",
+  description: `Precios del Paquete Semanal de ${SITE.paqueteTamano} y de películas, series, anime, novelas y realities por separado. Servicio a domicilio; pedidos por WhatsApp.`,
+  alternates: { canonical: "/descripcion" },
+};
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [infoRes, pricingRes] = await Promise.all([
-          fetch("/api/descripcion"),
-          fetch("/api/pricing-categories")
-        ]);
+const fmt = (n: number) => n.toLocaleString("es");
 
-        const infoData = await infoRes.json();
-        const pricingData = await pricingRes.json();
+/** Ejemplo de cuenta para que el precio se entienda de un vistazo ("3 temporadas = 300 CUP"). */
+function ejemplo(t: TarifaPublica, modo: string | undefined): string | null {
+  if (modo === "temporada") return `3 temporadas = ${fmt(t.price * 3)} ${t.currency}`;
+  if (modo === "capitulo") return `20 capítulos = ${fmt(t.price * 20)} ${t.currency}`;
+  if (modo === "unidad") return `5 películas = ${fmt(t.price * 5)} ${t.currency}`;
+  return null;
+}
 
-        // ✅ CORRECCIÓN DE ESTRUCTURA: 
-        // Si infoData es un array, extraemos el primero.
-        const businessData = Array.isArray(infoData) ? infoData[0] : infoData;
-
-        setInfo(businessData);
-        setPricing(pricingData);
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+export default async function PreciosPage() {
+  const d = await getPreciosPagina();
+  const precioPaquete = precioPaqueteDe(d.descripcion);
+  // El precio y el horario del paquete ya salen en su tarjeta: no se repiten abajo.
+  const secciones = seccionesNegocio(d.descripcion).filter((s) => !/^(precio del paquete|horario)/i.test(s.titulo ?? ""));
+  const intro = secciones.filter((s) => !s.titulo);
+  const detalles = secciones.filter((s) => s.titulo);
 
   return (
-    <div
-      className="bg-[var(--color-background)] min-h-screen text-[var(--color-secondary)] overflow-x-hidden"
-      style={{
-        "--color-primary": "#F9C3A4",
-        "--color-secondary": "#DCDAD9",
-        "--color-accent": "#95999E",
-        "--color-background": "#161616ff",
-      } as React.CSSProperties}
-    >
-
-      {/* 🎭 HEADER / BANNER ANIMADO */}
-      <section className="relative pt-32 pb-16 overflow-hidden">
-        <ShootingStars />
-
-        {/* Luces de fondo */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[60%] rounded-full bg-[var(--color-primary)] blur-[120px]" />
-          <div className="absolute bottom-0 right-[0%] w-[40%] h-[50%] rounded-full bg-indigo-600 blur-[100px]" />
+    <>
+      {/* ── Cabecera ─────────────────────────────────────────────────── */}
+      <section className="relative isolate overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10"
+          style={{ backgroundImage: "radial-gradient(60% 90% at 15% 0%, rgba(249,195,164,0.12), transparent 70%)" }}
+        />
+        <div className="mx-auto max-w-[1600px] px-4 pb-8 pt-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
+          <nav aria-label="Ruta" className="mb-3 text-xs font-semibold text-accent">
+            <Link href="/" className="hover:text-white">Inicio</Link>
+            <span aria-hidden="true" className="mx-1.5 text-white/30">›</span>
+            <span className="text-white/80">Precios</span>
+          </nav>
+          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <span aria-hidden="true" className="mr-2">💰</span>Precios
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-white/70 sm:text-base">
+            Lo que cuesta cada cosa, sin sorpresas. Pide por WhatsApp y te lo llevamos a domicilio.
+          </p>
         </div>
+      </section>
 
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            {/* ✅ LOGO: Verificamos si existe image_url */}
-            {info?.image_url ? (
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="relative inline-block mb-8"
-              >
-                <div className="absolute inset-0 bg-[var(--color-primary)] blur-3xl opacity-20" />
-                <img
-                  src={info.image_url}
-                  alt="Logo Business"
-                  className="relative w-32 h-32 mx-auto rounded-[2.5rem] border-2 border-white/10 shadow-2xl object-cover"
-                />
-              </motion.div>
-            ) : (
-              // Div temporal por si la URL es nula mientras carga
-              <div className="w-32 h-32 mx-auto mb-8 bg-white/5 rounded-[2.5rem] animate-pulse border border-white/5" />
-            )}
+      {/* ── Paquete semanal + tarifas ────────────────────────────────── */}
+      <section className="mx-auto max-w-[1600px] px-4 pb-12 sm:px-6 lg:px-10">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)] lg:gap-6">
+          {/* Paquete semanal: el producto principal */}
+          {/* En PC acompaña al bajar por las tarifas (sticky) en vez de estirarse hasta su altura */}
+          <article className="relative isolate flex flex-col overflow-hidden rounded-3xl border border-primary/40 bg-surface p-6 sm:p-8 lg:sticky lg:top-24 lg:self-start">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10"
+              style={{ backgroundImage: "radial-gradient(80% 70% at 100% 0%, rgba(249,195,164,0.18), transparent 70%)" }}
+            />
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-[11px] font-black uppercase tracking-wider text-black">
+              📦 Lo más pedido
+            </span>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">Paquete semanal</h2>
+            <p className="mt-1 text-sm text-white/70">{SITE.paqueteTamano} de estrenos, series, novelas y más, cada semana.</p>
+            <p className="mt-5 flex items-baseline gap-2">
+              {precioPaquete ? (
+                <>
+                  <span className="text-5xl font-black tracking-tight text-white">{precioPaquete.split(" ")[0]}</span>
+                  <span className="text-lg font-black text-primary">{precioPaquete.split(" ")[1]}</span>
+                  <span className="text-sm font-semibold text-accent">el básico</span>
+                </>
+              ) : (
+                <span className="text-2xl font-black text-white">Precio a consultar</span>
+              )}
+            </p>
+            <ul className="mt-5 space-y-2 text-sm text-white/80">
+              <li className="flex gap-2"><span aria-hidden="true">🛵</span> Servicio a domicilio</li>
+              {d.horario && <li className="flex gap-2"><span aria-hidden="true">🕘</span> {d.horario}</li>}
+              <li className="flex gap-2"><span aria-hidden="true">🔁</span> Contenido nuevo cada semana</li>
+            </ul>
+            <a
+              href={waLink(d.whatsappUrl, "Hola 👋 quiero reservar turno para el paquete de esta semana")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-whatsapp px-5 py-3.5 text-sm font-black text-black transition hover:brightness-110 active:scale-[0.97]"
+            >
+              <WhatsAppIcon className="h-4 w-4" /> Reservar turno
+            </a>
+          </article>
 
-            <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tighter text-white">
-              {info?.title || "Catálogo Digital"}
-            </h1>
-
-            <div className="flex flex-col items-center">
-              <p className="text-[var(--color-primary)] font-bold tracking-[0.4em] uppercase text-xs mb-4">
-                Tarifas y Servicios
-              </p>
-              <div className="h-1 w-20 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent" />
+          {/* Títulos sueltos */}
+          <div className="min-w-0">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">Títulos por separado</h2>
+              <span className="text-xs font-semibold text-accent">Para grabar solo lo que quieras</span>
             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 📖 SOBRE NOSOTROS */}
-      <section className="max-w-4xl mx-auto px-6 pb-16">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 md:p-12 backdrop-blur-md"
-        >
-          <h2 className="text-sm font-black mb-6 text-white uppercase tracking-[0.3em] flex items-center gap-4">
-            <span className="w-10 h-[1px] bg-[var(--color-primary)]"></span>
-            ¿Quienes Somos?
-          </h2>
-          <p className="text-[var(--color-secondary)]/70 leading-relaxed text-lg whitespace-pre-line">
-            {info?.description || "Cargando información corporativa..."}
-          </p>
-        </motion.div>
-      </section>
-
-      {/* 🏷️ LISTADO DE PRECIOS */}
-      <section className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex items-center gap-4 mb-12">
-          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">
-            Nuestras <span className="text-[var(--color-primary)]">Tarifas</span>
-          </h2>
-          <div className="flex-1 h-px bg-white/10"></div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {pricing
-            // 1. Filtramos solo las que están activas
-            .filter((item) => item.is_active === true)
-            // 2. Ordenamos por display_order de menor a mayor
-            .sort((a, b) => a.display_order - b.display_order)
-            // 3. Renderizamos
-            .map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                viewport={{ once: true }}
-                className="group relative bg-white/[0.03] border border-white/5 hover:border-[var(--color-primary)]/30 rounded-[1.8rem] p-6 transition-all duration-300"
-              >
-                {/* ... resto del contenido del card (h3, precio, descripción) igual ... */}
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-sm font-black text-[var(--color-accent)] group-hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
-                    {item.category}
-                  </h3>
-                  <span className="text-[var(--color-primary)] text-xs">★</span>
-                </div>
-
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-3xl font-black text-white">
-                    {item.price.toLocaleString()}
-                  </span>
-                  <span className="text-[var(--color-primary)] text-sm font-bold uppercase">
-                    {item.currency}
-                  </span>
-                </div>
-
-                {item.description && (
-                  <p className="text-[var(--color-accent)] text-xs leading-relaxed border-t border-white/5 pt-4 italic">
-                    {item.description}
-                  </p>
-                )}
-
-                <div className="absolute inset-0 rounded-[1.8rem] bg-[var(--color-primary)]/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              </motion.div>
-            ))}
-        </div>
-      </section>
-
-      {/* 🔗 CONTACTO: WhatsApp y Telegram asociados a tu modelo */}
-      <section className="max-w-4xl mx-auto px-6 py-24">
-        <div className="relative overflow-hidden bg-gradient-to-b from-white/[0.03] to-transparent p-10 md:p-16 rounded-[3rem] border border-white/5 text-center">
-
-          <h3 className="text-3xl font-black text-white mb-4">¿Listo para empezar?</h3>
-          <p className="text-[var(--color-accent)] mb-10 max-w-sm mx-auto">
-            Haz clic en tu plataforma preferida y hablemos sobre tu próximo proyecto.
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-6">
-            {/* BOTÓN WHATSAPP */}
-            {info?.whatsapp_url && (
-              <motion.a
-                href={info.whatsapp_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                className="group flex items-center gap-4 bg-[#25D366]/10 hover:bg-[#25D366] border border-[#25D366]/20 px-8 py-4 rounded-2xl transition-all duration-300"
-              >
-                <svg className="w-6 h-6 fill-[#25D366] group-hover:fill-white transition-colors" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                </svg>
-                <span className="text-sm font-bold text-white uppercase tracking-widest">WhatsApp</span>
-              </motion.a>
+            {d.tarifas.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-white/15 px-5 py-8 text-center text-sm text-accent">
+                Pregúntanos por WhatsApp el precio de lo que buscas.
+              </p>
+            ) : (
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {d.tarifas.map((t) => {
+                  const info = TARIFAS.find((x) => x.nombre === t.category);
+                  const cat = CATEGORIAS.find((c) => c.categorias.includes(t.category));
+                  const tambien = info?.cubre.filter((c) => c !== t.category) ?? [];
+                  const ej = ejemplo(t, info?.modo);
+                  return (
+                    <li key={t.category} className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-primary/40">
+                      <h3 className="text-base font-black text-white">
+                        {cat && <span aria-hidden="true" className="mr-1.5">{cat.emoji}</span>}
+                        {t.category}
+                      </h3>
+                      <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5">
+                        <span className="text-3xl font-black tracking-tight text-white">{fmt(t.price)}</span>
+                        <span className="text-sm font-black text-primary">{t.currency}</span>
+                        {info && <span className="text-sm font-semibold text-accent">{info.unidad}</span>}
+                      </p>
+                      {ej && <p className="mt-1 text-xs font-semibold text-white/60">Ej.: {ej}</p>}
+                      {tambien.length > 0 && <p className="mt-1 text-xs text-accent">También: {tambien.join(", ")}</p>}
+                      {t.description && <p className="mt-3 whitespace-pre-line border-t border-white/10 pt-3 text-[13px] leading-relaxed text-white/70">{t.description.trim()}</p>}
+                      {cat && (
+                        <Link href={`/category/${cat.slug}`} className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-bold text-primary underline-offset-4 hover:underline">
+                          Ver {cat.label.toLowerCase()} →
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             )}
-
-            {/* BOTÓN TELEGRAM
-            {info?.telegram_url && (
-              <motion.a
-                href={info.telegram_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                className="group flex items-center gap-4 bg-[#0088cc]/10 hover:bg-[#0088cc] border border-[#0088cc]/20 px-8 py-4 rounded-2xl transition-all duration-300"
-              >
-                <svg className="w-6 h-6 fill-[#0088cc] group-hover:fill-white transition-colors" viewBox="0 0 24 24">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.441-.168.56-.505 1.259-.832 1.259-.224 0-.448-.112-.672-.336-.224-.224-.56-.56-1.121-1.009-.784-.56-1.233-.896-2.018-1.457-.56-.392-.224-1.065.28-.112.505.953 2.132 4.208 2.412 4.881.056.168.168.336.168.448 0 .112-.056.224-.168.224-.112 0-.28-.056-.448-.168-.224-.112-2.912-1.849-5.488-3.53-.448-.28-.896-.56-.896-.896 0-.336.448-.56 1.008-.84 1.121-.56 5.824-2.522 6.16-2.69.336-.168.56-.168.728-.112.168.056.28.168.336.336z"/>
-                </svg>
-                <span className="text-sm font-bold text-white uppercase tracking-widest">Telegram</span>
-              </motion.a>
-            )} */}
           </div>
         </div>
       </section>
-    </div>
+
+      <OffersRow promos={d.promosCard} whatsappUrl={d.whatsappUrl} />
+
+      {/* ── Cómo trabajamos (texto del panel → Negocio) ──────────────── */}
+      {(intro.length > 0 || detalles.length > 0) && (
+        <section className="mx-auto max-w-[1600px] px-4 pb-12 sm:px-6 lg:px-10">
+          <div className="grid gap-6 rounded-3xl border border-white/10 bg-surface p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-10">
+            <div className="min-w-0">
+              <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">{d.titulo || "Quiénes somos"}</h2>
+              {intro.map((p, i) => (
+                <p key={i} className="mt-3 text-sm leading-relaxed text-white/75 sm:text-base">{p.texto}</p>
+              ))}
+            </div>
+            {detalles.length > 0 && (
+              <dl className="grid min-w-0 gap-3 sm:grid-cols-2">
+                {detalles.map((s, i) => (
+                  <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <dt className="text-[13px] font-black text-primary">{s.titulo}</dt>
+                    <dd className="mt-1 text-sm leading-relaxed text-white/75">{s.texto}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Cierre ───────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-[1600px] px-4 pb-16 sm:px-6 lg:px-10">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.02] px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
+          <div>
+            <p className="text-xl font-black text-white">¿Dudas con algún precio?</p>
+            <p className="mt-1 text-sm text-accent">Escríbenos y te lo explicamos. También conseguimos títulos que no están en el catálogo.</p>
+          </div>
+          <a
+            href={waLink(d.whatsappUrl, "Hola 👋 tengo una duda sobre los precios")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-black transition hover:brightness-110 active:scale-[0.97]"
+          >
+            <WhatsAppIcon className="h-4 w-4" /> Preguntar por WhatsApp
+          </a>
+        </div>
+      </section>
+    </>
   );
 }

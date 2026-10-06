@@ -27,6 +27,8 @@ async function protegido<T>(fn: () => Promise<Resultado<T>>): Promise<Resultado<
 
 function refrescar() {
   revalidatePath("/");
+  revalidatePath("/category/[category]", "page");
+  revalidatePath("/titulo/[slug]", "page");
   revalidatePath("/admin/media");
   revalidatePath("/admin/dashboard");
 }

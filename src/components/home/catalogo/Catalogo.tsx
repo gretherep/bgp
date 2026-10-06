@@ -19,17 +19,32 @@ import PosterCard from "../PosterCard";
 import Chip from "./Chip";
 import FilterSheet from "./FilterSheet";
 import FiltroPopover from "./FiltroPopover";
+import { GRID_POSTERS } from "./grid";
 
 export const EVENTO_FILTRAR = "bgp:filtrar";
 
 type Pagina = { items: HomeMedia[]; total: number; page: number; pageSize: number };
 
-const GRID =
-  // 2 columnas en móvil, 4 en tablet, 6 en 1024, 7 en 1280–1440 y 8 en 1920 (nunca menos de 140 px).
-  "grid gap-x-3 gap-y-5 sm:gap-x-4 [grid-template-columns:repeat(auto-fill,minmax(clamp(140px,11.5vw,172px),1fr))]";
 
-export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagina; whatsappUrl: string | null }) {
-  const [filtros, setFiltros] = useState<FiltrosCatalogo>(FILTROS_VACIOS);
+/**
+ * Catálogo con filtros, "Cargar más" y filtros en la URL. Lo usan el Inicio (todas las categorías)
+ * y cada página de categoría (`catFija`: la categoría no se muestra como filtro ni se puede quitar).
+ */
+export default function Catalogo({
+  inicial,
+  whatsappUrl,
+  catFija = null,
+  ruta = "/",
+  titulo,
+}: {
+  inicial: Pagina;
+  whatsappUrl: string | null;
+  catFija?: string | null;
+  ruta?: string;
+  titulo?: React.ReactNode;
+}) {
+  const base: FiltrosCatalogo = { ...FILTROS_VACIOS, cat: catFija };
+  const [filtros, setFiltros] = useState<FiltrosCatalogo>(base);
   const [items, setItems] = useState<HomeMedia[]>(inicial.items);
   const [total, setTotal] = useState(inicial.total);
   const [page, setPage] = useState(1);
@@ -55,14 +70,20 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
     }
   }, []);
 
+  // Filtros elegidos por el cliente (la categoría fija de la página no cuenta).
+  const cuenta = useCallback((f: FiltrosCatalogo) => cuentaFiltrosActivos(f) - (catFija ? 1 : 0), [catFija]);
+
   const aplicar = useCallback(
-    async (f: FiltrosCatalogo) => {
+    async (elegidos: FiltrosCatalogo) => {
+      const f = catFija ? { ...elegidos, cat: catFija } : elegidos;
       setFiltros(f);
       setError(false);
       // La URL refleja los filtros (se puede compartir); replaceState no recarga la página.
-      const qs = filtrosAParams(f).toString();
-      history.replaceState(history.state, "", qs ? `/?${qs}#catalogo` : "/#catalogo");
-      if (cuentaFiltrosActivos(f) === 0) {
+      const params = filtrosAParams(f);
+      if (catFija) params.delete("cat"); // ya está en la ruta
+      const qs = params.toString();
+      history.replaceState(history.state, "", qs ? `${ruta}?${qs}#catalogo` : `${ruta}#catalogo`);
+      if (cuenta(f) === 0) {
         setItems(inicial.items);
         setTotal(inicial.total);
         setPage(1);
@@ -77,7 +98,7 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
       }
       setCargando(null);
     },
-    [inicial, pedir],
+    [inicial, pedir, catFija, ruta, cuenta],
   );
 
   const cargarMas = async () => {
@@ -93,8 +114,9 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
 
   // Filtros que llegan en la URL (enlace compartido) o desde los chips de "¿Qué quieres ver hoy?".
   useEffect(() => {
-    const desdeUrl = filtrosDesdeParams(new URLSearchParams(window.location.search));
-    if (cuentaFiltrosActivos(desdeUrl) > 0) aplicar(desdeUrl);
+    const leidos = filtrosDesdeParams(new URLSearchParams(window.location.search));
+    const desdeUrl = catFija ? { ...leidos, cat: catFija } : leidos;
+    if (cuenta(desdeUrl) > 0) aplicar(desdeUrl);
 
     const onFiltrar = (e: Event) => {
       const detalle = (e as CustomEvent<Partial<FiltrosCatalogo>>).detail;
@@ -103,9 +125,9 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
     };
     window.addEventListener(EVENTO_FILTRAR, onFiltrar);
     return () => window.removeEventListener(EVENTO_FILTRAR, onFiltrar);
-  }, [aplicar]);
+  }, [aplicar, catFija, cuenta]);
 
-  const activos = cuentaFiltrosActivos(filtros);
+  const activos = cuenta(filtros);
   const anios = aniosFiltro();
   const catLabel = CATEGORIAS.find((c) => c.slug === filtros.cat)?.label;
   const anioLabel = anios.find((a) => a.slug === filtros.anio)?.label;
@@ -118,7 +140,7 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
 
   // Chips de filtros activos (removibles)
   const chipsActivos = [
-    ...(catLabel ? [{ key: "cat", label: catLabel, quitar: () => quitar({ cat: null }) }] : []),
+    ...(catLabel && !catFija ? [{ key: "cat", label: catLabel, quitar: () => quitar({ cat: null }) }] : []),
     ...(anioLabel ? [{ key: "anio", label: anioLabel, quitar: () => quitar({ anio: null }) }] : []),
     ...filtros.generos.map((g) => {
       const gen = GENEROS.find((x) => x.slug === g);
@@ -144,18 +166,20 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
 
           {/* PC: chips desplegables */}
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
-            <FiltroPopover label="Categorías" valor={catLabel} activo={!!filtros.cat} ancho="w-72">
-              {(cerrar) => (
-                <div className="flex flex-wrap gap-2">
-                  <Chip activo={!filtros.cat} onClick={() => { quitar({ cat: null }); cerrar(); }}>Todas</Chip>
-                  {CATEGORIAS.map((c) => (
-                    <Chip key={c.slug} activo={filtros.cat === c.slug} onClick={() => { quitar({ cat: c.slug }); cerrar(); }}>
-                      {c.label}
-                    </Chip>
-                  ))}
-                </div>
-              )}
-            </FiltroPopover>
+            {!catFija && (
+              <FiltroPopover label="Categorías" valor={catLabel} activo={!!filtros.cat} ancho="w-72">
+                {(cerrar) => (
+                  <div className="flex flex-wrap gap-2">
+                    <Chip activo={!filtros.cat} onClick={() => { quitar({ cat: null }); cerrar(); }}>Todas</Chip>
+                    {CATEGORIAS.map((c) => (
+                      <Chip key={c.slug} activo={filtros.cat === c.slug} onClick={() => { quitar({ cat: c.slug }); cerrar(); }}>
+                        {c.label}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
+              </FiltroPopover>
+            )}
             <FiltroPopover label="Año" valor={anioLabel} activo={!!filtros.anio} ancho="w-72">
               {(cerrar) => (
                 <div className="flex flex-wrap gap-2">
@@ -225,7 +249,7 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
               </button>
             ))}
             {activos > 1 && (
-              <button type="button" onClick={() => aplicar(FILTROS_VACIOS)} className="shrink-0 px-2 text-xs font-bold text-white/50 underline-offset-4 hover:text-white hover:underline">
+              <button type="button" onClick={() => aplicar(base)} className="shrink-0 px-2 text-xs font-bold text-white/50 underline-offset-4 hover:text-white hover:underline">
                 Limpiar todo
               </button>
             )}
@@ -236,7 +260,7 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
       {/* ── Título ───────────────────────────────────────────────────── */}
       <div className="mb-5 flex items-baseline gap-3">
         <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
-          {activos ? "Resultados" : <>Contenido <span className="text-primary">reciente</span></>}
+          {activos ? "Resultados" : (titulo ?? <>Contenido <span className="text-primary">reciente</span></>)}
         </h2>
         <span className="text-sm font-semibold text-accent" aria-live="polite">
           {total} {total === 1 ? "título" : "títulos"}
@@ -264,7 +288,7 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
           </a>
         </div>
       ) : (
-        <ul className={`${GRID} transition-opacity ${cargando === "filtro" ? "opacity-40" : ""}`} aria-busy={cargando !== null}>
+        <ul className={`${GRID_POSTERS} transition-opacity ${cargando === "filtro" ? "opacity-40" : ""}`} aria-busy={cargando !== null}>
           {items.map((m) => (
             <li key={m.id}>
               {/* Todo lazy: el catálogo nunca está en la primera pantalla */}
@@ -297,6 +321,7 @@ export default function CatalogoInicio({ inicial, whatsappUrl }: { inicial: Pagi
       {sheet && (
         <FilterSheet
           inicial={filtros}
+          catFija={!!catFija}
           onCerrar={(f) => {
             setSheet(false);
             if (f) aplicar(f);

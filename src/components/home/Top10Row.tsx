@@ -5,12 +5,12 @@ import OpenMedia from "./OpenMedia";
 
 const MIN_ITEMS = 5;
 
-export default function Top10Row({ items }: { items: HomeMedia[] }) {
+export default function Top10Row({ items, titulo = "🏆 Top 10 mejor valorados" }: { items: HomeMedia[]; titulo?: string }) {
   if (items.length < MIN_ITEMS) return null;
   return (
     <section className="mx-auto max-w-[1600px] px-4 pb-10 sm:px-6 lg:px-10">
       <Carousel
-        titulo="🏆 Top 10 mejor valorados"
+        titulo={titulo}
         className="-mx-4 scroll-px-4 sm:-mx-6 sm:scroll-px-6 lg:mx-0 lg:scroll-px-0"
       >
         <ol className="flex w-max gap-3 px-4 pb-1 sm:gap-4 sm:px-6 lg:px-0">

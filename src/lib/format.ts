@@ -89,3 +89,36 @@ export function generosCortos(genre: string | null | undefined, max = 2): string
     .filter(Boolean)
     .slice(0, max);
 }
+
+export type SeccionNegocio = { titulo: string | null; texto: string };
+
+/**
+ * La descripción del negocio es texto libre de la admin. Se ordena para la página de Precios:
+ * cada línea "ETIQUETA: texto" pasa a ser una sección con título; el resto son párrafos.
+ * Ej.: "OJO: Si usted desea…" → { titulo: "Ojo", texto: "Si usted desea…" }.
+ * Solo cuenta como etiqueta si está casi toda en mayúsculas (evita cortar "las 6:30pm, …").
+ */
+export function seccionesNegocio(descripcion: string | null | undefined): SeccionNegocio[] {
+  const lineas = (descripcion ?? "").replace(/\r\n?/g, "\n").split("\n").map((l) => l.trim()).filter(Boolean);
+  return lineas.map((l) => {
+    const m = l.match(/^([^:]{2,60}):\s+(.+)$/);
+    const letras = m?.[1].replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, "") ?? "";
+    const mayus = letras.replace(/[^A-ZÁÉÍÓÚÑ]/g, "").length;
+    if (m && letras.length >= 2 && mayus / letras.length >= 0.8) {
+      const t = m[1].trim().toLowerCase();
+      return { titulo: t.charAt(0).toUpperCase() + t.slice(1), texto: m[2].trim() };
+    }
+    return { titulo: null, texto: l };
+  });
+}
+
+/** "PRECIO DEL PAQUETE SEMANAL BÁSICO: 500CUP" → "500 CUP" (o null si la descripción no lo dice). */
+export function precioPaqueteDe(descripcion: string | null | undefined): string | null {
+  const m = (descripcion ?? "").match(/PRECIO[^:\n]*PAQUETE[^:\n]*:\s*([\d.,]+)\s*(CUP|USD|MLC)?/i);
+  return m ? `${m[1]} ${(m[2] ?? "CUP").toUpperCase()}` : null;
+}
+
+/** Enlace a la ficha de un título. Sin slug todavía (SQL 004 sin ejecutar), usa el id. */
+export function rutaTitulo(m: { id: string; slug?: string | null }): string {
+  return `/titulo/${m.slug || m.id}`;
+}

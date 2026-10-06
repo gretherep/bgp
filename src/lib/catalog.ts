@@ -123,6 +123,40 @@ export async function getPedidoConfig(): Promise<PedidoConfig> {
   };
 }
 
+export type TarifaPublica = Precio & { description: string | null };
+
+export type PreciosPagina = {
+  tarifas: TarifaPublica[];
+  promosCard: Promo[];
+  whatsappUrl: string | null;
+  horario: string | null;
+  titulo: string | null;
+  descripcion: string | null;
+};
+
+/** Datos de /descripcion (Precios): tarifas visibles en su orden, ofertas activas y datos del negocio. */
+export async function getPreciosPagina(): Promise<PreciosPagina> {
+  const sb = createServerClient();
+  const ahora = new Date().toISOString();
+  const [tarifas, info, promos] = await Promise.all([
+    sb.from("pricing_categories").select("category,price,currency,description").eq("is_active", true).order("display_order", { ascending: true }),
+    sb.from("business_info").select("*").limit(1).maybeSingle(),
+    sb.from("promos").select("id,kind,titulo,subtitulo,badge,cta_label,cta_mensaje,min_items,hasta")
+      .eq("activa", true).eq("kind", "card").lte("desde", ahora).or(`hasta.is.null,hasta.gt.${ahora}`)
+      .order("prioridad", { ascending: false }),
+  ]);
+  let promosCard = (promos.data ?? []) as Promo[];
+  if (!promosCard.length && process.env.NODE_ENV === "development") promosCard = promosDeEjemplo().filter((p) => p.kind === "card");
+  return {
+    tarifas: (tarifas.data ?? []) as TarifaPublica[],
+    promosCard,
+    whatsappUrl: info.data?.whatsapp_url ?? null,
+    horario: horarioDe(info.data),
+    titulo: info.data?.title ?? null,
+    descripcion: info.data?.description ?? null,
+  };
+}
+
 // Nunca se muestran en producción: los precios reales los define el admin en la tabla promos.
 function promosDeEjemplo(): Promo[] {
   const en = (dias: number) => new Date(Date.now() + dias * 864e5).toISOString();

@@ -7,7 +7,7 @@ import HomeHero from "@/components/home/HomeHero";
 import OffersRow from "@/components/home/OffersRow";
 import MoodChips from "@/components/home/MoodChips";
 import Top10Row from "@/components/home/Top10Row";
-import CatalogoInicio from "@/components/home/catalogo/CatalogoInicio";
+import Catalogo from "@/components/home/catalogo/Catalogo";
 import PideloBlock from "@/components/home/PideloBlock";
 
 // HTML cacheado en la CDN y regenerado cada 5 min.
@@ -29,7 +29,7 @@ export default async function HomePage() {
       <OffersRow promos={data.promosCard} whatsappUrl={data.whatsappUrl} />
       <MoodChips />
       <Top10Row items={top} />
-      <CatalogoInicio inicial={catalogo} whatsappUrl={data.whatsappUrl} />
+      <Catalogo inicial={catalogo} whatsappUrl={data.whatsappUrl} />
       <PideloBlock whatsappUrl={data.whatsappUrl} />
     </>
   );

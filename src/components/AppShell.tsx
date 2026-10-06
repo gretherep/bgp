@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import PedidoFlotante from "@/components/pedido/PedidoFlotante";
 import { MediaModalProvider } from "@/app/context/MediaModalContext";
 import { ToastProvider, useToast } from "@/app/context/ToastContext";
+import { EVENTO_ABRIR_LOGIN } from "@/lib/eventos";
 
 // Se descargan solo al abrirse: login (Supabase) y popups (framer-motion) no pesan en la carga inicial.
 const LoginModal = dynamic(() => import("@/components/LoginModal"), { ssr: false });
@@ -20,6 +21,12 @@ function ShellContent({ children }: { children: React.ReactNode }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showConfirmLogout, setShowConfirmLogout] = useState(false);
+
+  useEffect(() => {
+    const abrir = () => setIsLoginOpen(true);
+    window.addEventListener(EVENTO_ABRIR_LOGIN, abrir);
+    return () => window.removeEventListener(EVENTO_ABRIR_LOGIN, abrir);
+  }, []);
 
   const handleFinalLogout = async () => {
     try {

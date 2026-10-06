@@ -21,9 +21,12 @@ import Chip from "./Chip";
 export default function FilterSheet({
   inicial,
   onCerrar,
+  catFija = false,
 }: {
   inicial: FiltrosCatalogo;
   onCerrar: (aplicar: FiltrosCatalogo | null) => void;
+  /** En la página de una categoría: no se muestra ni se borra el filtro de categoría. */
+  catFija?: boolean;
 }) {
   const [f, setF] = useState<FiltrosCatalogo>(inicial);
   const [total, setTotal] = useState<number | null>(null);
@@ -66,7 +69,7 @@ export default function FilterSheet({
         <span className="mx-auto mb-2 mt-3 block h-1 w-10 rounded-full bg-white/20" aria-hidden="true" />
         <div className="flex items-center justify-between px-5 pb-3">
           <h2 className="text-lg font-black text-white">Filtros</h2>
-          <button type="button" onClick={() => setF({ ...FILTROS_VACIOS })} className="text-sm font-bold text-primary">
+          <button type="button" onClick={() => setF({ ...FILTROS_VACIOS, cat: catFija ? inicial.cat : null })} className="text-sm font-bold text-primary">
             Limpiar
           </button>
         </div>
@@ -82,16 +85,18 @@ export default function FilterSheet({
               ))}
             </div>
           </div>
-          <div className={seccion}>
-            <p className={titulo}>Categoría</p>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIAS.map((c) => (
-                <Chip key={c.slug} activo={f.cat === c.slug} onClick={() => setF((p) => ({ ...p, cat: p.cat === c.slug ? null : c.slug }))}>
-                  {c.label}
-                </Chip>
-              ))}
+          {!catFija && (
+            <div className={seccion}>
+              <p className={titulo}>Categoría</p>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIAS.map((c) => (
+                  <Chip key={c.slug} activo={f.cat === c.slug} onClick={() => setF((p) => ({ ...p, cat: p.cat === c.slug ? null : c.slug }))}>
+                    {c.label}
+                  </Chip>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div className={seccion}>
             <p className={titulo}>Año</p>
             <div className="flex flex-wrap gap-2">

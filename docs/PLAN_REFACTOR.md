@@ -343,7 +343,14 @@ Página `/admin/portada` → `RecomendadaEditor`.
 
 ### 1.4 Páginas públicas en servidor + ISR
 - [ ] **Inicio** (`(public)/page.tsx`): Server Component, `export const revalidate = 300`. Renderiza hero, carruseles y la **primera página** del catálogo en el HTML.
-- [ ] **Categoría** (`(public)/category/[category]/page.tsx`): `generateStaticParams` con las 6 categorías + `revalidate = 300`. Primera página en HTML.
+- ✅ **Categoría** (`category/[category]/page.tsx`, 2026-10-06): Server Component con `generateStaticParams` (6 slugs), `dynamicParams = false` (otra categoría → 404) y `revalidate = 300`; primera página en el HTML. Rediseño:
+  - cabecera con ruta (Inicio › Películas), título con emoji, qué incluye, **nº de títulos y precio** ("Desde 60 CUP c/u"; Animados muestra sus dos tarifas) y **"Pedir una película"** por WhatsApp;
+  - chips para saltar a otra categoría;
+  - "🆕 Lo último en…" y "🏆 Mejor valorados en…" (`getTopValorados(10, categorias)`), solo si la categoría no cabe en una página (Reality, 15 títulos, muestra solo el catálogo);
+  - el **mismo catálogo del Inicio** (`CatalogoInicio` → `Catalogo`, con `catFija` y `ruta`): sin el filtro de categoría, filtros en la URL de la categoría (`/category/series?g=drama`), hoja de filtros en móvil sin la sección Categoría;
+  - "¿No encuentras lo que buscas?" al final.
+  - Verificado: 74 películas de terror (118 en todo el catálogo), 121 series de drama, 360–1440 px sin scroll horizontal, 4/6/7 columnas en 768/1024/1440.
+  - Se eliminaron `FilterSidebar`, `MultiSelect`, `SingleSelect`, `LoadingBike` y `utils/filter-options.ts` (sin uso).
 - [ ] **Filtros y "Cargar más"**: componente cliente `CatalogGrid` que recibe `initialItems` y pide páginas siguientes / filtros a `/api/catalog?cat=&year=&genres=&page=` (respuesta cacheada en CDN). Estado de filtros **en la URL** también en Inicio (hoy solo en Categoría).
 - [ ] **Búsqueda** (`/search?q=`): Server Component dinámico usando la RPC de 1.1; navegación con `router.push`, no `window.location`.
 - [ ] `loading.tsx` por ruta con skeletons del tamaño exacto de las tarjetas (reemplaza `LoadingBike`).
@@ -354,8 +361,18 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - [ ] `(public)/@modal/(.)titulo/[slug]/page.tsx`: **intercepting route** → al tocar una tarjeta dentro del sitio se abre como modal (URL real, botón "atrás" nativo, sin `pushState` manual); al abrir el link directo se ve la página completa.
 - [ ] Verificar `slug` único y no nulo en los 879 registros; generar los que falten.
 
+**Hecho (2026-10-06), sin intercepting route:**
+- ✅ **`/titulo/[slug]`**: Server Component con ISR bajo demanda (`generateStaticParams` vacío + `revalidate = 300`; el panel la revalida al guardar títulos, precios o negocio). `generateMetadata` con **Open Graph del póster** (`video.movie`), canonical y **JSON-LD** (`Movie`/`TVSeries` + `aggregateRating`). Fondo con el póster difuminado, ruta Inicio › Categoría › Título y **"Si te gustó, mira también"** (`getParecidos`: misma categoría y grupo de género).
+- ✅ Acepta también el **id** (`/titulo/<uuid>`) y redirige (308) a la dirección con nombre: los enlaces funcionan antes y después del SQL 004.
+- ✅ **`FichaTitulo`** (un solo componente para la ventanita y la página): póster con ESTRENO, categoría (enlace) · año · temporadas, calificación guardada (sin pedir `/api/ratings/avg`), géneros, idioma legible, sinopsis, **precio** (`precioItem`, config compartida con "Mi pedido" vía `usePedidoConfig`), **Pedir por WhatsApp con el enlace de la ficha**, ＋ Mi pedido, **Compartir** (menú del teléfono o copiar enlace) y estrellas para votar (`Votar`, cargado aparte porque trae Supabase; sin sesión abre el login con `EVENTO_ABRIR_LOGIN`).
+- ✅ **`MediaModal`** rehecho con el sistema de diseño (hoja desde abajo en móvil, ventana en PC) usando `FichaTitulo` + "Ver la ficha completa →".
+- ✅ Las tarjetas (`OpenMedia`) son `<a href="/titulo/…">`: toque normal → ventanita; Ctrl/⌘+clic, clic central y buscadores → página.
+- ✅ **`docs/sql/004_slugs.sql`**: `slugify()` (sin tildes, máx. 80), relleno de los 880 (choques: "It", "S.W.A.T." y "La maldición de Hill House" llevan el año, y si aún chocan, 6 letras del id), índice único y trigger que pone el slug a los títulos nuevos sin cambiarlo al editar. ⬜ **Falta ejecutar el SQL 004.**
+- ✅ Se eliminaron `useMediaRating` y `/api/ratings/avg`.
+- ⬜ Intercepting route (`@modal/(.)titulo`) para que la ventanita tenga URL propia: queda para después; hoy la ventanita se cierra con "atrás" y comparte el enlace de la página.
+
 ### 1.6 Revalidación bajo demanda
-- [ ] En POST/PATCH/DELETE de `/api/media`, `/api/descripcion`, `/api/pricing-categories`: `revalidatePath` de `/`, `/category/[category]`, `/titulo/[slug]` y `/descripcion` según corresponda → los cambios del admin se ven al instante pese al caché.
+- 🔄 Las Server Actions del panel (Catálogo, Precios, Negocio) revalidan `/`, `/category/[category]` y `/descripcion` ✅; falta `/titulo/[slug]` cuando exista (1.5).
 
 ### 1.7 Auth fuera del bundle público
 - [ ] `apiClient`: solo adjunta token en mutaciones; los GET públicos no tocan Supabase.
@@ -400,7 +417,7 @@ Página `/admin/portada` → `RecomendadaEditor`.
 
 - [ ] Fila de **chips de filtros activos** removibles sobre el grid en todos los tamaños.
 - [ ] Orden: "Estrenos primero" (actual), "Recién agregados", "Mejor valorados", "A–Z".
-- [ ] Reemplazar `FilterSidebar` + `MultiSelect` + `SingleSelect` por `FilterSheet` / `FilterBar` sobre un mismo hook `useCatalogFilters()` (fuente de verdad: URL).
+- ✅ Reemplazar `FilterSidebar` + `MultiSelect` + `SingleSelect` por `FilterSheet` + chips desplegables (`FiltroPopover`) dentro de `Catalogo`, con la URL como fuente de verdad (Inicio y Categoría).
 
 ### 2.4 Tarjeta y grid
 - [ ] `MediaCard` como Server Component (sin hooks): póster (Fase 3), badge estreno, año, categoría, título 2 líneas, `⭐ 4.6 · 128`. Botón `＋ pedido` (isla cliente pequeña).
@@ -427,8 +444,21 @@ Página `/admin/portada` → `RecomendadaEditor`.
 | ≥ 1024 | **2 columnas**: izquierda texto + CTAs; derecha **mosaico** de 6 pósters de estreno en abanico. Alto máx. 420 px. |
 
 ### 2.8 Páginas secundarias
-- [ ] `/descripcion`: precios como tarjetas comparables (PC: 3–4 columnas con "Más popular" destacado; móvil: lista), CTA WhatsApp/Telegram fijo en móvil.
-- [ ] `/search`: resultados en el mismo grid, sugerencias mientras se escribe en PC (debounce 300 ms, mínimo 3 caracteres), estado vacío con CTA "Pídelo".
+- ✅ `/descripcion` → **Precios** (2026-10-06): Server Component estático (`revalidate = 300`; lo revalidan Precios y Negocio del panel) con `getPreciosPagina()`. Antes: cliente con `ShootingStars` + framer-motion y dos fetch a la API.
+  - **Paquete semanal** destacado ("Lo más pedido"): 1 TB, precio sacado de la descripción (`precioPaqueteDe`: "PRECIO DEL PAQUETE…: 500CUP"), horario del campo propio y "Reservar turno"; en PC es sticky junto a las tarifas.
+  - **Títulos por separado**: una tarjeta por tarifa en el orden del panel, con precio, unidad, **ejemplo de cuenta** ("3 temporadas = 300 CUP"), "También: …", el texto de la tarifa y enlace a su categoría.
+  - **Ofertas activas** (las mismas tarjetas del Inicio).
+  - **"Tu Dosis Semanal…"**: la descripción del panel ordenada por `seccionesNegocio()` (las líneas "ETIQUETA: texto" se ven como tarjetas: Turnos del día, Ojo, Domicilio…; precio y horario no se repiten).
+  - Cierre "¿Dudas con algún precio?" por WhatsApp. Telegram fuera. Sin barra fija en móvil: chocaría con el botón flotante de "Mi pedido".
+  - Verificado 360–1440 px sin scroll horizontal; 28 KB gzip en desarrollo.
+  - Se eliminaron `ShootingStars`, `/api/descripcion`, `/api/pricing-categories`, `actions/pricingCategory.actions.ts`, `services/pricingCategories.ts` y los modelos `pricingCategory`/`businessInfo` (sin uso).
+- ✅ `/search` → **Búsqueda** (2026-10-06): Server Component dinámico (`?query=`, también `?q=`), `noindex`.
+  - **Búsqueda en vivo** (`BuscadorEnVivo`): al escribir (pausa de 350 ms, mín. 2 letras) cambia la URL y el servidor devuelve los resultados; Enter busca y cierra el teclado del teléfono; si llega otra búsqueda desde el menú, el campo la refleja.
+  - Resultados con `PosterCard` en la misma cuadrícula del catálogo (`GRID_POSTERS`, compartida), hasta 48.
+  - **Sin resultados**: "No tenemos «…» en el catálogo" + **"Pedir «…»" por WhatsApp con el nombre buscado** + "Quizás te interese" (lo último que entró). Sin búsqueda: chips de categorías y lo último que entró.
+  - `buscarCatalogo()` usa la RPC `buscar_media` (**`docs/sql/003_busqueda.sql`**: `unaccent` + `pg_trgm`, sin tildes y tolerante a errores: "hary poter" → Harry Potter). ⬜ **Falta ejecutar el SQL 003.** Mientras tanto, ilike con cada vocal como comodín ("accion" ya encuentra "Acción").
+  - Se eliminaron `/api/media` (y `/api/media/poster`), `services/media.ts`, `actions/media.actions.ts`, `actions/ratings.actions.ts` y `MediaCard` (sin uso).
+- ✅ Tamaños reales en producción (transferidos, comprimidos): Inicio 30 KB, Películas 27 KB, Reality 13 KB, Precios 8 KB, búsqueda "harry" 18 KB.
 - [ ] Footer en PC (contacto, horario, categorías, precios); en móvil queda por encima del Bottom Nav.
 
 **Criterios de aceptación Fase 2**

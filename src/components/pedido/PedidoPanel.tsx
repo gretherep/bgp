@@ -1,35 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { PedidoConfig } from "@/lib/catalog";
+import { useState } from "react";
 import { usePedido } from "@/lib/pedido";
 import { precioItem } from "@/lib/precios";
 import { waLink } from "@/lib/whatsapp";
 import { useHojaModal } from "@/hooks/useHojaModal";
+import { usePedidoConfig } from "@/hooks/usePedidoConfig";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
-
-// La configuración (tarifas, WhatsApp, promo) se pide una sola vez por visita.
-let configCache: PedidoConfig | null = null;
 
 /** Hoja inferior en móvil, panel lateral derecho desde sm. */
 export default function PedidoPanel({ onCerrado }: { onCerrado: () => void }) {
   const cerrar = useHojaModal(onCerrado);
   const { items, quitar, vaciar } = usePedido();
-  const [config, setConfig] = useState<PedidoConfig | null>(configCache);
+  const config = usePedidoConfig();
   const [confirmarVaciar, setConfirmarVaciar] = useState(false);
-
-  useEffect(() => {
-    if (configCache) return;
-    fetch("/api/pedido-config")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((c: PedidoConfig | null) => {
-        if (c) {
-          configCache = c;
-          setConfig(c);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   const precios = config?.precios ?? [];
   const lineas = items.map((it) => ({ it, precio: precioItem(it.category, it.seasons, precios) }));

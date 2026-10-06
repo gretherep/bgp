@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { Media } from "@/app/models/media";
+import type { HomeMedia } from "@/lib/catalog";
 
-// La ficha (con auth, votos y lucide) se descarga recién al abrir el primer título.
+// La ficha se descarga recién al abrir el primer título.
 const MediaModal = dynamic(() => import("@/components/MediaModal"), { ssr: false });
 
-type MediaItem = Media & { avg_rating?: number | null };
+type MediaItem = HomeMedia;
 
 interface MediaModalContextType {
   selectedMedia: MediaItem | null;
