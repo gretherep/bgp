@@ -548,7 +548,8 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - ✅ **Favicon de 179 KB → 6,6 KB** (`src/app/icon.png` a 96 px).
 - ✅ `AppInstalable` (en AppShell, fuera del admin): registra el SW solo en producción y después de `load`; aviso "Instala BGP en tu teléfono" con `beforeinstallprompt`, desde la 2.ª visita, si no está instalada y no se descartó en 30 días.
 - ✅ `/offline`: estática, solo enlaces simples (funciona sin los scripts): reintentar, WhatsApp y categorías.
-- ⬜ **Verificar en producción** (el build local falla por cortes de la conexión de esta PC con Supabase al prerenderizar; no es del código): SW activo, cachés llenándose, manifest instalable (Lighthouse), modo avión.
+- ✅ **Verificado en producción** (commit e3b0081): `sw.js` 200 con `no-store`; manifest publicado (standalone, 192/512/maskable, 3 atajos) y enlazado en el `<head>` con el `apple-touch-icon`; SW `activated` y controlando la página; cachés llenándose (11 estáticos, páginas visitadas, pósters guardados como `cors` 200, no opacos). **Segunda visita al Inicio: 0 KB de estáticos y pósters desde la red** (solo el HTML, network-first, ~30 KB comprimido).
+- ⬜ Probar en un teléfono real: instalar desde el aviso o el menú de Chrome, y abrir en modo avión una página ya visitada y otra no visitada (→ "Estás sin conexión").
 - ⬜ 4.4 Modo ahorro de datos: pospuesto. Con pósters de ~16 KB rinde mucho menos, y ocultarlos de verdad (sin descargarlos) exige decidirlo antes de que el HTML pida las imágenes: leerlo en el servidor (cookie) rompe la caché de las páginas, y en el cliente llega tarde. Se retoma si hace falta.
 
 **Criterios de aceptación Fase 4**

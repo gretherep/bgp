@@ -52,3 +52,19 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* iPhone: Safari hace zoom al tocar un campo con letra < 16 px y no lo deshace (la página queda
+   más ancha que la pantalla y hay que deslizar). En el móvil, todos los campos van a 16 px. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Red de seguridad: nada puede ensanchar la página hacia el costado (clip no rompe position: sticky). */
+html,
+body {
+  overflow-x: clip;
+}

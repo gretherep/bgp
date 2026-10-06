@@ -4,12 +4,12 @@
  *   Así con conexión nunca se muestra contenido viejo, y con la red mala o sin red el sitio abre igual.
  * - /_next/static (nombres con hash, nunca cambian) y pósters (caché de 1 año): primero lo guardado.
  *   Los pósters se piden con CORS para no guardar respuestas opacas.
- * - /api/catalog y /api/pedido-config (lecturas): responde lo guardado y actualiza por detrás.
+ * - /api/catalog: responde lo guardado y actualiza por detrás. /api/pedido-config: primero la red.
  * - /admin, el resto de /api y todo lo que no sea GET: no se tocan.
  *
  * Al cambiar la lógica de este archivo, subir VERSION: el activate borra las cachés de la versión anterior.
  */
-const VERSION = "v1";
+const VERSION = "v2"; // v2: pedido-config por red primero (la v1 mostraba promos viejas)
 const C = {
   paginas: `bgp-paginas-${VERSION}`,
   estaticos: `bgp-estaticos-${VERSION}`,
@@ -123,8 +123,20 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(primeroGuardado(C.estaticos, request));
     return;
   }
-  if (url.pathname === "/api/catalog" || url.pathname === "/api/pedido-config") {
+  if (url.pathname === "/api/catalog") {
     event.respondWith(guardadoYActualizar(C.api, request));
+    return;
+  }
+  // Precios y promo de "Mi pedido": primero la red (si cambió una promo, se ve al momento); sin red, lo guardado.
+  if (url.pathname === "/api/pedido-config") {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          guardar(C.api, request, res.clone());
+          return res;
+        })
+        .catch(async () => (await caches.match(request, { cacheName: C.api })) || Response.error()),
+    );
     return;
   }
   // Navegaciones de página completa (no las peticiones RSC de Next, que dependen de cabeceras).

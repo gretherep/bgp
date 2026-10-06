@@ -6,7 +6,9 @@ export async function GET() {
   try {
     const data = await getPedidoConfig();
     return NextResponse.json(data, {
-      headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" },
+      // Caché corta: si la admin cambia una promo o un precio, "Mi pedido" lo refleja en ~1 minuto
+      // (el panel no puede vaciar la caché de la CDN de una ruta como esta). Pesa ~1 KB.
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=60" },
     });
   } catch (error) {
     console.error("GET /api/pedido-config:", error);
