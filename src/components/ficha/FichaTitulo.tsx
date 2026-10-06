@@ -64,7 +64,8 @@ export default function FichaTitulo({
   return (
     <div className="grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-8">
       {/* Póster */}
-      <div className="mx-auto w-full max-w-[260px] sm:max-w-none">
+      {/* En la ventanita del móvil, póster más chico: así "Pedir por WhatsApp" entra en la primera pantalla */}
+      <div className={`mx-auto w-full sm:max-w-none ${variante === "modal" ? "max-w-[150px]" : "max-w-[260px]"}`}>
         <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-2xl shadow-black/60">
           {sinPoster ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
