@@ -9,5 +9,6 @@ export interface BusinessInfo {
   price_premium: number | null;
   whatsapp_url: string | null;
   telegram_url: string | null;
+  horario?: string | null; // docs/sql/002_fase_a_negocio.sql
   updated_at: string;
 }
