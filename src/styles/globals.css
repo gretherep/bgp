@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Paleta de marca (sin cambios respecto al diseño original) */
+  --color-primary: #F9C3A4;
+  --color-secondary: #DCDAD9;
+  --color-accent: #95999E;
+  --color-background: #161616;
+
+  /* Superficies y acentos funcionales */
+  --color-surface: #1d1d1d;
+  --color-surface-2: #252525;
+  --color-whatsapp: #25D366;
+  --color-offer: #dc2626;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-secondary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .no-scrollbar,
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
