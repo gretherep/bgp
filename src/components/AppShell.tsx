@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import PedidoFlotante from "@/components/pedido/PedidoFlotante";
+import AppInstalable from "@/components/pwa/AppInstalable";
 import { MediaModalProvider } from "@/app/context/MediaModalContext";
 import { ToastProvider, useToast } from "@/app/context/ToastContext";
 import { EVENTO_ABRIR_LOGIN } from "@/lib/eventos";
@@ -56,6 +57,7 @@ function ShellContent({ children }: { children: React.ReactNode }) {
       <main className={`min-h-screen ${isAdminRoute ? "pt-0" : "pt-16"}`}>{children}</main>
 
       {!isAdminRoute && <PedidoFlotante />}
+      {!isAdminRoute && <AppInstalable />}
 
       {showConfirmLogout && (
         <ConfirmPopup

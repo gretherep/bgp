@@ -503,7 +503,8 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - ✅ `src/lib/poster.ts` → `posterImg(m, uso, sizes)`: `tarjeta` (srcset 320w/480w), `grande` (320w/480w/600w), `mini` (miniaturas); fondo `poster_color`; sin versiones usa el original. Aplicado en PosterCard, NuevosRail, Top10Row, RecomendadaCard, FichaTitulo, fondo de /titulo, "Mi pedido" (guarda la miniatura) y miniaturas del panel (Catálogo, Portada, Resumen).
 - ✅ Panel: al subir un póster, el navegador genera thumb y md (canvas → WebP) + color y los sube junto al póster comprimido (`full`); si cambia el póster por URL o se quita, se borran las versiones viejas. Si el navegador no sabe WebP, se guarda igual y queda para el script.
 - ✅ Logo de `business_info`: ya se comprime y sube con caché de 1 año (Fase A).
-- ⬜ **Ejecutar el script sobre los 880** (escribe en producción: pendiente de permiso).
+- ✅ **Script ejecutado sobre los 880** con permiso de la dueña (2026-10-06): 880 listos, 0 errores; 0 títulos sin thumb/md/full/color. Tarjetas del móvil: 97,1 MB → 12,6 MB en total (−87 %). Muestra de 20 miniaturas: mediana 16 KB, máx. 29 KB, `cache-control: public, max-age=31536000`.
+- ✅ En producción (commit 8f47cd5): el Inicio usa versiones en los 40 pósters (srcset en 47 imágenes); los 40 juntos pesan 548 KB en el móvil (antes, ~4 MB con los originales). Con carga diferida, la primera pantalla baja solo los visibles.
 - ⬜ Borrar del bucket las versiones viejas al reemplazar un póster (hoy quedan huérfanas; ocupan poco).
 
 **Criterios de aceptación Fase 3**
@@ -539,6 +540,16 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - [ ] Auto-activación si `navigator.connection.saveData` o `effectiveType` ∈ {`slow-2g`, `2g`}; interruptor manual en header (PC) / pestaña Más (móvil), persistido en `localStorage`.
 - [ ] Con el modo activo: `html[data-saver]` oculta pósters (queda color + título + año), "Toca para ver póster" por tarjeta, carruseles reducidos, sin precarga de la página siguiente.
 - [ ] Indicador en el header: "Ahorro de datos activo".
+
+**Hecho (2026-10-07), sin Serwist** *(no se integra bien con Turbopack; con ~120 líneas a mano alcanza)*:
+- ✅ `public/sw.js`: páginas **network-first con 4 s** (si la red no llega, copia guardada; si no hay, `/offline`); `/_next/static` e `/icons` **cache-first**; pósters **cache-first pidiéndolos con CORS** (Supabase da `Access-Control-Allow-Origin: *`; evita respuestas opacas, que Chrome cuenta como ~7 MB de cuota cada una); `/api/catalog` y `/api/pedido-config` **stale-while-revalidate**; `/admin`, el resto de `/api` y lo que no sea GET no se tocan. Límites: 60 páginas, 200 estáticos, 400 pósters, 60 respuestas de API. `VERSION` en el archivo: al subirla, el activate borra las cachés viejas. `skipWaiting` + `clients.claim` (sin aviso de "Actualizar": las páginas van primero por la red y los estáticos tienen hash, así que no hay contenido viejo que refrescar).
+- ✅ `next.config.ts`: `/sw.js` con `Cache-Control: no-cache, no-store`.
+- ✅ `app/manifest.ts`: nombre, `standalone`, `#161616`, `start_url /?source=pwa`, íconos 192/512/maskable (generados con sharp desde el logo; el maskable sobre `#161616` con zona segura del 78 %) y atajos (Lo nuevo, Buscar, Precios). `apple-touch-icon` y `appleWebApp` en el layout.
+- ✅ **Favicon de 179 KB → 6,6 KB** (`src/app/icon.png` a 96 px).
+- ✅ `AppInstalable` (en AppShell, fuera del admin): registra el SW solo en producción y después de `load`; aviso "Instala BGP en tu teléfono" con `beforeinstallprompt`, desde la 2.ª visita, si no está instalada y no se descartó en 30 días.
+- ✅ `/offline`: estática, solo enlaces simples (funciona sin los scripts): reintentar, WhatsApp y categorías.
+- ⬜ **Verificar en producción** (el build local falla por cortes de la conexión de esta PC con Supabase al prerenderizar; no es del código): SW activo, cachés llenándose, manifest instalable (Lighthouse), modo avión.
+- ⬜ 4.4 Modo ahorro de datos: pospuesto. Con pósters de ~16 KB rinde mucho menos, y ocultarlos de verdad (sin descargarlos) exige decidirlo antes de que el HTML pida las imágenes: leerlo en el servidor (cookie) rompe la caché de las páginas, y en el cliente llega tarde. Se retoma si hace falta.
 
 **Criterios de aceptación Fase 4**
 - Lighthouse PWA instalable en Android.

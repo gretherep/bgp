@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     description: SITE.description,
   },
   twitter: { card: "summary_large_image" },
+  // Ícono y barra al guardar el sitio en la pantalla de inicio (iPhone; Android usa manifest.ts).
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "BGP Paquete", statusBarStyle: "black" },
 };
 
 export const viewport: Viewport = {
