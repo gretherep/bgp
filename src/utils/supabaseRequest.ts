@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/**
+ * Cliente de Supabase con la sesión del usuario (cookies de la petición).
+ * Usa getAll/setAll: la API get/set/remove está deprecada en @supabase/ssr 0.8 y no
+ * encuentra la sesión cuando la cookie se guarda entera con prefijo "base64-" o en trozos.
+ */
 export async function createRequestClient() {
   const cookieStore = await cookies();
 
@@ -9,25 +14,14 @@ export async function createRequestClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: any) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch (error) {
-            // The `remove` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {
+            // Desde un Server Component no se pueden escribir cookies; la renovación la hace proxy.ts.
           }
         },
       },
