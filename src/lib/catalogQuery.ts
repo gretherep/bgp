@@ -1,6 +1,6 @@
 import "server-only";
 import { createServerClient } from "@/utils/supabaseServer";
-import { CATEGORIAS, GENEROS, PAGE_SIZE, aniosFiltro, type FiltrosCatalogo } from "./categories";
+import { CATEGORIAS, FILTROS_VACIOS, GENEROS, PAGE_SIZE, aniosFiltro, type FiltrosCatalogo } from "./categories";
 import type { HomeMedia } from "./catalog";
 
 // Mismos campos que el Inicio: tarjeta + modal de detalle.
@@ -23,6 +23,8 @@ export async function getCatalogo(f: FiltrosCatalogo, page = 1, soloTotal = fals
   const anio = aniosFiltro().find((a) => a.slug === f.anio);
   if (anio?.min !== undefined) q = q.gte("year", anio.min);
   if (anio?.max !== undefined) q = q.lte("year", anio.max);
+
+  if (f.estreno) q = q.eq("estreno", true);
 
   const patrones = f.generos.flatMap((g) => GENEROS.find((x) => x.slug === g)?.patrones ?? []);
   if (patrones.length) q = q.or(patrones.map((p) => `genre.ilike.%${p}%`).join(","));
@@ -76,7 +78,7 @@ export async function getParecidos(m: HomeMedia, limite = 12): Promise<HomeMedia
   const cat = CATEGORIAS.find((c) => c.categorias.includes(m.category));
   if (!cat) return [];
   const genero = GENEROS.find((g) => g.patrones.some((p) => (m.genre ?? "").toLowerCase().includes(p)));
-  const base = { cat: cat.slug, anio: null, orden: "estrenos" as const };
+  const base = { ...FILTROS_VACIOS, cat: cat.slug };
   const conGenero = genero ? (await getCatalogo({ ...base, generos: [genero.slug] }, 1)).items : [];
   let lista = conGenero.filter((x) => x.id !== m.id && x.poster_url);
   if (lista.length < 6) {

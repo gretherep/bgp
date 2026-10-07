@@ -22,30 +22,6 @@ export function rangoSemanaActual(ahora = new Date()): string {
   return `${fmt.format(lunes).replace(".", "")} – ${fmt.format(domingo).replace(".", "")}`;
 }
 
-const PLURAL: Record<string, [string, string]> = {
-  "Películas": ["película", "películas"],
-  "Películas Animadas": ["animada", "animadas"],
-  "Películas Anime": ["película anime", "películas anime"],
-  "Series": ["serie", "series"],
-  "Series Animadas": ["serie animada", "series animadas"],
-  "MiniSeries": ["miniserie", "miniseries"],
-  "Anime": ["anime", "anime"],
-  "Novelas": ["novela", "novelas"],
-  "Reality Shows": ["reality", "realities"],
-};
-
-/** ["+4 películas", "+2 series"], ordenado de mayor a menor. */
-export function resumenPorCategoria(items: { category: string }[]): string[] {
-  const cuenta = new Map<string, number>();
-  for (const m of items) cuenta.set(m.category, (cuenta.get(m.category) ?? 0) + 1);
-  return [...cuenta.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([cat, n]) => {
-      const [sing, plur] = PLURAL[cat] ?? [cat.toLowerCase(), cat.toLowerCase()];
-      return `+${n} ${n === 1 ? sing : plur}`;
-    });
-}
-
 /**
  * `idioma` es texto libre en la base ("Latino", "Dual-Audio", "Inglés-Subtitulado"...).
  * Lo convierte en una frase legible; si no reconoce el valor, lo devuelve tal cual.

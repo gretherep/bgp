@@ -1,15 +1,15 @@
 import Link from "next/link";
 import type { HomeData } from "@/lib/catalog";
-import { rangoSemanaActual, resumenPorCategoria } from "@/lib/format";
+import { rangoSemanaActual } from "@/lib/format";
 import { SITE } from "@/lib/site";
 import { waLink } from "@/lib/whatsapp";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import AtajosHero from "./AtajosHero";
 import NuevosRail from "./NuevosRail";
 import RecomendadaCard from "./RecomendadaCard";
 
 export default function HomeHero({ data }: { data: HomeData }) {
   const { nuevos, nuevosSonDeLaSemana, recomendada, whatsappUrl, horario } = data;
-  const resumen = nuevosSonDeLaSemana ? resumenPorCategoria(nuevos) : [];
   const pedirPaquete = waLink(whatsappUrl, `Hola 👋 quiero el paquete de esta semana (${SITE.paqueteTamano})`);
 
   return (
@@ -37,34 +37,15 @@ export default function HomeHero({ data }: { data: HomeData }) {
           </div>
 
           <h1 className="mt-4 text-[clamp(1.85rem,4.4vw,3.6rem)] font-black leading-[1.04] tracking-tight text-white">
-            {nuevosSonDeLaSemana ? (
-              <>
-                {nuevos.length} títulos nuevos
-                <br className="hidden sm:block" />{" "}
-                <span className="text-primary">listos para copiar</span>
-              </>
-            ) : (
-              <>
-                Lo nuevo del paquete,
-                <br className="hidden sm:block" />{" "}
-                <span className="text-primary">directo a tu casa</span>
-              </>
-            )}
+            ¿Qué vas a mirar
+            <br className="hidden sm:block" /> <span className="text-primary">este fin de semana?</span>
           </h1>
 
-          {resumen.length > 0 ? (
-            <ul className="mt-3 flex flex-wrap gap-1.5">
-              {resumen.map((r) => (
-                <li key={r} className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-white/80">
-                  {r}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 max-w-xl text-sm text-white/65 sm:text-base">
-              Películas, series, anime, novelas y realities. Elige lo que quieras y pídelo por WhatsApp.
-            </p>
-          )}
+          <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
+            Explora los estrenos más recientes de Netflix, HBO, cines y anime. Todo preparado para que te desconectes.
+          </p>
+
+          <AtajosHero />
 
           <div className="mt-6 grid grid-cols-2 gap-2.5 sm:flex sm:gap-3">
             <a

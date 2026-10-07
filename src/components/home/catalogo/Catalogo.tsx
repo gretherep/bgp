@@ -146,6 +146,7 @@ export default function Catalogo({
       const gen = GENEROS.find((x) => x.slug === g);
       return { key: `g-${g}`, label: `${gen?.emoji ?? ""} ${gen?.label ?? g}`, quitar: () => toggleGenero(g) };
     }),
+    ...(filtros.estreno ? [{ key: "estreno", label: "🔥 Solo estrenos", quitar: () => quitar({ estreno: false }) }] : []),
     ...(filtros.orden !== "estrenos" ? [{ key: "orden", label: ordenLabel ?? "", quitar: () => quitar({ orden: "estrenos" }) }] : []),
   ];
 
@@ -213,6 +214,16 @@ export default function Catalogo({
                 </>
               )}
             </FiltroPopover>
+            <button
+              type="button"
+              aria-pressed={filtros.estreno}
+              onClick={() => quitar({ estreno: !filtros.estreno })}
+              className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[13px] font-bold transition ${
+                filtros.estreno ? "border-primary bg-primary/15 text-primary" : "border-white/10 bg-white/[0.04] text-white/80 hover:border-white/25 hover:text-white"
+              }`}
+            >
+              🔥 Solo estrenos
+            </button>
             <FiltroPopover label="Ordenar por" valor={filtros.orden !== "estrenos" ? ordenLabel : null} activo={filtros.orden !== "estrenos"} ancho="w-56">
               {(cerrar) => (
                 <ul className="space-y-1">

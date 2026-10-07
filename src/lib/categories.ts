@@ -73,9 +73,11 @@ export type FiltrosCatalogo = {
   anio: string | null;
   generos: string[];
   orden: Orden;
+  /** Solo títulos marcados como estreno (?estreno=1). */
+  estreno: boolean;
 };
 
-export const FILTROS_VACIOS: FiltrosCatalogo = { cat: null, anio: null, generos: [], orden: "estrenos" };
+export const FILTROS_VACIOS: FiltrosCatalogo = { cat: null, anio: null, generos: [], orden: "estrenos", estreno: false };
 
 export const PAGE_SIZE = 24;
 
@@ -89,6 +91,7 @@ export function filtrosDesdeParams(p: URLSearchParams): FiltrosCatalogo {
     anio: aniosFiltro().some((a) => a.slug === anio) ? anio : null,
     generos: (p.get("g") ?? "").split(",").filter((g) => GENEROS.some((x) => x.slug === g)),
     orden: ORDENES.some((o) => o.slug === orden) ? (orden as Orden) : "estrenos",
+    estreno: p.get("estreno") === "1",
   };
 }
 
@@ -98,9 +101,10 @@ export function filtrosAParams(f: FiltrosCatalogo): URLSearchParams {
   if (f.anio) p.set("anio", f.anio);
   if (f.generos.length) p.set("g", f.generos.join(","));
   if (f.orden !== "estrenos") p.set("orden", f.orden);
+  if (f.estreno) p.set("estreno", "1");
   return p;
 }
 
 export function cuentaFiltrosActivos(f: FiltrosCatalogo): number {
-  return (f.cat ? 1 : 0) + (f.anio ? 1 : 0) + f.generos.length + (f.orden !== "estrenos" ? 1 : 0);
+  return (f.cat ? 1 : 0) + (f.anio ? 1 : 0) + f.generos.length + (f.orden !== "estrenos" ? 1 : 0) + (f.estreno ? 1 : 0);
 }

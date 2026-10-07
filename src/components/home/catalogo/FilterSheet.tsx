@@ -76,6 +76,11 @@ export default function FilterSheet({
 
         <div className="overflow-y-auto overscroll-contain">
           <div className={seccion}>
+            <div className="mb-4">
+              <Chip activo={f.estreno} onClick={() => setF((p) => ({ ...p, estreno: !p.estreno }))}>
+                🔥 Solo estrenos
+              </Chip>
+            </div>
             <p className={titulo}>Ordenar por</p>
             <div className="flex flex-wrap gap-2">
               {ORDENES.map((o) => (

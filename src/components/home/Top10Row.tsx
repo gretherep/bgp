@@ -9,7 +9,8 @@ const MIN_ITEMS = 5;
 export default function Top10Row({ items, titulo = "🏆 Top 10 mejor valorados" }: { items: HomeMedia[]; titulo?: string }) {
   if (items.length < MIN_ITEMS) return null;
   return (
-    <section className="mx-auto max-w-[1600px] px-4 pb-10 sm:px-6 lg:px-10">
+    // id: destino del atajo "🔥 Lo Más Pedido" del Hero (scroll-mt: no queda debajo del menú fijo).
+    <section id="top10" className="mx-auto max-w-[1600px] scroll-mt-20 px-4 pb-10 sm:px-6 lg:px-10">
       <Carousel
         titulo={titulo}
         className="-mx-4 scroll-px-4 sm:-mx-6 sm:scroll-px-6 lg:mx-0 lg:scroll-px-0"
