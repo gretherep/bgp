@@ -63,10 +63,11 @@ export default function FichaTitulo({
   };
 
   return (
-    <div className="grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-8">
-      {/* Póster */}
-      {/* En la ventanita del móvil, póster más chico: así "Pedir por WhatsApp" entra en la primera pantalla */}
-      <div className={`mx-auto w-full sm:max-w-none ${variante === "modal" ? "max-w-[150px]" : "max-w-[260px]"}`}>
+    // Áreas: móvil = póster / datos / calificar (una columna). sm+ = póster y calificar a la izquierda,
+    // datos a la derecha: así la columna del póster no deja un hueco debajo cuando los datos son largos.
+    <div className="grid gap-5 [grid-template-areas:'poster''info''extra'] sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:grid-rows-[auto_1fr] sm:gap-x-8 sm:gap-y-5 sm:[grid-template-areas:'poster_info''extra_info']">
+      {/* Póster. En la ventanita del móvil, más chico: así "Pedir por WhatsApp" entra en la primera pantalla. */}
+      <div className={`mx-auto w-full [grid-area:poster] sm:max-w-none ${variante === "modal" ? "max-w-[150px]" : "max-w-[260px]"}`}>
         <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-2xl shadow-black/60">
           {sinPoster ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
@@ -86,7 +87,7 @@ export default function FichaTitulo({
       </div>
 
       {/* Datos */}
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-col [grid-area:info]">
         <p className="text-xs font-bold uppercase tracking-wider text-accent">
           {cat ? (
             <Link href={`/category/${cat.slug}`} className="text-primary hover:underline">
@@ -130,44 +131,45 @@ export default function FichaTitulo({
           {m.synopsis?.trim() || "Sinopsis no disponible."}
         </p>
 
-        {/* Precio */}
-        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
-          <p className="text-[11px] font-black uppercase tracking-wider text-accent">Precio</p>
-          <p className="mt-0.5 text-lg font-black text-white">
-            {precio ? precio.texto : <span className="inline-block h-5 w-32 animate-pulse rounded bg-white/[0.06] align-middle" aria-label="Cargando precio" />}
-          </p>
-        </div>
+        {/* Precio en una línea */}
+        <p className="mt-5 flex flex-wrap items-baseline gap-x-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5">
+          <span className="text-[11px] font-black uppercase tracking-wider text-accent">Precio</span>
+          <span className="text-base font-black text-white">
+            {precio ? precio.texto : <span className="inline-block h-4 w-32 animate-pulse rounded bg-white/[0.06] align-middle" aria-label="Cargando precio" />}
+          </span>
+        </p>
 
-        {/* Acciones */}
-        <div className="mt-5 flex flex-wrap gap-2">
+        {/* Acciones. Móvil: WhatsApp a todo el ancho y debajo "Al pedido" + compartir. sm+: una sola fila. */}
+        <div className="mt-4 flex flex-wrap gap-2 sm:flex-nowrap">
           <a
             href={pedir}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-black shadow-lg shadow-whatsapp/20 transition hover:brightness-110 active:scale-[0.97] sm:flex-none"
+            className="inline-flex basis-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-whatsapp px-4 py-3 text-sm font-black text-black shadow-lg shadow-whatsapp/20 transition hover:brightness-110 active:scale-[0.97] sm:basis-auto sm:px-5"
           >
-            <WhatsAppIcon className="h-4 w-4" /> Pedir por WhatsApp
+            <WhatsAppIcon className="h-4 w-4 shrink-0" /> Pedir por WhatsApp
           </a>
-          <PedidoToggle media={m} variante="boton" />
+          <PedidoToggle media={m} variante="boton" className="flex-1 justify-center sm:flex-none" />
           <button
             type="button"
             onClick={compartir}
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-white/15 bg-white/[0.03] px-4 py-3 text-sm font-bold text-white transition hover:border-white/30 hover:bg-white/[0.06] active:scale-[0.97]"
+            aria-label="Compartir"
+            title="Compartir"
+            className="inline-flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.03] text-white transition hover:border-white/30 hover:bg-white/[0.06] active:scale-[0.97]"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" aria-hidden="true">
               <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" />
             </svg>
-            Compartir
           </button>
         </div>
+      </div>
 
-        <div className="mt-6 border-t border-white/10 pt-4">
-          <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-accent">¿La viste? Califícala</p>
-          <Votar mediaId={m.id} titulo={titulo} />
-        </div>
-
+      {/* Calificar y ficha completa: debajo del póster en sm+, al final en el móvil */}
+      <div className="min-w-0 self-start border-t border-white/10 pt-4 [grid-area:extra] sm:rounded-2xl sm:border sm:bg-white/[0.03] sm:p-4">
+        <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-accent">¿La viste? Califícala</p>
+        <Votar mediaId={m.id} titulo={titulo} />
         {variante === "modal" && (
-          <a href={ruta} className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-bold text-primary underline-offset-4 hover:underline">
+          <a href={ruta} className="mt-3 inline-flex w-fit items-center gap-1 text-sm font-bold text-primary underline-offset-4 hover:underline">
             Ver la ficha completa →
           </a>
         )}
