@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@/utils/supabaseServer";
 import type { Media } from "@/app/models/media";
+import { heroDesde, type HeroTextos } from "./hero";
 import type { Precio } from "./precios";
 
 // Campos que necesitan la tarjeta y el modal de detalle. Nunca "*": la tabla puede crecer.
@@ -39,6 +40,7 @@ export type HomeData = {
   promosCard: Promo[];
   whatsappUrl: string | null;
   horario: string | null;
+  hero: HeroTextos;
   precios: Precio[];
 };
 
@@ -92,6 +94,7 @@ export async function getHomeData(): Promise<HomeData> {
     promosCard: todasPromos.filter((p) => p.kind === "card"),
     whatsappUrl: info.data?.whatsapp_url ?? null,
     horario: horarioDe(info.data),
+    hero: heroDesde((info.data as { hero?: unknown } | null)?.hero),
     precios: (precios.data ?? []) as Precio[],
   };
 }

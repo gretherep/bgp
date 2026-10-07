@@ -1,21 +1,23 @@
 "use client";
 
 import { FILTROS_VACIOS, type FiltrosCatalogo } from "@/lib/categories";
+import type { HeroTextos } from "@/lib/hero";
 import { EVENTO_FILTRAR } from "./catalogo/Catalogo";
 
-type Atajo = { emoji: string; texto: string; filtro?: Partial<FiltrosCatalogo>; ancla?: string };
+type Atajo = { clave: keyof HeroTextos["chips"]; filtro?: Partial<FiltrosCatalogo>; ancla?: string };
 
+// Lo que hace cada chip es fijo; el texto lo edita la admin (Portada → Texto de bienvenida).
 const ATAJOS: Atajo[] = [
-  { emoji: "🍿", texto: "Películas de Cine", filtro: { cat: "peliculas" } },
-  { emoji: "📺", texto: "Series de Estreno", filtro: { cat: "series", estreno: true } },
-  { emoji: "🔥", texto: "Lo Más Pedido", ancla: "top10" },
+  { clave: "peliculas", filtro: { cat: "peliculas" } },
+  { clave: "series", filtro: { cat: "series", estreno: true } },
+  { clave: "top", ancla: "top10" },
 ];
 
 /**
  * Chips del Hero. Los de filtro avisan al catálogo (que filtra y baja suave hasta él);
  * "Lo Más Pedido" baja al Top 10. Sin JS, los enlaces llevan igual al lugar correcto.
  */
-export default function AtajosHero() {
+export default function AtajosHero({ chips }: { chips: HeroTextos["chips"] }) {
   const ir = (e: React.MouseEvent, a: Atajo) => {
     if (a.ancla) {
       const destino = document.getElementById(a.ancla);
@@ -39,14 +41,13 @@ export default function AtajosHero() {
   return (
     <ul className="mt-4 flex flex-wrap gap-2">
       {ATAJOS.map((a) => (
-        <li key={a.texto}>
+        <li key={a.clave}>
           <a
             href={href(a)}
             onClick={(e) => ir(e, a)}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[13px] font-bold text-white/85 transition hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/10 hover:text-white active:scale-[0.97]"
           >
-            <span aria-hidden="true" className="text-base leading-none">{a.emoji}</span>
-            {a.texto}
+            {chips[a.clave]}
           </a>
         </li>
       ))}

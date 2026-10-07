@@ -5,11 +5,12 @@ import { SITE } from "@/lib/site";
 import { waLink } from "@/lib/whatsapp";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import AtajosHero from "./AtajosHero";
+import HeroTexto from "./HeroTexto";
 import NuevosRail from "./NuevosRail";
 import RecomendadaCard from "./RecomendadaCard";
 
 export default function HomeHero({ data }: { data: HomeData }) {
-  const { nuevos, nuevosSonDeLaSemana, recomendada, whatsappUrl, horario } = data;
+  const { nuevos, nuevosSonDeLaSemana, recomendada, whatsappUrl, horario, hero } = data;
   const pedirPaquete = waLink(whatsappUrl, `Hola 👋 quiero el paquete de esta semana (${SITE.paqueteTamano})`);
 
   return (
@@ -36,16 +37,9 @@ export default function HomeHero({ data }: { data: HomeData }) {
             <span className="text-[11px] font-semibold text-accent">{rangoSemanaActual()}</span>
           </div>
 
-          <h1 className="mt-4 text-[clamp(1.85rem,4.4vw,3.6rem)] font-black leading-[1.04] tracking-tight text-white">
-            ¿Qué vas a mirar
-            <br className="hidden sm:block" /> <span className="text-primary">este fin de semana?</span>
-          </h1>
-
-          <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
-            Explora los estrenos más recientes de Netflix, HBO, cines y anime. Todo preparado para que te desconectes.
-          </p>
-
-          <AtajosHero />
+          {/* Textos editables en Panel → Portada → Texto de bienvenida */}
+          <HeroTexto hero={hero} />
+          <AtajosHero chips={hero.chips} />
 
           <div className="mt-6 grid grid-cols-2 gap-2.5 sm:flex sm:gap-3">
             <a

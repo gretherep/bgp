@@ -556,6 +556,7 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - ✅ `AtajosHero`: 🍿 Películas de Cine (cat=peliculas), 📺 Series de Estreno (cat=series + **nuevo filtro `estreno`**), 🔥 Lo Más Pedido (baja al `#top10`). Los de filtro usan `EVENTO_FILTRAR` (el catálogo filtra y baja suave); son `<a>` con href real si no hay JS.
 - ✅ Filtro "🔥 Solo estrenos" en el catálogo (`?estreno=1`): chip en la barra de PC, en la hoja del móvil y chip activo quitable.
 - Verificado a 375/390/1440: sin scroll horizontal; Series de Estreno = 2 títulos; Películas = 394.
+- ✅ **Editable desde el panel (opción A)**: Portada → "Texto de bienvenida" (`HeroEditor`): titular, segunda parte en color, texto y el texto de los 3 botones (lo que hace cada uno es fijo y se indica debajo de cada campo), con contadores, vista previa con el mismo `HeroTexto` del Inicio, "Publicar en el Inicio", "Deshacer" y "Volver al texto original". Se guarda en `business_info.hero` (jsonb, `docs/sql/006_texto_bienvenida.sql`, ejecutado); `heroDesde()` completa lo que falte con `HERO_ORIGINAL`. Server Action `guardarHero` (valida largos; revalida `/`).
 
 **Correcciones tras probar en teléfonos (2026-10-07):**
 - ✅ **iPhone, la página se deslizaba hacia el costado:** no hay elementos más anchos que la pantalla (medido a 375 px en Inicio, Series, Precios, Búsqueda y ficha, también con el texto un 6 % más ancho, como San Francisco). Causa: el buscador del menú a 14 px → Safari hace zoom al tocarlo y no lo deshace. En el móvil todos los campos van a 16 px (`globals.css`) + `overflow-x: clip` en `html, body`.

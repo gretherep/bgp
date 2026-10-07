@@ -5,6 +5,7 @@ import { requireAdminAction } from "@/utils/auth";
 import { createServerClient } from "@/utils/supabaseServer";
 import { CARD_FIELDS } from "@/lib/catalogQuery";
 import type { HomeMedia } from "@/lib/catalog";
+import { HERO_LIMITES } from "@/lib/hero";
 
 export type Resultado<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
 
@@ -186,6 +187,44 @@ export async function reordenarPromos(ids: string[]): Promise<Resultado> {
     const res = await Promise.all(ids.map((id, i) => sb.from("promos").update({ prioridad: total - i }).eq("id", id)));
     const fallo = res.find((r) => r.error);
     if (fallo?.error) throw fallo.error;
+    revalidatePath("/");
+    revalidatePath("/admin/portada");
+    return { ok: true };
+  });
+}
+
+export type HeroInput = { titulo: string; destacado: string; subtexto: string; chips: { peliculas: string; series: string; top: string } };
+
+/** Texto de bienvenida del Inicio. `null` vuelve al texto original. */
+export async function guardarHero(input: HeroInput | null): Promise<Resultado> {
+  return protegido(async () => {
+    const L = HERO_LIMITES;
+    let valor: HeroInput | null = null;
+    if (input) {
+      const t = (v: unknown) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "");
+      valor = {
+        titulo: t(input.titulo),
+        destacado: t(input.destacado),
+        subtexto: t(input.subtexto),
+        chips: { peliculas: t(input.chips?.peliculas), series: t(input.chips?.series), top: t(input.chips?.top) },
+      };
+      if (!valor.titulo) return { ok: false, error: "Escribe el titular." };
+      if (!valor.subtexto) return { ok: false, error: "Escribe el texto de abajo del titular." };
+      if (Object.values(valor.chips).some((c) => !c)) return { ok: false, error: "Los 3 botones necesitan texto." };
+      if (valor.titulo.length > L.titulo || valor.destacado.length > L.destacado) return { ok: false, error: `Cada parte del titular admite hasta ${L.titulo} caracteres.` };
+      if (valor.subtexto.length > L.subtexto) return { ok: false, error: `El texto admite hasta ${L.subtexto} caracteres.` };
+      if (Object.values(valor.chips).some((c) => c.length > L.chip)) return { ok: false, error: `Cada botón admite hasta ${L.chip} caracteres.` };
+    }
+    const sb = createServerClient();
+    const { data: fila, error: e1 } = await sb.from("business_info").select("id").limit(1).maybeSingle();
+    if (e1) throw e1;
+    if (!fila) return { ok: false, error: "Faltan los datos del negocio." };
+    const { error } = await sb.from("business_info").update({ hero: valor }).eq("id", fila.id);
+    if (error) {
+      // 42703 / PGRST204: la columna no existe todavía (falta el SQL 006).
+      if (error.code === "42703" || error.code === "PGRST204") return { ok: false, error: "Falta ejecutar docs/sql/006_texto_bienvenida.sql en Supabase." };
+      throw error;
+    }
     revalidatePath("/");
     revalidatePath("/admin/portada");
     return { ok: true };
