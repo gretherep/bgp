@@ -550,6 +550,11 @@ Página `/admin/portada` → `RecomendadaEditor`.
 - ✅ `/offline`: estática, solo enlaces simples (funciona sin los scripts): reintentar, WhatsApp y categorías.
 - ✅ **Verificado en producción** (commit e3b0081): `sw.js` 200 con `no-store`; manifest publicado (standalone, 192/512/maskable, 3 atajos) y enlazado en el `<head>` con el `apple-touch-icon`; SW `activated` y controlando la página; cachés llenándose (11 estáticos, páginas visitadas, pósters guardados como `cors` 200, no opacos). **Segunda visita al Inicio: 0 KB de estáticos y pósters desde la red** (solo el HTML, network-first, ~30 KB comprimido).
 - ⬜ Probar en un teléfono real: instalar desde el aviso o el menú de Chrome, y abrir en modo avión una página ya visitada y otra no visitada (→ "Estás sin conexión").
+
+**Correcciones tras probar en teléfonos (2026-10-07):**
+- ✅ **iPhone, la página se deslizaba hacia el costado:** no hay elementos más anchos que la pantalla (medido a 375 px en Inicio, Series, Precios, Búsqueda y ficha, también con el texto un 6 % más ancho, como San Francisco). Causa: el buscador del menú a 14 px → Safari hace zoom al tocarlo y no lo deshace. En el móvil todos los campos van a 16 px (`globals.css`) + `overflow-x: clip` en `html, body`.
+- ✅ **iPhone, sin aviso para instalar:** iOS no tiene `beforeinstallprompt`. `AppInstalable` muestra en iPhone/iPad (sin la app instalada) el aviso con los dos toques: Compartir → «Agregar a inicio». Mismas reglas: 2.ª visita y 30 días tras descartarlo.
+- ✅ **"Mi pedido" mostraba una promo que ya no estaba:** `/api/pedido-config` pasa a `s-maxage=60, stale-while-revalidate=60` (era 300 + 86400); SW v2 con pedido-config primero por red (y borra las cachés v1); `usePedidoConfig` vence al minuto. Además, en los datos, la promo de temporada tenía «Mínimo de títulos: 5» heredado y «5 películas por 200 CUP» seguía activa (lo corrige la dueña desde Portada).
 - ⬜ 4.4 Modo ahorro de datos: pospuesto. Con pósters de ~16 KB rinde mucho menos, y ocultarlos de verdad (sin descargarlos) exige decidirlo antes de que el HTML pida las imágenes: leerlo en el servidor (cookie) rompe la caché de las páginas, y en el cliente llega tarde. Se retoma si hace falta.
 
 **Criterios de aceptación Fase 4**
