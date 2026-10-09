@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import AppShell from "@/components/AppShell";
+import Analitica from "@/components/Analitica";
 import { SITE } from "@/lib/site";
 import "@/styles/globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
         <AppShell>{children}</AppShell>
+        <Analitica />
       </body>
     </html>
   );
