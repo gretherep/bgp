@@ -45,11 +45,11 @@ export default function FiltroPopover({
         className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-bold transition ${
           activo
             ? "border-primary/60 bg-primary/15 text-primary"
-            : "border-white/10 bg-white/[0.04] text-white/80 hover:border-white/25 hover:text-white"
+            : "border-ink/10 bg-ink/[0.04] text-ink/80 hover:border-ink/25 hover:text-ink"
         }`}
       >
         {label}
-        {valor && <span className="max-w-[9rem] truncate font-semibold text-white/90">: {valor}</span>}
+        {valor && <span className="max-w-[9rem] truncate font-semibold text-ink/90">: {valor}</span>}
         <svg viewBox="0 0 20 20" className={`h-4 w-4 transition-transform ${abierto ? "rotate-180" : ""}`} fill="currentColor" aria-hidden="true">
           <path fillRule="evenodd" d="M5.2 7.2a.75.75 0 0 1 1.06 0L10 10.94l3.74-3.74a.75.75 0 1 1 1.06 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0L5.2 8.26a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
         </svg>
@@ -57,7 +57,7 @@ export default function FiltroPopover({
       {abierto && (
         <div
           id={id}
-          className={`absolute left-0 top-11 z-30 ${ancho} animate-fade-up rounded-2xl border border-white/10 bg-surface p-3 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] [animation-duration:180ms]`}
+          className={`absolute left-0 top-11 z-30 ${ancho} animate-fade-up rounded-2xl border border-ink/10 bg-surface p-3 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.3)] [animation-duration:180ms]`}
         >
           {children(() => setAbierto(false))}
         </div>

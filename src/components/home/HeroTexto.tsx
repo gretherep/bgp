@@ -4,7 +4,7 @@ import type { HeroTextos } from "@/lib/hero";
 export default function HeroTexto({ hero, Etiqueta = "h1" }: { hero: Pick<HeroTextos, "titulo" | "destacado" | "subtexto">; Etiqueta?: "h1" | "p" }) {
   return (
     <>
-      <Etiqueta className="mt-4 text-[clamp(1.85rem,4.4vw,3.6rem)] font-black leading-[1.04] tracking-tight text-white">
+      <Etiqueta className="mt-4 text-[clamp(1.85rem,4.4vw,3.6rem)] font-black leading-[1.04] tracking-tight text-ink">
         {hero.titulo}
         {hero.destacado && (
           <>
@@ -12,7 +12,7 @@ export default function HeroTexto({ hero, Etiqueta = "h1" }: { hero: Pick<HeroTe
           </>
         )}
       </Etiqueta>
-      <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">{hero.subtexto}</p>
+      <p className="mt-3 max-w-xl text-sm text-ink/70 sm:text-base">{hero.subtexto}</p>
     </>
   );
 }

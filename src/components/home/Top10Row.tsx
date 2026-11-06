@@ -19,7 +19,7 @@ export default function Top10Row({ items, titulo = "🏆 Top 10 mejor valorados"
           {items.map((m, i) => (
             <li key={m.id} className="group relative w-[132px] shrink-0 snap-start sm:w-[150px] xl:w-[168px]">
               <OpenMedia media={m} label={`Top ${i + 1}: ${m.title}`} className="block w-full text-left">
-                <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-surface-2 transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/50">
+                <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-ink/10 bg-surface-2 transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/50">
                   {m.poster_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -50,7 +50,7 @@ export default function Top10Row({ items, titulo = "🏆 Top 10 mejor valorados"
                     </span>
                   )}
                 </div>
-                <p className="mt-2 line-clamp-1 text-[12px] font-semibold text-white/85 group-hover:text-primary">{m.title}</p>
+                <p className="mt-2 line-clamp-1 text-[12px] font-semibold text-ink/85 group-hover:text-primary">{m.title}</p>
               </OpenMedia>
               <PedidoToggle media={m} className="absolute right-2 top-2 transition-transform duration-300 group-hover:-translate-y-1" />
             </li>

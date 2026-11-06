@@ -59,29 +59,29 @@ export default async function CategoriaPage({ params }: Props) {
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
-          style={{ backgroundImage: "radial-gradient(60% 90% at 15% 0%, rgba(249,195,164,0.12), transparent 70%)" }}
+          style={{ backgroundImage: "radial-gradient(60% 90% at 15% 0%, var(--glow), transparent 70%)" }}
         />
         <div className="mx-auto max-w-[1600px] px-4 pb-6 pt-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
           <nav aria-label="Ruta" className="mb-3 text-xs font-semibold text-accent">
-            <Link href="/" className="hover:text-white">Inicio</Link>
-            <span aria-hidden="true" className="mx-1.5 text-white/30">›</span>
-            <span className="text-white/80">{cat.label}</span>
+            <Link href="/" className="hover:text-ink">Inicio</Link>
+            <span aria-hidden="true" className="mx-1.5 text-ink/30">›</span>
+            <span className="text-ink/80">{cat.label}</span>
           </nav>
 
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
             <div className="min-w-0">
-              <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl lg:text-5xl">
                 <span aria-hidden="true" className="mr-2">{cat.emoji}</span>
                 {cat.label}
               </h1>
-              <p className="mt-2 max-w-xl text-sm text-white/70 sm:text-base">{cat.incluye}</p>
+              <p className="mt-2 max-w-xl text-sm text-ink/70 sm:text-base">{cat.incluye}</p>
               <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                <span className="font-bold text-white">
+                <span className="font-bold text-ink">
                   {catalogo.total} {catalogo.total === 1 ? "título" : "títulos"}
                 </span>
                 {precios.map((p) => (
                   <span key={p} className="font-bold text-primary">
-                    <span aria-hidden="true" className="mr-2 text-white/25">·</span>
+                    <span aria-hidden="true" className="mr-2 text-ink/25">·</span>
                     {p}
                   </span>
                 ))}
@@ -107,7 +107,7 @@ export default async function CategoriaPage({ params }: Props) {
                     href={`/category/${c.slug}`}
                     aria-current={actual ? "page" : undefined}
                     className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[13px] font-bold transition ${
-                      actual ? "border-primary bg-primary text-black" : "border-white/10 bg-white/[0.04] text-white/80 hover:border-primary/50 hover:text-white"
+                      actual ? "border-brand bg-brand text-white" : "border-ink/10 bg-ink/[0.04] text-ink/80 hover:border-primary/50 hover:text-ink"
                     }`}
                   >
                     <span aria-hidden="true">{c.emoji}</span>

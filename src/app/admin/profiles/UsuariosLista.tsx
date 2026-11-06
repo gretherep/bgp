@@ -54,19 +54,19 @@ export function FiltrosUsuarios({ q, rol, cuenta }: { q: string; rol: string | n
   return (
     <div className="mb-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" aria-hidden="true" />
         <Input type="search" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar por nombre o correo…" aria-label="Buscar por nombre o correo" className="pl-9" />
       </div>
-      <div className="flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1" role="group" aria-label="Filtrar por rol">
+      <div className="flex gap-1 rounded-xl border border-ink/10 bg-ink/[0.03] p-1" role="group" aria-label="Filtrar por rol">
         {opciones.map((o) => (
           <button
             key={o.t}
             type="button"
             aria-pressed={rol === o.v}
             onClick={() => ir({ rol: o.v })}
-            className={`flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition sm:flex-none ${rol === o.v ? "bg-primary text-black" : "text-white/70 hover:bg-white/[0.06] hover:text-white"}`}
+            className={`flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-bold transition sm:flex-none ${rol === o.v ? "bg-brand text-white" : "text-ink/70 hover:bg-ink/[0.06] hover:text-ink"}`}
           >
-            {o.t} <span className={rol === o.v ? "text-black/60" : "text-accent"}>{o.n}</span>
+            {o.t} <span className={rol === o.v ? "text-ink/70" : "text-accent"}>{o.n}</span>
           </button>
         ))}
       </div>
@@ -91,7 +91,7 @@ export function ListaUsuarios({ usuarios, miId }: { usuarios: UsuarioFila[]; miI
 
   return (
     <>
-      <ul className="divide-y divide-white/10">
+      <ul className="divide-y divide-ink/10">
         {usuarios.map((u) => {
           const nombre = nombreDe(u);
           const soyYo = u.id === miId;
@@ -99,28 +99,28 @@ export function ListaUsuarios({ usuarios, miId }: { usuarios: UsuarioFila[]; miI
             <li key={u.id} className="flex items-center gap-3 px-3 py-3 sm:px-5">
               <span
                 aria-hidden="true"
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black uppercase ${u.role === "admin" ? "bg-primary/20 text-primary" : "bg-white/[0.06] text-white/70"}`}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black uppercase ${u.role === "admin" ? "bg-primary/20 text-primary" : "bg-ink/[0.06] text-ink/70"}`}
               >
                 {(nombre || u.email || "?").charAt(0)}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <p className={`truncate text-sm font-bold ${nombre ? "text-white" : "italic text-white/50"}`}>{nombre || "Sin nombre"}</p>
+                  <p className={`truncate text-sm font-bold ${nombre ? "text-ink" : "italic text-ink/50"}`}>{nombre || "Sin nombre"}</p>
                   {u.role === "admin" ? <Badge tono="marca">Admin</Badge> : <Badge>Cliente</Badge>}
                   {soyYo && <Badge tono="exito">Tú</Badge>}
                 </div>
-                <p className="truncate text-xs text-white/70">{u.email ?? "—"}</p>
+                <p className="truncate text-xs text-ink/70">{u.email ?? "—"}</p>
                 <p className="text-[11px] text-accent">
                   {u.created_at && <>Desde {fechaAlta(u.created_at)} · </>}
                   {u.votos} {u.votos === 1 ? "voto" : "votos"}
                 </p>
               </div>
               <div className="flex shrink-0 items-center">
-                <button type="button" onClick={() => setEditando(u)} aria-label={`Editar ${nombre || u.email}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white">
+                <button type="button" onClick={() => setEditando(u)} aria-label={`Editar ${nombre || u.email}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-ink/60 hover:bg-ink/10 hover:text-ink">
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                 </button>
                 {!soyYo && (
-                  <button type="button" onClick={() => setABorrar(u)} aria-label={`Borrar la cuenta de ${nombre || u.email}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-offer/15 hover:text-red-300">
+                  <button type="button" onClick={() => setABorrar(u)} aria-label={`Borrar la cuenta de ${nombre || u.email}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-offer/15 hover:text-red-700 dark:hover:text-red-300">
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </button>
                 )}
@@ -179,13 +179,13 @@ function EditarUsuario({ usuario: u, soyYo, onCerrado }: { usuario: UsuarioFila;
     <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-stretch sm:justify-end" role="dialog" aria-modal="true" aria-label="Editar usuario">
       <button type="button" aria-label="Cerrar sin guardar" onClick={cerrar} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      <div className="relative flex max-h-[92vh] w-full animate-fade-up flex-col rounded-t-3xl border border-b-0 border-white/10 bg-surface [animation-duration:220ms] sm:h-full sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-l-3xl sm:border-b sm:border-r-0">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+      <div className="relative flex max-h-[92vh] w-full animate-fade-up flex-col rounded-t-3xl border border-b-0 border-ink/10 bg-surface [animation-duration:220ms] sm:h-full sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-l-3xl sm:border-b sm:border-r-0">
+        <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-lg font-black text-white">Editar usuario</h2>
+            <h2 className="text-lg font-black text-ink">Editar usuario</h2>
             <p className="truncate text-xs text-accent">{u.email}</p>
           </div>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink/60 hover:bg-ink/10 hover:text-ink">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -214,9 +214,9 @@ function EditarUsuario({ usuario: u, soyYo, onCerrado }: { usuario: UsuarioFila;
                   aria-pressed={f.role === o.v}
                   disabled={soyYo}
                   onClick={() => setF({ ...f, role: o.v })}
-                  className={`rounded-xl border p-3 text-left transition disabled:opacity-60 ${f.role === o.v ? "border-primary bg-primary/10" : "border-white/10 hover:border-white/25"}`}
+                  className={`rounded-xl border p-3 text-left transition disabled:opacity-60 ${f.role === o.v ? "border-primary bg-primary/10" : "border-ink/10 hover:border-ink/25"}`}
                 >
-                  <span className="block text-sm font-bold text-white">{o.t}</span>
+                  <span className="block text-sm font-bold text-ink">{o.t}</span>
                   <span className="block text-xs text-accent">{o.d}</span>
                 </button>
               ))}
@@ -242,7 +242,7 @@ function EditarUsuario({ usuario: u, soyYo, onCerrado }: { usuario: UsuarioFila;
                 type="button"
                 onClick={() => setVerPass((v) => !v)}
                 aria-label={verPass ? "Ocultar contraseña" : "Mostrar contraseña"}
-                className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-white/50 hover:text-white"
+                className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-ink/50 hover:text-ink"
               >
                 {verPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -250,7 +250,7 @@ function EditarUsuario({ usuario: u, soyYo, onCerrado }: { usuario: UsuarioFila;
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 border-t border-white/10 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="grid grid-cols-2 gap-2 border-t border-ink/10 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variante="secundario" onClick={cerrar} disabled={guardando}>
             Cancelar
           </Button>

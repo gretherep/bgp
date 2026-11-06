@@ -17,7 +17,7 @@ export default function MediaModal() {
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label={selectedMedia.title.trim()}>
       <button type="button" aria-label="Cerrar ficha" onClick={cerrar} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div className="relative max-h-[92vh] w-full max-w-3xl animate-fade-up overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 border-white/10 bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl [animation-duration:220ms] sm:rounded-3xl sm:border-b sm:p-8">
+      <div className="relative max-h-[92vh] w-full max-w-3xl animate-fade-up overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 border-ink/10 bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl [animation-duration:220ms] sm:rounded-3xl sm:border-b sm:p-8">
         <button
           type="button"
           onClick={cerrar}

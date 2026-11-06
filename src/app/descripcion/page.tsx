@@ -43,18 +43,18 @@ export default async function PreciosPage() {
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
-          style={{ backgroundImage: "radial-gradient(60% 90% at 15% 0%, rgba(249,195,164,0.12), transparent 70%)" }}
+          style={{ backgroundImage: "radial-gradient(60% 90% at 15% 0%, var(--glow), transparent 70%)" }}
         />
         <div className="mx-auto max-w-[1600px] px-4 pb-8 pt-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
           <nav aria-label="Ruta" className="mb-3 text-xs font-semibold text-accent">
-            <Link href="/" className="hover:text-white">Inicio</Link>
-            <span aria-hidden="true" className="mx-1.5 text-white/30">›</span>
-            <span className="text-white/80">Precios</span>
+            <Link href="/" className="hover:text-ink">Inicio</Link>
+            <span aria-hidden="true" className="mx-1.5 text-ink/30">›</span>
+            <span className="text-ink/80">Precios</span>
           </nav>
-          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl lg:text-5xl">
             <span aria-hidden="true" className="mr-2">💰</span>Precios
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-white/70 sm:text-base">
+          <p className="mt-2 max-w-2xl text-sm text-ink/70 sm:text-base">
             Lo que cuesta cada cosa, sin sorpresas. Pide por WhatsApp y te lo llevamos a domicilio.
           </p>
         </div>
@@ -69,25 +69,25 @@ export default async function PreciosPage() {
             <div
               aria-hidden="true"
               className="absolute inset-0 -z-10"
-              style={{ backgroundImage: "radial-gradient(80% 70% at 100% 0%, rgba(249,195,164,0.18), transparent 70%)" }}
+              style={{ backgroundImage: "radial-gradient(80% 70% at 100% 0%, var(--glow-fuerte), transparent 70%)" }}
             />
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-[11px] font-black uppercase tracking-wider text-black">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand px-3 py-1 text-[11px] font-black uppercase tracking-wider text-white">
               📦 Lo más pedido
             </span>
-            <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">Paquete semanal</h2>
-            <p className="mt-1 text-sm text-white/70">{SITE.paqueteTamano} de estrenos, series, novelas y más, cada semana.</p>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-ink sm:text-3xl">Paquete semanal</h2>
+            <p className="mt-1 text-sm text-ink/70">{SITE.paqueteTamano} de estrenos, series, novelas y más, cada semana.</p>
             <p className="mt-5 flex items-baseline gap-2">
               {precioPaquete ? (
                 <>
-                  <span className="text-5xl font-black tracking-tight text-white">{precioPaquete.split(" ")[0]}</span>
+                  <span className="text-5xl font-black tracking-tight text-ink">{precioPaquete.split(" ")[0]}</span>
                   <span className="text-lg font-black text-primary">{precioPaquete.split(" ")[1]}</span>
                   <span className="text-sm font-semibold text-accent">el básico</span>
                 </>
               ) : (
-                <span className="text-2xl font-black text-white">Precio a consultar</span>
+                <span className="text-2xl font-black text-ink">Precio a consultar</span>
               )}
             </p>
-            <ul className="mt-5 space-y-2 text-sm text-white/80">
+            <ul className="mt-5 space-y-2 text-sm text-ink/80">
               <li className="flex gap-2"><span aria-hidden="true">🛵</span> Servicio a domicilio</li>
               {d.horario && <li className="flex gap-2"><span aria-hidden="true">🕘</span> {d.horario}</li>}
               <li className="flex gap-2"><span aria-hidden="true">🔁</span> Contenido nuevo cada semana</li>
@@ -105,11 +105,11 @@ export default async function PreciosPage() {
           {/* Títulos sueltos */}
           <div className="min-w-0">
             <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">Títulos por separado</h2>
+              <h2 className="text-lg font-black tracking-tight text-ink sm:text-xl">Títulos por separado</h2>
               <span className="text-xs font-semibold text-accent">Para grabar solo lo que quieras</span>
             </div>
             {d.tarifas.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-white/15 px-5 py-8 text-center text-sm text-accent">
+              <p className="rounded-2xl border border-dashed border-ink/15 px-5 py-8 text-center text-sm text-accent">
                 Pregúntanos por WhatsApp el precio de lo que buscas.
               </p>
             ) : (
@@ -120,19 +120,19 @@ export default async function PreciosPage() {
                   const tambien = info?.cubre.filter((c) => c !== t.category) ?? [];
                   const ej = ejemplo(t, info?.modo);
                   return (
-                    <li key={t.category} className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-primary/40">
-                      <h3 className="text-base font-black text-white">
+                    <li key={t.category} className="flex flex-col rounded-2xl border border-ink/10 bg-ink/[0.03] p-5 transition hover:border-primary/40">
+                      <h3 className="text-base font-black text-ink">
                         {cat && <span aria-hidden="true" className="mr-1.5">{cat.emoji}</span>}
                         {t.category}
                       </h3>
                       <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5">
-                        <span className="text-3xl font-black tracking-tight text-white">{fmt(t.price)}</span>
+                        <span className="text-3xl font-black tracking-tight text-ink">{fmt(t.price)}</span>
                         <span className="text-sm font-black text-primary">{t.currency}</span>
                         {info && <span className="text-sm font-semibold text-accent">{info.unidad}</span>}
                       </p>
-                      {ej && <p className="mt-1 text-xs font-semibold text-white/60">Ej.: {ej}</p>}
+                      {ej && <p className="mt-1 text-xs font-semibold text-ink/60">Ej.: {ej}</p>}
                       {tambien.length > 0 && <p className="mt-1 text-xs text-accent">También: {tambien.join(", ")}</p>}
-                      {t.description && <p className="mt-3 whitespace-pre-line border-t border-white/10 pt-3 text-[13px] leading-relaxed text-white/70">{t.description.trim()}</p>}
+                      {t.description && <p className="mt-3 whitespace-pre-line border-t border-ink/10 pt-3 text-[13px] leading-relaxed text-ink/70">{t.description.trim()}</p>}
                       {cat && (
                         <Link href={`/category/${cat.slug}`} className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-bold text-primary underline-offset-4 hover:underline">
                           Ver {cat.label.toLowerCase()} →
@@ -152,19 +152,19 @@ export default async function PreciosPage() {
       {/* ── Cómo trabajamos (texto del panel → Negocio) ──────────────── */}
       {(intro.length > 0 || detalles.length > 0) && (
         <section className="mx-auto max-w-[1600px] px-4 pb-12 sm:px-6 lg:px-10">
-          <div className="grid gap-6 rounded-3xl border border-white/10 bg-surface p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-10">
+          <div className="grid gap-6 rounded-3xl border border-ink/10 bg-surface p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:gap-10">
             <div className="min-w-0">
-              <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">{d.titulo || "Quiénes somos"}</h2>
+              <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">{d.titulo || "Quiénes somos"}</h2>
               {intro.map((p, i) => (
-                <p key={i} className="mt-3 text-sm leading-relaxed text-white/75 sm:text-base">{p.texto}</p>
+                <p key={i} className="mt-3 text-sm leading-relaxed text-ink/75 sm:text-base">{p.texto}</p>
               ))}
             </div>
             {detalles.length > 0 && (
               <dl className="grid min-w-0 gap-3 sm:grid-cols-2">
                 {detalles.map((s, i) => (
-                  <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div key={i} className="rounded-2xl border border-ink/10 bg-ink/[0.03] p-4">
                     <dt className="text-[13px] font-black text-primary">{s.titulo}</dt>
-                    <dd className="mt-1 text-sm leading-relaxed text-white/75">{s.texto}</dd>
+                    <dd className="mt-1 text-sm leading-relaxed text-ink/75">{s.texto}</dd>
                   </div>
                 ))}
               </dl>
@@ -175,9 +175,9 @@ export default async function PreciosPage() {
 
       {/* ── Cierre ───────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-[1600px] px-4 pb-16 sm:px-6 lg:px-10">
-        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.02] px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-ink/10 bg-ink/[0.02] px-6 py-10 text-center sm:flex-row sm:justify-between sm:text-left">
           <div>
-            <p className="text-xl font-black text-white">¿Dudas con algún precio?</p>
+            <p className="text-xl font-black text-ink">¿Dudas con algún precio?</p>
             <p className="mt-1 text-sm text-accent">Escríbenos y te lo explicamos. También conseguimos títulos que no están en el catálogo.</p>
           </div>
           <a

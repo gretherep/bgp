@@ -178,7 +178,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
   return (
     <form onSubmit={guardar}>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <Link href={volver} className="inline-flex items-center gap-1.5 text-sm font-bold text-white/60 hover:text-white">
+        <Link href={volver} className="inline-flex items-center gap-1.5 text-sm font-bold text-ink/60 hover:text-ink">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Volver al catálogo
         </Link>
         {editando && (
@@ -188,7 +188,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
         )}
       </div>
 
-      <h1 className="mb-6 text-2xl font-black tracking-tight text-white sm:text-3xl">{editando ? "Editar título" : "Agregar título"}</h1>
+      <h1 className="mb-6 text-2xl font-black tracking-tight text-ink sm:text-3xl">{editando ? "Editar título" : "Agregar título"}</h1>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="min-w-0 space-y-6">
@@ -196,7 +196,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
           <Card>
             <CardHeader titulo="Póster" descripcion="Se comprime solo a WebP (≈ 200 KB) antes de subirlo, para que cargue rápido con datos móviles." />
             <div className="flex flex-wrap items-start gap-4 p-5">
-              <div className="relative aspect-[2/3] w-28 shrink-0 overflow-hidden rounded-xl border border-dashed border-white/20 bg-white/[0.03]">
+              <div className="relative aspect-[2/3] w-28 shrink-0 overflow-hidden rounded-xl border border-dashed border-ink/20 bg-ink/[0.03]">
                 {posterVisible ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -206,7 +206,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
                     </button>
                   </>
                 ) : (
-                  <span className="flex h-full items-center justify-center p-2 text-center text-[11px] text-white/40">Sin póster</span>
+                  <span className="flex h-full items-center justify-center p-2 text-center text-[11px] text-ink/40">Sin póster</span>
                 )}
               </div>
               <div className="min-w-0 flex-1 space-y-2">
@@ -220,7 +220,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
                     <Input id="poster-url" type="url" value={f.poster_url} onChange={(e) => { setArchivo(null); setPreviaArchivo(null); set("poster_url", e.target.value); }} placeholder="https://…" />
                   </Field>
                 ) : (
-                  <button type="button" onClick={() => setModoUrl(true)} className="inline-flex items-center gap-1.5 text-xs font-bold text-white/60 underline-offset-4 hover:text-white hover:underline">
+                  <button type="button" onClick={() => setModoUrl(true)} className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/60 underline-offset-4 hover:text-ink hover:underline">
                     <Link2 className="h-3.5 w-3.5" aria-hidden="true" /> Usar una URL en su lugar
                   </button>
                 )}
@@ -269,15 +269,15 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
                 <Input id="m-genre" value={f.genre} onChange={(e) => set("genre", e.target.value)} required placeholder="Ej.: Terror-Drama" />
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {MEDIA_GENRES.map((g) => (
-                    <button key={g} type="button" onClick={() => agregarGenero(g)} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/75 transition hover:border-primary/50 hover:text-primary">
+                    <button key={g} type="button" onClick={() => agregarGenero(g)} className="rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 text-xs font-semibold text-ink/75 transition hover:border-primary/50 hover:text-primary">
                       ＋ {g}
                     </button>
                   ))}
                 </div>
               </Field>
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3 sm:col-span-2">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 px-4 py-3 sm:col-span-2">
                 <div>
-                  <p className="text-sm font-bold text-white">🔥 Estreno</p>
+                  <p className="text-sm font-bold text-ink">🔥 Estreno</p>
                   <p className="text-xs text-accent">Sale primero en el catálogo, con la cinta roja «Estreno».</p>
                 </div>
                 <Switch activo={f.estreno} onChange={(v) => set("estreno", v)} label="Marcar como estreno" />
@@ -292,7 +292,7 @@ export default function MediaForm({ inicial, volver }: { inicial: TituloEditable
             <Card className="border-offer/30">
               <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                 <div>
-                  <p className="text-sm font-bold text-white">Borrar título</p>
+                  <p className="text-sm font-bold text-ink">Borrar título</p>
                   <p className="text-xs text-accent">Desaparece del sitio junto con sus votos. No se puede deshacer.</p>
                 </div>
                 <Button variante="peligro" tamano="sm" onClick={() => setConfirmarBorrar(true)} disabled={pendiente}>

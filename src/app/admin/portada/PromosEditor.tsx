@@ -210,13 +210,13 @@ function FilaPromo({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center gap-2 rounded-xl border bg-white/[0.03] p-2.5 sm:gap-3 sm:p-3 ${isDragging ? "z-10 border-primary/60 shadow-2xl" : "border-white/10"}`}
+      className={`flex items-center gap-2 rounded-xl border bg-ink/[0.03] p-2.5 sm:gap-3 sm:p-3 ${isDragging ? "z-10 border-primary/60 shadow-2xl" : "border-ink/10"}`}
     >
       <button
         ref={setActivatorNodeRef}
         type="button"
         aria-label={`Mover "${p.titulo}"`}
-        className="flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-white/40 hover:bg-white/10 hover:text-white active:cursor-grabbing"
+        className="flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-ink/40 hover:bg-ink/10 hover:text-ink active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >
@@ -226,13 +226,13 @@ function FilaPromo({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge tono={estado.tono}>{estado.label}</Badge>
-          <span className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/60">
+          <span className="rounded-md bg-ink/[0.06] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink/60">
             {p.kind === "strip" ? "Franja" : "Tarjeta"}
           </span>
-          {p.kind === "strip" && visibleComoFranja && <span className="text-[11px] font-bold text-whatsapp">● En el sitio</span>}
+          {p.kind === "strip" && visibleComoFranja && <span className="text-[11px] font-bold text-green-700 dark:text-whatsapp">● En el sitio</span>}
           {p.min_items && <span className="text-[11px] font-semibold text-accent">Mín. {p.min_items} títulos</span>}
         </div>
-        <p className="mt-1 truncate text-sm font-bold text-white">
+        <p className="mt-1 truncate text-sm font-bold text-ink">
           {p.badge && <span className="mr-1.5 rounded bg-offer px-1 py-px text-[10px] font-black uppercase text-white">{p.badge}</span>}
           {p.titulo}
         </p>
@@ -241,13 +241,13 @@ function FilaPromo({
 
       <Switch activo={p.activa} onChange={onAlternar} label={p.activa ? `Pausar "${p.titulo}"` : `Activar "${p.titulo}"`} />
       <div className="flex shrink-0 items-center">
-        <button type="button" onClick={onEditar} aria-label={`Editar "${p.titulo}"`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white">
+        <button type="button" onClick={onEditar} aria-label={`Editar "${p.titulo}"`} className="flex h-9 w-9 items-center justify-center rounded-lg text-ink/60 hover:bg-ink/10 hover:text-ink">
           <Pencil className="h-4 w-4" aria-hidden="true" />
         </button>
-        <button type="button" onClick={onDuplicar} aria-label={`Duplicar "${p.titulo}"`} className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white sm:flex">
+        <button type="button" onClick={onDuplicar} aria-label={`Duplicar "${p.titulo}"`} className="hidden h-9 w-9 items-center justify-center rounded-lg text-ink/60 hover:bg-ink/10 hover:text-ink sm:flex">
           <Copy className="h-4 w-4" aria-hidden="true" />
         </button>
-        <button type="button" onClick={onBorrar} aria-label={`Borrar "${p.titulo}"`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-offer/15 hover:text-red-300">
+        <button type="button" onClick={onBorrar} aria-label={`Borrar "${p.titulo}"`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-offer/15 hover:text-red-700 dark:hover:text-red-300">
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>

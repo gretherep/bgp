@@ -34,15 +34,15 @@ export default function PedidoPanel({ onCerrado }: { onCerrado: () => void }) {
     <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-stretch sm:justify-end" role="dialog" aria-modal="true" aria-label="Mi pedido">
       <button type="button" aria-label="Cerrar pedido" onClick={cerrar} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      <div className="relative flex max-h-[88vh] w-full animate-fade-up flex-col rounded-t-3xl border border-b-0 border-white/10 bg-surface [animation-duration:220ms] sm:h-full sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-l-3xl sm:border-b sm:border-r-0">
-        <span className="mx-auto mt-3 block h-1 w-10 rounded-full bg-white/20 sm:hidden" aria-hidden="true" />
+      <div className="relative flex max-h-[88vh] w-full animate-fade-up flex-col rounded-t-3xl border border-b-0 border-ink/10 bg-surface [animation-duration:220ms] sm:h-full sm:max-h-none sm:max-w-md sm:rounded-none sm:rounded-l-3xl sm:border-b sm:border-r-0">
+        <span className="mx-auto mt-3 block h-1 w-10 rounded-full bg-ink/20 sm:hidden" aria-hidden="true" />
 
         {/* Cabecera */}
         <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-3 sm:pt-6">
-          <h2 className="text-lg font-black text-white">
+          <h2 className="text-lg font-black text-ink">
             🛍️ Mi pedido <span className="text-accent">({items.length})</span>
           </h2>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-ink/60 transition hover:bg-ink/10 hover:text-ink">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
         </div>
@@ -50,43 +50,43 @@ export default function PedidoPanel({ onCerrado }: { onCerrado: () => void }) {
         {/* Progreso hacia la promo */}
         {promo && items.length > 0 && (
           <div className="mx-5 mb-3 rounded-2xl border border-primary/25 bg-primary/10 p-3">
-            <p className="text-[13px] font-bold text-white">
+            <p className="text-[13px] font-bold text-ink">
               {faltan > 0 ? (
                 <>Te {faltan === 1 ? "falta" : "faltan"} <span className="text-primary">{faltan} {faltan === 1 ? "título" : "títulos"}</span> para la promo</>
               ) : (
                 <>🎉 ¡Ya tienes la promo!</>
               )}
             </p>
-            <p className="mt-0.5 truncate text-xs text-white/60">
+            <p className="mt-0.5 truncate text-xs text-ink/60">
               {promo.badge && <span className="mr-1 font-black text-primary">{promo.badge}</span>}
               {promo.titulo}
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={promo.min_items} aria-valuenow={Math.min(items.length, promo.min_items)}>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/10" role="progressbar" aria-valuemin={0} aria-valuemax={promo.min_items} aria-valuenow={Math.min(items.length, promo.min_items)}>
               <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${Math.min(items.length / promo.min_items, 1) * 100}%` }} />
             </div>
           </div>
         )}
 
         {/* Lista */}
-        <div className="flex-1 overflow-y-auto overscroll-contain border-t border-white/10">
+        <div className="flex-1 overflow-y-auto overscroll-contain border-t border-ink/10">
           {items.length === 0 ? (
             <div className="px-6 py-14 text-center">
               <p className="text-3xl" aria-hidden="true">🛍️</p>
-              <p className="mt-2 font-bold text-white">Tu pedido está vacío</p>
+              <p className="mt-2 font-bold text-ink">Tu pedido está vacío</p>
               <p className="mt-1 text-sm text-accent">Toca ＋ en cualquier título para añadirlo y luego envíanos la lista por WhatsApp.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-ink/5">
               {lineas.map(({ it, precio }) => (
                 <li key={it.id} className="flex items-center gap-3 px-5 py-3">
-                  <div className="h-[60px] w-10 shrink-0 overflow-hidden rounded-md bg-surface-2 ring-1 ring-white/10">
+                  <div className="h-[60px] w-10 shrink-0 overflow-hidden rounded-md bg-surface-2 ring-1 ring-ink/10">
                     {it.poster_url && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={it.poster_url} alt="" width={40} height={60} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-white">{it.title}</p>
+                    <p className="truncate text-sm font-bold text-ink">{it.title}</p>
                     <p className="truncate text-xs text-accent">{it.year} · {it.category}</p>
                     <p className="text-xs font-semibold text-primary">{config ? precio.texto : "…"}</p>
                   </div>
@@ -94,7 +94,7 @@ export default function PedidoPanel({ onCerrado }: { onCerrado: () => void }) {
                     type="button"
                     onClick={() => quitar(it.id)}
                     aria-label={`Quitar ${it.title}`}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink/40 transition hover:bg-ink/10 hover:text-ink"
                   >
                     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
                   </button>
@@ -106,10 +106,10 @@ export default function PedidoPanel({ onCerrado }: { onCerrado: () => void }) {
 
         {/* Total y envío */}
         {items.length > 0 && (
-          <div className="border-t border-white/10 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="border-t border-ink/10 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="text-sm font-semibold text-white/70">Total aproximado</span>
-              <span className="text-xl font-black text-white">
+              <span className="text-sm font-semibold text-ink/70">Total aproximado</span>
+              <span className="text-xl font-black text-ink">
                 {config ? `${total.toLocaleString("es")} ${moneda}` : "…"}
               </span>
             </div>
@@ -129,14 +129,14 @@ export default function PedidoPanel({ onCerrado }: { onCerrado: () => void }) {
 
             <div className="mt-3 text-center">
               {confirmarVaciar ? (
-                <span className="text-xs text-white/70">
+                <span className="text-xs text-ink/70">
                   ¿Vaciar el pedido?{" "}
-                  <button type="button" onClick={() => { vaciar(); setConfirmarVaciar(false); }} className="font-bold text-red-300 underline underline-offset-4">Sí, vaciar</button>
+                  <button type="button" onClick={() => { vaciar(); setConfirmarVaciar(false); }} className="font-bold text-red-700 dark:text-red-300 underline underline-offset-4">Sí, vaciar</button>
                   {" · "}
-                  <button type="button" onClick={() => setConfirmarVaciar(false)} className="font-bold text-white underline underline-offset-4">No</button>
+                  <button type="button" onClick={() => setConfirmarVaciar(false)} className="font-bold text-ink underline underline-offset-4">No</button>
                 </span>
               ) : (
-                <button type="button" onClick={() => setConfirmarVaciar(true)} className="text-xs font-semibold text-white/50 underline-offset-4 hover:text-white hover:underline">
+                <button type="button" onClick={() => setConfirmarVaciar(true)} className="text-xs font-semibold text-ink/50 underline-offset-4 hover:text-ink hover:underline">
                   Vaciar pedido
                 </button>
               )}

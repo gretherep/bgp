@@ -35,7 +35,7 @@ export default function PedidoFlotante() {
       {items.length > 0 && !abierto && (
         <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-[90] flex flex-col items-end gap-2 sm:right-6">
           {aviso && (
-            <p role="status" className="max-w-[16rem] animate-fade-up truncate rounded-xl border border-white/10 bg-surface px-3 py-2 text-xs font-semibold text-white shadow-xl [animation-duration:200ms]">
+            <p role="status" className="max-w-[16rem] animate-fade-up truncate rounded-xl border border-ink/10 bg-surface px-3 py-2 text-xs font-semibold text-ink shadow-xl [animation-duration:200ms]">
               ✓ Añadido: <span className="text-primary">{aviso.titulo}</span>
             </p>
           )}
@@ -43,7 +43,7 @@ export default function PedidoFlotante() {
             type="button"
             onClick={() => setAbierto(true)}
             aria-label={`Abrir mi pedido, ${items.length} ${items.length === 1 ? "título" : "títulos"}`}
-            className="inline-flex items-center gap-2 rounded-full bg-primary py-3 pl-4 pr-3 text-sm font-black text-black shadow-[0_12px_30px_-8px_rgba(249,195,164,0.55)] transition hover:-translate-y-0.5 active:scale-95"
+            className="inline-flex items-center gap-2 rounded-full bg-brand py-3 pl-4 pr-3 text-sm font-black text-white shadow-[0_12px_30px_-8px_rgba(150,0,0,0.7)] transition hover:-translate-y-0.5 active:scale-95"
           >
             <span aria-hidden="true">🛍️</span>
             Mi pedido

@@ -34,7 +34,7 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({ message, onConfirm, onCance
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-black hover:bg-orange-300 transition"
+              className="px-4 py-2 rounded-lg bg-brand text-white hover:brightness-125 transition"
             >
               Confirmar
             </button>

@@ -21,7 +21,7 @@ export default function NuevosRail({ items, titulo }: { items: HomeMedia[]; titu
         {items.map((m, i) => (
           <li key={m.id} className="group relative w-[104px] shrink-0 snap-start sm:w-[118px] xl:w-[128px]">
             <OpenMedia media={m} label={`Ver ficha de ${m.title}`} className="block w-full text-left">
-              <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-white/10 transition duration-300 group-hover:-translate-y-1 group-hover:ring-primary/50">
+              <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-ink/10 transition duration-300 group-hover:-translate-y-1 group-hover:ring-primary/50">
                 {m.poster_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -44,7 +44,7 @@ export default function NuevosRail({ items, titulo }: { items: HomeMedia[]; titu
                   {m.year}
                 </span>
               </div>
-              <p className="mt-1.5 line-clamp-1 text-[11px] font-semibold text-white/80 group-hover:text-primary">{m.title}</p>
+              <p className="mt-1.5 line-clamp-1 text-[11px] font-semibold text-ink/80 group-hover:text-primary">{m.title}</p>
             </OpenMedia>
             <PedidoToggle media={m} className="absolute right-1.5 top-1.5 transition-transform duration-300 group-hover:-translate-y-1" />
           </li>

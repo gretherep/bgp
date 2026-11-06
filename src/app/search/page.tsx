@@ -30,7 +30,7 @@ export default async function BuscarPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-[1600px] px-4 pb-16 pt-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-4 text-center text-2xl font-black tracking-tight text-white sm:text-3xl">
+        <h1 className="mb-4 text-center text-2xl font-black tracking-tight text-ink sm:text-3xl">
           {q ? "Buscar" : "¿Qué quieres ver?"}
         </h1>
         <BuscadorEnVivo inicial={q} />
@@ -39,7 +39,7 @@ export default async function BuscarPage({ searchParams }: Props) {
             <li key={c.slug} className="shrink-0">
               <Link
                 href={`/category/${c.slug}`}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 text-[13px] font-bold text-white/80 transition hover:border-primary/50 hover:text-white"
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-ink/10 bg-ink/[0.04] px-4 text-[13px] font-bold text-ink/80 transition hover:border-primary/50 hover:text-ink"
               >
                 <span aria-hidden="true">{c.emoji}</span>
                 {c.label}
@@ -52,7 +52,7 @@ export default async function BuscarPage({ searchParams }: Props) {
       {/* ── Resultados ───────────────────────────────────────────────── */}
       {buscando && resultados.length > 0 && (
         <section className="mt-10" aria-labelledby="titulo-resultados">
-          <h2 id="titulo-resultados" className="mb-5 flex flex-wrap items-baseline gap-x-3 text-xl font-black tracking-tight text-white sm:text-2xl">
+          <h2 id="titulo-resultados" className="mb-5 flex flex-wrap items-baseline gap-x-3 text-xl font-black tracking-tight text-ink sm:text-2xl">
             Resultados para <span className="text-primary">«{q}»</span>
             <span className="text-sm font-semibold text-accent" aria-live="polite">
               {resultados.length >= MAX_RESULTADOS ? `más de ${MAX_RESULTADOS - 1}` : resultados.length} {resultados.length === 1 ? "título" : "títulos"}
@@ -75,12 +75,12 @@ export default async function BuscarPage({ searchParams }: Props) {
 
       {/* ── Sin resultados: que lo pida igual ────────────────────────── */}
       {sinResultados && (
-        <section className="mx-auto mt-10 max-w-2xl rounded-3xl border border-dashed border-white/15 px-6 py-10 text-center">
+        <section className="mx-auto mt-10 max-w-2xl rounded-3xl border border-dashed border-ink/15 px-6 py-10 text-center">
           <p className="text-3xl" aria-hidden="true">🔎</p>
-          <h2 className="mt-2 text-xl font-black text-white">
+          <h2 className="mt-2 text-xl font-black text-ink">
             No tenemos <span className="text-primary">«{q}»</span> en el catálogo
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-white/65">
+          <p className="mx-auto mt-2 max-w-md text-sm text-ink/65">
             Revisa cómo está escrito, o pídelo igual: te confirmamos por WhatsApp si lo podemos conseguir.
           </p>
           <a
@@ -97,7 +97,7 @@ export default async function BuscarPage({ searchParams }: Props) {
       {/* ── Sin búsqueda o sin resultados: lo último que entró ───────── */}
       {sugeridos.length > 0 && (
         <section className="mt-12" aria-labelledby="titulo-sugeridos">
-          <h2 id="titulo-sugeridos" className="mb-5 text-xl font-black tracking-tight text-white sm:text-2xl">
+          <h2 id="titulo-sugeridos" className="mb-5 text-xl font-black tracking-tight text-ink sm:text-2xl">
             {sinResultados ? "Quizás te interese" : <>Lo último que <span className="text-primary">entró</span></>}
           </h2>
           <ul className={GRID_POSTERS}>

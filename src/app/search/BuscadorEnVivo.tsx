@@ -46,7 +46,7 @@ export default function BuscadorEnVivo({ inicial }: { inicial: string }) {
       }}
       className="relative"
     >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/45" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink/45" aria-hidden="true">
         <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm10 2-4.35-4.35" />
       </svg>
       <input
@@ -59,10 +59,10 @@ export default function BuscadorEnVivo({ inicial }: { inicial: string }) {
         enterKeyHint="search"
         autoComplete="off"
         maxLength={80}
-        className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.05] pl-12 pr-12 text-base text-white placeholder:text-white/40 transition focus:border-primary/60 focus:bg-white/[0.08] focus:outline-none"
+        className="h-14 w-full rounded-2xl border border-ink/10 bg-ink/[0.05] pl-12 pr-12 text-base text-ink placeholder:text-ink/40 transition focus:border-primary/60 focus:bg-ink/[0.08] focus:outline-none"
       />
       {pendiente && (
-        <span className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin rounded-full border-2 border-white/20 border-t-primary" role="status" aria-label="Buscando" />
+        <span className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin rounded-full border-2 border-ink/20 border-t-primary" role="status" aria-label="Buscando" />
       )}
     </form>
   );

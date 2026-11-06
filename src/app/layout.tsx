@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import AppShell from "@/components/AppShell";
 import Analitica from "@/components/Analitica";
 import { SITE } from "@/lib/site";
+import { SCRIPT_TEMA } from "@/lib/tema";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -25,13 +26,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#161616",
-  colorScheme: "dark",
+  themeColor: "#D9D9D9",
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    // suppressHydrationWarning: SCRIPT_TEMA añade la clase "dark" antes de que React hidrate
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body className="min-h-screen bg-[var(--color-background)] text-[var(--color-secondary)]">
         <AppShell>{children}</AppShell>
         <Analitica />

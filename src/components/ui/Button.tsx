@@ -7,11 +7,11 @@ const BASE =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-bold transition active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-primary text-black hover:brightness-105",
+  primario: "bg-brand text-white hover:brightness-125",
   whatsapp: "bg-whatsapp text-black hover:brightness-110",
-  secundario: "border border-white/15 bg-white/[0.03] text-white hover:border-white/30 hover:bg-white/[0.06]",
-  fantasma: "text-white/70 hover:bg-white/[0.06] hover:text-white",
-  peligro: "border border-offer/40 bg-offer/10 text-red-200 hover:bg-offer/20",
+  secundario: "border border-ink/15 bg-ink/[0.03] text-ink hover:border-ink/30 hover:bg-ink/[0.06]",
+  fantasma: "text-ink/70 hover:bg-ink/[0.06] hover:text-ink",
+  peligro: "border border-offer/40 bg-offer/10 text-red-800 dark:text-red-200 hover:bg-offer/20",
 };
 
 const TAMANOS: Record<Tamano, string> = {

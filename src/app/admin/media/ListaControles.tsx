@@ -45,7 +45,7 @@ export function FiltrosCatalogoAdmin({
   return (
     <div className="mb-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_14rem_auto]">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" aria-hidden="true" />
         <Input type="search" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar por título…" aria-label="Buscar por título" className="pl-9" />
       </div>
       <Select value={cat ?? ""} onChange={(e) => ir({ cat: e.target.value || null })} aria-label="Filtrar por categoría">
@@ -61,7 +61,7 @@ export function FiltrosCatalogoAdmin({
         aria-pressed={soloEstrenos}
         onClick={() => ir({ estreno: soloEstrenos ? null : "1" })}
         className={`h-11 whitespace-nowrap rounded-xl border px-4 text-sm font-bold transition ${
-          soloEstrenos ? "border-offer/50 bg-offer/15 text-red-200" : "border-white/10 bg-white/[0.04] text-white/75 hover:border-white/25"
+          soloEstrenos ? "border-offer/50 bg-offer/15 text-red-800 dark:text-red-200" : "border-ink/10 bg-ink/[0.04] text-ink/75 hover:border-ink/25"
         }`}
       >
         🔥 Solo estrenos
@@ -96,7 +96,7 @@ export function EstrenoSwitch({ id, titulo, estreno }: { id: string; titulo: str
 
   return (
     <label className="flex shrink-0 items-center gap-2" title="Estreno">
-      <span className={`hidden text-[11px] font-bold uppercase tracking-wide sm:inline ${valor ? "text-red-300" : "text-white/40"}`}>Estreno</span>
+      <span className={`hidden text-[11px] font-bold uppercase tracking-wide sm:inline ${valor ? "text-red-700 dark:text-red-300" : "text-ink/40"}`}>Estreno</span>
       <Switch activo={valor} onChange={cambiar} disabled={pendiente} label={valor ? `Quitar estreno de ${titulo}` : `Marcar ${titulo} como estreno`} />
     </label>
   );
@@ -118,7 +118,7 @@ export function BorrarTitulo({ id, titulo }: { id: string; titulo: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => setConfirmar(true)} aria-label={`Borrar ${titulo}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-offer/15 hover:text-red-300">
+      <button type="button" onClick={() => setConfirmar(true)} aria-label={`Borrar ${titulo}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-offer/15 hover:text-red-700 dark:hover:text-red-300">
         <Trash2 className="h-4 w-4" aria-hidden="true" />
       </button>
       {confirmar && (
@@ -150,8 +150,8 @@ export function CorregirEspacios({ cantidad }: { cantidad: number }) {
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3">
-      <Type className="h-5 w-5 shrink-0 text-amber-300" aria-hidden="true" />
-      <p className="min-w-0 flex-1 text-sm text-white/85">
+      <Type className="h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
+      <p className="min-w-0 flex-1 text-sm text-ink/85">
         <strong>{cantidad} {cantidad === 1 ? "título tiene" : "títulos tienen"}</strong> espacios de más al inicio o al final (salen desordenados en A–Z).
       </p>
       <Button tamano="sm" onClick={corregir} disabled={pendiente}>

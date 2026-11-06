@@ -153,16 +153,16 @@ export default function Catalogo({
   return (
     <section ref={seccion} id="catalogo" className="mx-auto max-w-[1600px] scroll-mt-20 px-4 pb-14 sm:px-6 lg:px-10">
       {/* ── Barra de filtros ─────────────────────────────────────────── */}
-      <div className="sticky top-16 z-20 -mx-4 mb-5 border-b border-white/5 bg-background/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
+      <div className="sticky top-16 z-20 -mx-4 mb-5 border-b border-ink/5 bg-background/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
         <div className="flex items-center gap-2">
           {/* Móvil / tablet: un solo botón que abre la hoja */}
           <button
             type="button"
             onClick={() => setSheet(true)}
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-[13px] font-bold text-white lg:hidden"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-ink/10 bg-ink/[0.04] px-4 text-[13px] font-bold text-ink lg:hidden"
           >
             🎛️ Filtros
-            {activos > 0 && <span className="rounded-full bg-primary px-1.5 text-[11px] font-black text-black">{activos}</span>}
+            {activos > 0 && <span className="rounded-full bg-brand px-1.5 text-[11px] font-black text-white">{activos}</span>}
           </button>
 
           {/* PC: chips desplegables */}
@@ -208,7 +208,7 @@ export default function Catalogo({
                       </Chip>
                     ))}
                   </div>
-                  <button type="button" onClick={cerrar} className="mt-3 w-full rounded-xl bg-primary py-2 text-sm font-black text-black">
+                  <button type="button" onClick={cerrar} className="mt-3 w-full rounded-xl bg-brand py-2 text-sm font-black text-white">
                     Listo
                   </button>
                 </>
@@ -219,7 +219,7 @@ export default function Catalogo({
               aria-pressed={filtros.estreno}
               onClick={() => quitar({ estreno: !filtros.estreno })}
               className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[13px] font-bold transition ${
-                filtros.estreno ? "border-primary bg-primary/15 text-primary" : "border-white/10 bg-white/[0.04] text-white/80 hover:border-white/25 hover:text-white"
+                filtros.estreno ? "border-primary bg-primary/15 text-primary" : "border-ink/10 bg-ink/[0.04] text-ink/80 hover:border-ink/25 hover:text-ink"
               }`}
             >
               🔥 Solo estrenos
@@ -232,7 +232,7 @@ export default function Catalogo({
                       <button
                         type="button"
                         onClick={() => { quitar({ orden: o.slug }); cerrar(); }}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-white/5 ${filtros.orden === o.slug ? "text-primary" : "text-white/80"}`}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-ink/5 ${filtros.orden === o.slug ? "text-primary" : "text-ink/80"}`}
                       >
                         {o.label}
                         {filtros.orden === o.slug && <span aria-hidden="true">✓</span>}
@@ -242,7 +242,7 @@ export default function Catalogo({
                 </ul>
               )}
             </FiltroPopover>
-            {chipsActivos.length > 0 && <span className="mx-1 h-5 w-px bg-white/10" aria-hidden="true" />}
+            {chipsActivos.length > 0 && <span className="mx-1 h-5 w-px bg-ink/10" aria-hidden="true" />}
           </div>
 
           {/* Filtros activos, removibles (deslizable en móvil) */}
@@ -260,7 +260,7 @@ export default function Catalogo({
               </button>
             ))}
             {activos > 1 && (
-              <button type="button" onClick={() => aplicar(base)} className="shrink-0 px-2 text-xs font-bold text-white/50 underline-offset-4 hover:text-white hover:underline">
+              <button type="button" onClick={() => aplicar(base)} className="shrink-0 px-2 text-xs font-bold text-ink/50 underline-offset-4 hover:text-ink hover:underline">
                 Limpiar todo
               </button>
             )}
@@ -270,7 +270,7 @@ export default function Catalogo({
 
       {/* ── Título ───────────────────────────────────────────────────── */}
       <div className="mb-5 flex items-baseline gap-3">
-        <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
+        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">
           {activos ? "Resultados" : (titulo ?? <>Contenido <span className="text-primary">reciente</span></>)}
         </h2>
         <span className="text-sm font-semibold text-accent" aria-live="polite">
@@ -280,14 +280,14 @@ export default function Catalogo({
 
       {/* ── Grid ─────────────────────────────────────────────────────── */}
       {error && (
-        <p className="mb-4 rounded-xl border border-offer/40 bg-offer/10 px-4 py-3 text-sm text-red-200">
+        <p className="mb-4 rounded-xl border border-offer/40 bg-offer/10 px-4 py-3 text-sm text-red-800 dark:text-red-200">
           No se pudo cargar el catálogo. Revisa tu conexión e inténtalo de nuevo.
         </p>
       )}
 
       {items.length === 0 && cargando !== "filtro" ? (
-        <div className="rounded-3xl border border-dashed border-white/15 px-6 py-14 text-center">
-          <p className="text-base font-bold text-white">No encontramos títulos con esos filtros</p>
+        <div className="rounded-3xl border border-dashed border-ink/15 px-6 py-14 text-center">
+          <p className="text-base font-bold text-ink">No encontramos títulos con esos filtros</p>
           <p className="mt-1 text-sm text-accent">Si lo que buscas no está en el catálogo, te lo conseguimos.</p>
           <a
             href={waLink(whatsappUrl, "Hola 👋 busco un título que no encontré en el catálogo:")}
@@ -309,8 +309,8 @@ export default function Catalogo({
           {cargando === "mas" &&
             Array.from({ length: 6 }).map((_, i) => (
               <li key={`sk-${i}`} aria-hidden="true">
-                <div className="aspect-[2/3] animate-pulse rounded-xl bg-white/[0.06]" />
-                <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-white/[0.06]" />
+                <div className="aspect-[2/3] animate-pulse rounded-xl bg-ink/[0.06]" />
+                <div className="mt-2 h-3 w-3/4 animate-pulse rounded bg-ink/[0.06]" />
               </li>
             ))}
         </ul>
@@ -322,7 +322,7 @@ export default function Catalogo({
             type="button"
             onClick={cargarMas}
             disabled={cargando !== null}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:border-primary/50 hover:bg-white/[0.07] active:scale-[0.98] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-2xl border border-ink/15 bg-ink/[0.04] px-6 py-3 text-sm font-bold text-ink transition hover:border-primary/50 hover:bg-ink/[0.07] active:scale-[0.98] disabled:opacity-50"
           >
             {cargando === "mas" ? "Cargando…" : `Cargar más títulos · quedan ${quedan}`}
           </button>

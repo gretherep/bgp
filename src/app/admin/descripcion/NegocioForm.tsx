@@ -107,7 +107,7 @@ export default function NegocioForm({ inicial }: { inicial: NegocioEditable }) {
           <CardHeader
             titulo={
               <span className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-whatsapp" aria-hidden="true" /> Contacto y horario
+                <MessageCircle className="h-4 w-4 text-green-700 dark:text-whatsapp" aria-hidden="true" /> Contacto y horario
               </span>
             }
             descripcion="Todos los botones «Pedir» del sitio abren tu WhatsApp con el mensaje ya escrito."
@@ -119,7 +119,7 @@ export default function NegocioForm({ inicial }: { inicial: NegocioEditable }) {
               error={b.telefono && !telOk ? "Debe ser un móvil cubano de 8 dígitos (empieza por 5)." : null}
               hint={
                 telOk ? (
-                  <a href={`https://wa.me/53${telLimpio}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-bold text-whatsapp hover:underline">
+                  <a href={`https://wa.me/53${telLimpio}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-bold text-green-700 dark:text-whatsapp hover:underline">
                     Probar el enlace <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   </a>
                 ) : (
@@ -128,7 +128,7 @@ export default function NegocioForm({ inicial }: { inicial: NegocioEditable }) {
               }
             >
               <div className="relative">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-white/50">+53</span>
+                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-ink/50">+53</span>
                 <Input id="neg-tel" type="tel" inputMode="numeric" autoComplete="off" value={b.telefono} onChange={(e) => set("telefono", e.target.value)} className="pl-12 font-bold tabular-nums tracking-wide" placeholder="50623401" />
               </div>
             </Field>
@@ -147,7 +147,7 @@ export default function NegocioForm({ inicial }: { inicial: NegocioEditable }) {
                 placeholder={sinColumnaHorario ? "Falta un paso en la base de datos" : "Lunes a viernes de 9am a 6pm"}
               />
               {sinColumnaHorario && (
-                <p className="mt-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                <p className="mt-1.5 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
                   Para editarlo aquí hay que ejecutar <code className="font-mono">docs/sql/002_fase_a_negocio.sql</code> en Supabase. Mientras tanto se toma de la línea «HORARIO…» de la descripción.
                 </p>
               )}
@@ -166,16 +166,16 @@ export default function NegocioForm({ inicial }: { inicial: NegocioEditable }) {
           />
           <div className="space-y-5 p-5">
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/[0.04]">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/10 bg-ink/[0.04]">
                 {b.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={b.image_url} alt="Logo actual" className="h-full w-full object-cover" />
                 ) : (
-                  <ImagePlus className="h-6 w-6 text-white/40" aria-hidden="true" />
+                  <ImagePlus className="h-6 w-6 text-ink/40" aria-hidden="true" />
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-[13px] font-bold text-white/90">Logo</p>
+                <p className="text-[13px] font-bold text-ink/90">Logo</p>
                 <p className="text-xs text-accent">Se comprime solo (máx. 512 px).</p>
                 <div className="mt-2 flex gap-2">
                   <Button variante="secundario" tamano="sm" onClick={() => archivo.current?.click()} disabled={subiendo}>

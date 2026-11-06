@@ -18,7 +18,7 @@ import PedidoToggle from "@/components/pedido/PedidoToggle";
 // Las estrellas para votar traen Supabase: se cargan después, sin frenar la ficha.
 const Votar = dynamic(() => import("./Votar"), {
   ssr: false,
-  loading: () => <div className="h-9 w-44 animate-pulse rounded-lg bg-white/[0.06]" aria-hidden="true" />,
+  loading: () => <div className="h-9 w-44 animate-pulse rounded-lg bg-ink/[0.06]" aria-hidden="true" />,
 });
 
 /**
@@ -68,7 +68,7 @@ export default function FichaTitulo({
     <div className="grid gap-5 [grid-template-areas:'poster''info''extra'] sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:grid-rows-[auto_1fr] sm:gap-x-8 sm:gap-y-5 sm:[grid-template-areas:'poster_info''extra_info']">
       {/* Póster. En la ventanita del móvil, más chico: así "Pedir por WhatsApp" entra en la primera pantalla. */}
       <div className={`mx-auto w-full [grid-area:poster] sm:max-w-none ${variante === "modal" ? "max-w-[150px]" : "max-w-[260px]"}`}>
-        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-2xl shadow-black/60">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-ink/10 bg-surface-2 shadow-2xl shadow-black/30">
           {sinPoster ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <span className="text-4xl" aria-hidden="true">🎬</span>
@@ -96,46 +96,46 @@ export default function FichaTitulo({
           ) : (
             m.category
           )}
-          <span aria-hidden="true" className="mx-1.5 text-white/25">·</span>
+          <span aria-hidden="true" className="mx-1.5 text-ink/25">·</span>
           {m.year}
           {temporadas && (
             <>
-              <span aria-hidden="true" className="mx-1.5 text-white/25">·</span>
+              <span aria-hidden="true" className="mx-1.5 text-ink/25">·</span>
               {temporadas}
             </>
           )}
         </p>
-        <Titulo className="mt-2 text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl lg:text-4xl">{titulo}</Titulo>
+        <Titulo className="mt-2 text-2xl font-black leading-tight tracking-tight text-ink sm:text-3xl lg:text-4xl">{titulo}</Titulo>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {m.rating_count > 0 ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-black text-amber-300">
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-black text-amber-700 dark:text-amber-300">
               ⭐ {Number(m.rating_avg).toFixed(1)} / 5
-              <span className="font-semibold text-amber-300/60">
+              <span className="font-semibold text-amber-700/60 dark:text-amber-300/60">
                 · {m.rating_count} {m.rating_count === 1 ? "voto" : "votos"}
               </span>
             </span>
           ) : (
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-white/60">Sin votos todavía</span>
+            <span className="rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 text-xs font-bold text-ink/60">Sin votos todavía</span>
           )}
           {generos.map((g) => (
-            <span key={g} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-white/75">
+            <span key={g} className="rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 text-xs font-bold text-ink/75">
               {g}
             </span>
           ))}
         </div>
 
-        {idioma && <p className="mt-3 text-sm text-white/70">🗣️ {idioma}</p>}
+        {idioma && <p className="mt-3 text-sm text-ink/70">🗣️ {idioma}</p>}
 
-        <p className={`mt-4 whitespace-pre-line text-sm leading-relaxed text-white/80 sm:text-[15px] ${variante === "modal" ? "line-clamp-6" : ""}`}>
+        <p className={`mt-4 whitespace-pre-line text-sm leading-relaxed text-ink/80 sm:text-[15px] ${variante === "modal" ? "line-clamp-6" : ""}`}>
           {m.synopsis?.trim() || "Sinopsis no disponible."}
         </p>
 
         {/* Precio en una línea */}
-        <p className="mt-5 flex flex-wrap items-baseline gap-x-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5">
+        <p className="mt-5 flex flex-wrap items-baseline gap-x-2 rounded-xl border border-ink/10 bg-ink/[0.03] px-4 py-2.5">
           <span className="text-[11px] font-black uppercase tracking-wider text-accent">Precio</span>
-          <span className="text-base font-black text-white">
-            {precio ? precio.texto : <span className="inline-block h-4 w-32 animate-pulse rounded bg-white/[0.06] align-middle" aria-label="Cargando precio" />}
+          <span className="text-base font-black text-ink">
+            {precio ? precio.texto : <span className="inline-block h-4 w-32 animate-pulse rounded bg-ink/[0.06] align-middle" aria-label="Cargando precio" />}
           </span>
         </p>
 
@@ -155,7 +155,7 @@ export default function FichaTitulo({
             onClick={compartir}
             aria-label="Compartir"
             title="Compartir"
-            className="inline-flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.03] text-white transition hover:border-white/30 hover:bg-white/[0.06] active:scale-[0.97]"
+            className="inline-flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl border border-ink/15 bg-ink/[0.03] text-ink transition hover:border-ink/30 hover:bg-ink/[0.06] active:scale-[0.97]"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" aria-hidden="true">
               <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" />
@@ -165,7 +165,7 @@ export default function FichaTitulo({
       </div>
 
       {/* Calificar y ficha completa: debajo del póster en sm+, al final en el móvil */}
-      <div className="min-w-0 self-start border-t border-white/10 pt-4 [grid-area:extra] sm:rounded-2xl sm:border sm:bg-white/[0.03] sm:p-4">
+      <div className="min-w-0 self-start border-t border-ink/10 pt-4 [grid-area:extra] sm:rounded-2xl sm:border sm:bg-ink/[0.03] sm:p-4">
         <p className="mb-1 text-[11px] font-black uppercase tracking-wider text-accent">¿La viste? Califícala</p>
         <Votar mediaId={m.id} titulo={titulo} />
         {variante === "modal" && (

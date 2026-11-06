@@ -21,7 +21,7 @@ export default function HomeHero({ data }: { data: HomeData }) {
         className="absolute inset-0 -z-10"
         style={{
           backgroundImage:
-            "radial-gradient(60% 55% at 12% 0%, rgba(249,195,164,0.16), transparent 70%), radial-gradient(45% 50% at 95% 15%, rgba(99,102,241,0.10), transparent 70%)",
+            "radial-gradient(60% 55% at 12% 0%, var(--glow), transparent 70%), radial-gradient(45% 50% at 95% 15%, var(--glow-neutro), transparent 70%)",
         }}
       />
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-b from-transparent to-background" />
@@ -53,7 +53,7 @@ export default function HomeHero({ data }: { data: HomeData }) {
             </a>
             <Link
               href="/descripcion"
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-white/15 bg-white/[0.03] px-3 py-3 text-[13px] font-bold sm:text-sm text-white transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/[0.06] active:scale-[0.97] sm:px-6"
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-ink/15 bg-ink/[0.03] px-3 py-3 text-[13px] font-bold sm:text-sm text-ink transition hover:-translate-y-0.5 hover:border-ink/30 hover:bg-ink/[0.06] active:scale-[0.97] sm:px-6"
             >
               Ver precios
             </Link>

@@ -32,8 +32,8 @@ export default function PedidoToggle({
         aria-label={label}
         className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border px-3.5 py-2.5 text-sm font-bold transition active:scale-[0.97] ${
           enPedido
-            ? "border-whatsapp/50 bg-whatsapp/15 text-whatsapp"
-            : "border-white/15 text-white hover:-translate-y-0.5 hover:border-primary/50 hover:bg-white/5"
+            ? "border-whatsapp/50 bg-whatsapp/15 text-green-700 dark:text-whatsapp"
+            : "border-ink/15 text-ink hover:-translate-y-0.5 hover:border-primary/50 hover:bg-ink/5"
         } ${className}`}
       >
         <span aria-hidden="true" className="text-base leading-none">{enPedido ? "✓" : "＋"}</span>
@@ -52,7 +52,7 @@ export default function PedidoToggle({
       className={`flex h-8 w-8 items-center justify-center rounded-full border text-base font-black shadow-lg backdrop-blur transition active:scale-90 ${
         enPedido
           ? "border-whatsapp bg-whatsapp text-black"
-          : "border-white/25 bg-black/60 text-white hover:border-primary hover:bg-primary hover:text-black"
+          : "border-white/25 bg-black/60 text-white hover:border-brand hover:bg-brand hover:text-white"
       } ${className}`}
     >
       <span aria-hidden="true" className="leading-none">{enPedido ? "✓" : "＋"}</span>

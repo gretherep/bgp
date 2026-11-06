@@ -9,6 +9,7 @@ import { CATEGORIAS } from "@/lib/categories";
 import { waLink } from "@/lib/whatsapp";
 import { useHojaModal } from "@/hooks/useHojaModal";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import InterruptorTema from "@/components/ui/InterruptorTema";
 
 const NAV = [
   { name: "Inicio", href: "/", emoji: "🏠" },
@@ -97,7 +98,7 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
 
   const campoBusqueda = (movil: boolean) => (
     <form onSubmit={buscar} role="search" className="relative w-full">
-      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/40">
         <Icono d={I.buscar} className="h-4 w-4" />
       </span>
       <input
@@ -108,22 +109,22 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
         placeholder="Buscar película, serie…"
         aria-label="Buscar en el catálogo"
         enterKeyHint="search"
-        className="h-10 w-full rounded-full border border-white/10 bg-white/[0.06] pl-9 pr-4 text-sm text-white placeholder:text-white/40 transition focus:border-primary/60 focus:bg-white/[0.09] focus:outline-none"
+        className="h-10 w-full rounded-full border border-ink/10 bg-ink/[0.06] pl-9 pr-4 text-sm text-ink placeholder:text-ink/40 transition focus:border-primary/60 focus:bg-ink/[0.09] focus:outline-none"
       />
     </form>
   );
 
-  const botonIcono = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white";
+  const botonIcono = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink/80 transition hover:bg-ink/10 hover:text-ink";
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-50 h-16 border-b border-white/[0.06] bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
+      <nav className="fixed inset-x-0 top-0 z-50 h-16 border-b border-ink/[0.06] bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-full max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:gap-6 lg:px-10">
           {buscando ? (
             /* Búsqueda abierta (hasta 1279 px): ocupa toda la barra */
             <div className="flex w-full items-center gap-2 xl:hidden">
               {campoBusqueda(true)}
-              <button type="button" onClick={() => setBuscando(false)} className="shrink-0 px-2 text-sm font-bold text-white/70 hover:text-white">
+              <button type="button" onClick={() => setBuscando(false)} className="shrink-0 px-2 text-sm font-bold text-ink/70 hover:text-ink">
                 Cancelar
               </button>
             </div>
@@ -131,7 +132,7 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
             <>
               <Link href="/" aria-label="BGP Paquete, ir al inicio" className="flex shrink-0 items-center gap-2.5">
                 <Image src="/images/Logo.png" alt="" width={40} height={40} sizes="40px" priority className="h-10 w-10 rounded-full" />
-                <span className="hidden text-[15px] font-black tracking-tight text-white sm:block lg:hidden xl:block">
+                <span className="hidden text-[15px] font-black tracking-tight text-ink sm:block lg:hidden xl:block">
                   BGP <span className="text-primary">Paquete</span>
                 </span>
               </Link>
@@ -144,7 +145,7 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
                       href={item.href}
                       aria-current={activo(item.href) ? "page" : undefined}
                       className={`relative block rounded-lg px-2.5 py-2 text-[13px] font-semibold transition-colors xl:px-3 ${
-                        activo(item.href) ? "text-primary" : "text-white/75 hover:bg-white/[0.05] hover:text-white"
+                        activo(item.href) ? "text-primary" : "text-ink/75 hover:bg-ink/[0.05] hover:text-ink"
                       }`}
                     >
                       {item.name}
@@ -160,6 +161,9 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
                 <button type="button" onClick={() => setBuscando(true)} aria-label="Buscar" className={`${botonIcono} xl:hidden`}>
                   <Icono d={I.buscar} />
                 </button>
+
+                {/* En móvil y tablet va dentro del menú */}
+                <InterruptorTema className="mx-1 hidden lg:inline-flex" />
 
                 <a
                   href={PEDIR}
@@ -241,12 +245,12 @@ function MenuMovil({
   return (
     <div className="fixed inset-0 z-[110] flex justify-end lg:hidden" role="dialog" aria-modal="true" aria-label="Menú">
       <button type="button" aria-label="Cerrar menú" onClick={cerrar} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div className="relative flex h-full w-[86%] max-w-sm animate-fade-up flex-col border-l border-white/10 bg-surface [animation-duration:200ms]">
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
-          <span className="text-base font-black text-white">
+      <div className="relative flex h-full w-[86%] max-w-sm animate-fade-up flex-col border-l border-ink/10 bg-surface [animation-duration:200ms]">
+        <div className="flex h-16 items-center justify-between border-b border-ink/10 px-5">
+          <span className="text-base font-black text-ink">
             BGP <span className="text-primary">Paquete</span>
           </span>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-10 w-10 items-center justify-center rounded-full text-white/70 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-10 w-10 items-center justify-center rounded-full text-ink/70 hover:bg-ink/10 hover:text-ink">
             <Icono d={I.cerrar} />
           </button>
         </div>
@@ -260,7 +264,7 @@ function MenuMovil({
                   onClick={(e) => ir(e, item.href)}
                   aria-current={activo(item.href) ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-bold transition ${
-                    activo(item.href) ? "bg-primary/15 text-primary" : "text-white/85 hover:bg-white/[0.05]"
+                    activo(item.href) ? "bg-primary/15 text-primary" : "text-ink/85 hover:bg-ink/[0.05]"
                   }`}
                 >
                   <span className="text-lg" aria-hidden="true">{item.emoji}</span>
@@ -271,7 +275,11 @@ function MenuMovil({
           </ul>
         </nav>
 
-        <div className="space-y-2 border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="space-y-2 border-t border-ink/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center justify-between px-1 pb-2">
+            <span className="text-sm font-bold text-ink/80">Modo oscuro</span>
+            <InterruptorTema />
+          </div>
           <a
             href={PEDIR}
             target="_blank"
@@ -283,7 +291,7 @@ function MenuMovil({
           <button
             type="button"
             onClick={() => ejecutar(session ? onLogout : onLogin)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 py-3 text-sm font-bold text-white"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink/15 py-3 text-sm font-bold text-ink"
           >
             <Icono d={session ? I.salir : I.usuario} className="h-4 w-4" />
             {session ? "Cerrar sesión" : "Iniciar sesión"}

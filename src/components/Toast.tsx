@@ -26,7 +26,7 @@ const Toast: React.FC<ToastProps> = ({ message, isError, onClose }) => {
       {/* Botón para cerrar el toast */}
       <button 
         onClick={onClose} 
-        className="ml-4 p-1 rounded-full hover:bg-white/20 transition-colors flex-shrink-0"
+        className="ml-4 p-1 rounded-full hover:bg-ink/20 transition-colors flex-shrink-0"
         aria-label="Cerrar notificación"
       >
         <X className="w-4 h-4" />

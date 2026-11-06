@@ -126,10 +126,10 @@ export default function PromoForm({
     <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-stretch sm:justify-end" role="dialog" aria-modal="true" aria-label={editando ? "Editar promo" : "Nueva promo"}>
       <button type="button" aria-label="Cerrar sin guardar" onClick={cerrar} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      <div className="relative flex max-h-[92vh] w-full animate-fade-up flex-col rounded-t-3xl border border-b-0 border-white/10 bg-surface [animation-duration:220ms] sm:h-full sm:max-h-none sm:max-w-xl sm:rounded-none sm:rounded-l-3xl sm:border-b sm:border-r-0">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <h2 className="text-lg font-black text-white">{editando ? "Editar promo" : "Nueva promo"}</h2>
-          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
+      <div className="relative flex max-h-[92vh] w-full animate-fade-up flex-col rounded-t-3xl border border-b-0 border-ink/10 bg-surface [animation-duration:220ms] sm:h-full sm:max-h-none sm:max-w-xl sm:rounded-none sm:rounded-l-3xl sm:border-b sm:border-r-0">
+        <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-5 py-4">
+          <h2 className="text-lg font-black text-ink">{editando ? "Editar promo" : "Nueva promo"}</h2>
+          <button type="button" onClick={cerrar} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-ink/60 hover:bg-ink/10 hover:text-ink">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -137,10 +137,10 @@ export default function PromoForm({
         <div className="flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5">
           {!editando && (
             <div>
-              <p className="mb-2 text-[13px] font-bold text-white/90">Empezar desde una plantilla</p>
+              <p className="mb-2 text-[13px] font-bold text-ink/90">Empezar desde una plantilla</p>
               <div className="flex flex-wrap gap-1.5">
                 {PLANTILLAS.map((t) => (
-                  <button key={t.nombre} type="button" onClick={() => setF((prev) => ({ ...prev, ...t.datos }))} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-white/80 transition hover:border-primary/50 hover:text-primary">
+                  <button key={t.nombre} type="button" onClick={() => setF((prev) => ({ ...prev, ...t.datos }))} className="rounded-full border border-ink/10 bg-ink/[0.04] px-3 py-1.5 text-xs font-bold text-ink/80 transition hover:border-primary/50 hover:text-primary">
                     {t.nombre}
                   </button>
                 ))}
@@ -161,25 +161,25 @@ export default function PromoForm({
                   type="button"
                   aria-pressed={f.kind === o.v}
                   onClick={() => set("kind", o.v)}
-                  className={`rounded-xl border p-3 text-left transition ${f.kind === o.v ? "border-primary bg-primary/10" : "border-white/10 hover:border-white/25"}`}
+                  className={`rounded-xl border p-3 text-left transition ${f.kind === o.v ? "border-primary bg-primary/10" : "border-ink/10 hover:border-ink/25"}`}
                 >
                   {/* Dibujo mínimo de la ubicación */}
-                  <span className="mb-2 block h-10 overflow-hidden rounded-md border border-white/10 bg-background p-1">
+                  <span className="mb-2 block h-10 overflow-hidden rounded-md border border-ink/10 bg-background p-1">
                     {o.v === "strip" ? (
                       <>
-                        <span className="block h-1.5 rounded-sm bg-white/20" />
+                        <span className="block h-1.5 rounded-sm bg-ink/20" />
                         <span className="mt-0.5 block h-1.5 rounded-sm bg-primary/70" />
-                        <span className="mt-1 block h-3 rounded-sm bg-white/10" />
+                        <span className="mt-1 block h-3 rounded-sm bg-ink/10" />
                       </>
                     ) : (
                       <span className="grid h-full grid-cols-3 gap-0.5">
                         <span className="rounded-sm bg-primary/70" />
-                        <span className="rounded-sm bg-white/15" />
-                        <span className="rounded-sm bg-white/15" />
+                        <span className="rounded-sm bg-ink/15" />
+                        <span className="rounded-sm bg-ink/15" />
                       </span>
                     )}
                   </span>
-                  <span className="block text-sm font-bold text-white">{o.t}</span>
+                  <span className="block text-sm font-bold text-ink">{o.t}</span>
                   <span className="block text-[11px] text-accent">{o.d}</span>
                 </button>
               ))}
@@ -221,9 +221,9 @@ export default function PromoForm({
             <Input id="p-min" type="number" inputMode="numeric" min={1} max={999} value={f.min_items} onChange={(e) => set("min_items", e.target.value)} placeholder="Ej.: 5" className="max-w-[8rem]" />
           </Field>
 
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 px-4 py-3">
             <div>
-              <p className="text-sm font-bold text-white">Publicada</p>
+              <p className="text-sm font-bold text-ink">Publicada</p>
               <p className="text-xs text-accent">Apágala para guardarla sin mostrarla.</p>
             </div>
             <Switch activo={f.activa} onChange={(v) => set("activa", v)} label="Publicada" />
@@ -232,7 +232,7 @@ export default function PromoForm({
           <div>
             <p className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-accent">Vista previa</p>
             {f.kind === "strip" ? (
-              <div className="overflow-hidden rounded-xl border border-white/10">
+              <div className="overflow-hidden rounded-xl border border-ink/10">
                 <PromoStrip promo={previa} href={waLink(whatsappUrl, previa.cta_mensaje ?? "")} />
               </div>
             ) : (
@@ -243,7 +243,7 @@ export default function PromoForm({
           </div>
         </div>
 
-        <div className="flex gap-2 border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="flex gap-2 border-t border-ink/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variante="secundario" onClick={cerrar} className="flex-1 sm:flex-none">
             Cancelar
           </Button>

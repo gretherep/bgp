@@ -64,7 +64,7 @@ export default function HeroEditor({ guardado, disponible }: { guardado: HeroTex
       />
 
       {!disponible && (
-        <p className="mx-5 mt-5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200">
+        <p className="mx-5 mt-5 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           Para editarlo hay que ejecutar <code className="font-mono">docs/sql/006_texto_bienvenida.sql</code> en Supabase. Mientras tanto el Inicio muestra el texto original.
         </p>
       )}
@@ -91,7 +91,7 @@ export default function HeroEditor({ guardado, disponible }: { guardado: HeroTex
           </div>
           <p className="text-xs text-accent">Consejo: empieza cada botón con un emoji (🍿 📺 🔥) para que se lea de un vistazo.</p>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-white/10 pt-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-ink/10 pt-4">
             {!esOriginal && (
               <Button variante="fantasma" tamano="sm" onClick={() => guardar(null, "El Inicio volvió al texto original")}>
                 Volver al texto original
@@ -111,14 +111,14 @@ export default function HeroEditor({ guardado, disponible }: { guardado: HeroTex
         {/* Vista previa con los mismos componentes del Inicio */}
         <div className="min-w-0">
           <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-accent">Así se ve en el Inicio</p>
-          <div className="rounded-2xl border border-white/10 bg-background p-5" aria-hidden="true">
+          <div className="rounded-2xl border border-ink/10 bg-background p-5" aria-hidden="true">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-primary">
               📦 Paquete de esta semana · {SITE.paqueteTamano}
             </span>
             <HeroTexto hero={{ titulo: h.titulo || HERO_ORIGINAL.titulo, destacado: h.destacado, subtexto: h.subtexto || HERO_ORIGINAL.subtexto }} Etiqueta="p" />
             <div className="mt-4 flex flex-wrap gap-2">
               {CHIPS.map((c) => (
-                <span key={c.clave} className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[13px] font-bold text-white/85">
+                <span key={c.clave} className="inline-flex items-center rounded-full border border-ink/10 bg-ink/[0.04] px-3.5 py-2 text-[13px] font-bold text-ink/85">
                   {h.chips[c.clave] || HERO_ORIGINAL.chips[c.clave]}
                 </span>
               ))}
@@ -127,7 +127,7 @@ export default function HeroEditor({ guardado, disponible }: { guardado: HeroTex
               <span className="inline-flex items-center gap-1.5 rounded-xl bg-whatsapp px-4 py-2.5 text-[13px] font-black text-black">
                 <WhatsAppIcon className="h-4 w-4" /> Pedir el paquete
               </span>
-              <span className="inline-flex items-center rounded-xl border border-white/15 px-4 py-2.5 text-[13px] font-bold text-white">Ver precios</span>
+              <span className="inline-flex items-center rounded-xl border border-ink/15 px-4 py-2.5 text-[13px] font-bold text-ink">Ver precios</span>
             </div>
           </div>
         </div>

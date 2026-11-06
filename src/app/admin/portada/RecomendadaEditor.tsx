@@ -115,7 +115,7 @@ export default function RecomendadaEditor({
         descripcion={
           activa ? (
             <>
-              <span className="font-semibold text-white/80">{activa.media.title.trim()}</span>
+              <span className="font-semibold text-ink/80">{activa.media.title.trim()}</span>
               {activa.hasta ? ` · hasta el ${fechaCorta(activa.hasta)}` : " · sin fecha de fin"}
             </>
           ) : (
@@ -144,7 +144,7 @@ export default function RecomendadaEditor({
                   <img src={media.poster_thumb_url || media.poster_url} alt="" width={36} height={54} className="h-[54px] w-9 rounded-md object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-white">{media.title.trim()}</p>
+                  <p className="truncate text-sm font-bold text-ink">{media.title.trim()}</p>
                   <p className="text-xs text-accent">{media.year} · {media.category}</p>
                 </div>
                 <Button variante="fantasma" tamano="sm" onClick={() => setMedia(null)} aria-label="Cambiar título">
@@ -179,7 +179,7 @@ export default function RecomendadaEditor({
                     className="pr-10"
                   />
                   {r && (
-                    <button type="button" onClick={() => setRazones((prev) => prev.map((x, j) => (j === i ? "" : x)))} aria-label={`Borrar razón ${i + 1}`} className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-white/40 hover:bg-white/10 hover:text-white">
+                    <button type="button" onClick={() => setRazones((prev) => prev.map((x, j) => (j === i ? "" : x)))} aria-label={`Borrar razón ${i + 1}`} className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-ink/40 hover:bg-ink/10 hover:text-ink">
                       <X className="h-4 w-4" />
                     </button>
                   )}
@@ -189,7 +189,7 @@ export default function RecomendadaEditor({
             {sugerencias.length > 0 && (
               <div className="mt-2.5 flex flex-wrap gap-1.5">
                 {sugerencias.map((s) => (
-                  <button key={s} type="button" onClick={() => usarSugerencia(s)} className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/75 transition hover:border-primary/50 hover:text-primary">
+                  <button key={s} type="button" onClick={() => usarSugerencia(s)} className="rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 text-xs font-semibold text-ink/75 transition hover:border-primary/50 hover:text-primary">
                     ＋ {s}
                   </button>
                 ))}
@@ -206,7 +206,7 @@ export default function RecomendadaEditor({
             </Field>
           </div>
 
-          <div className="flex flex-wrap gap-2 border-t border-white/10 pt-5">
+          <div className="flex flex-wrap gap-2 border-t border-ink/10 pt-5">
             <Button onClick={publicar} disabled={pendiente || !media || frase.trim().length < 10}>
               {pendiente ? "Publicando…" : activa ? "Publicar cambios" : "Publicar en el Inicio"}
             </Button>
@@ -234,9 +234,9 @@ export default function RecomendadaEditor({
       </div>
 
       {historial.length > 0 && (
-        <div className="border-t border-white/10 px-5 py-4">
+        <div className="border-t border-ink/10 px-5 py-4">
           <p className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-accent">Recomendadas anteriores</p>
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-ink/5">
             {historial.map((r) => (
               <li key={r.id} className="flex items-center gap-3 py-2.5">
                 {r.media.poster_url && (
@@ -244,7 +244,7 @@ export default function RecomendadaEditor({
                   <img src={r.media.poster_thumb_url || r.media.poster_url} alt="" width={28} height={42} loading="lazy" className="h-[42px] w-7 rounded object-cover" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-white/90">{r.media.title.trim()}</p>
+                  <p className="truncate text-sm font-bold text-ink/90">{r.media.title.trim()}</p>
                   <p className="truncate text-xs text-accent">“{r.frase}” · {fechaCorta(r.created_at)}</p>
                 </div>
                 <Button variante="secundario" tamano="sm" onClick={() => reutilizar(r)}>
@@ -299,7 +299,7 @@ function BuscadorTitulos({ onElegir }: { onElegir: (m: HomeMedia) => void }) {
   return (
     <div>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" aria-hidden="true" />
         <Input
           type="search"
           value={q}
@@ -311,24 +311,24 @@ function BuscadorTitulos({ onElegir }: { onElegir: (m: HomeMedia) => void }) {
         />
       </div>
       {activo && (
-        <ul className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-surface-2/60" aria-busy={cargando}>
+        <ul className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-ink/10 bg-surface-2/60" aria-busy={cargando}>
           {cargando && !resultados && <li className="px-3 py-3 text-sm text-accent">Buscando…</li>}
-          {error && <li className="px-3 py-3 text-sm font-semibold text-red-300">{error}</li>}
+          {error && <li className="px-3 py-3 text-sm font-semibold text-red-700 dark:text-red-300">{error}</li>}
           {resultados?.length === 0 && <li className="px-3 py-3 text-sm text-accent">No hay títulos con ese nombre.</li>}
           {resultados?.map((m) => (
             <li key={m.id}>
-              <button type="button" onClick={() => onElegir(m)} className="flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-white/[0.06]">
+              <button type="button" onClick={() => onElegir(m)} className="flex w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-ink/[0.06]">
                 {m.poster_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.poster_thumb_url || m.poster_url} alt="" width={28} height={42} loading="lazy" className="h-[42px] w-7 rounded object-cover" />
                 ) : (
-                  <span className="h-[42px] w-7 rounded bg-white/10" />
+                  <span className="h-[42px] w-7 rounded bg-ink/10" />
                 )}
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold text-white">{m.title.trim()}</span>
+                  <span className="block truncate text-sm font-bold text-ink">{m.title.trim()}</span>
                   <span className="block text-xs text-accent">
                     {m.year} · {m.category}
-                    {m.estreno && <span className="ml-1.5 font-bold text-red-300">· Estreno</span>}
+                    {m.estreno && <span className="ml-1.5 font-bold text-red-700 dark:text-red-300">· Estreno</span>}
                   </span>
                 </span>
               </button>

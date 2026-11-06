@@ -84,15 +84,15 @@ export default async function TituloPage({ params }: Props) {
 
         <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
           <nav aria-label="Ruta" className="mb-5 truncate text-xs font-semibold text-accent">
-            <Link href="/" className="hover:text-white">Inicio</Link>
+            <Link href="/" className="hover:text-ink">Inicio</Link>
             {cat && (
               <>
-                <span aria-hidden="true" className="mx-1.5 text-white/30">›</span>
-                <Link href={`/category/${cat.slug}`} className="hover:text-white">{cat.label}</Link>
+                <span aria-hidden="true" className="mx-1.5 text-ink/30">›</span>
+                <Link href={`/category/${cat.slug}`} className="hover:text-ink">{cat.label}</Link>
               </>
             )}
-            <span aria-hidden="true" className="mx-1.5 text-white/30">›</span>
-            <span className="text-white/80">{m.title.trim()}</span>
+            <span aria-hidden="true" className="mx-1.5 text-ink/30">›</span>
+            <span className="text-ink/80">{m.title.trim()}</span>
           </nav>
           <FichaTitulo media={m} variante="pagina" config={config} />
         </div>
@@ -100,7 +100,7 @@ export default async function TituloPage({ params }: Props) {
 
       {parecidos.length > 0 && (
         <section className="mx-auto max-w-[1600px] px-4 pb-16 sm:px-6 lg:px-10" aria-labelledby="titulo-parecidos">
-          <h2 id="titulo-parecidos" className="mb-5 text-xl font-black tracking-tight text-white sm:text-2xl">
+          <h2 id="titulo-parecidos" className="mb-5 text-xl font-black tracking-tight text-ink sm:text-2xl">
             Si te gustó, <span className="text-primary">mira también</span>
           </h2>
           <ul className={GRID_POSTERS}>

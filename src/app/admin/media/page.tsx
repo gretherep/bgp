@@ -80,7 +80,7 @@ export default async function CatalogoAdminPage({ searchParams }: { searchParams
         />
       ) : (
         <Card>
-          <ul className="divide-y divide-white/5">
+          <ul className="divide-y divide-ink/5">
             {filas.map((m) => {
               const editar = `/admin/media/${m.id}/edit${volver ? `?${volver}` : ""}`;
               return (
@@ -88,13 +88,13 @@ export default async function CatalogoAdminPage({ searchParams }: { searchParams
                   <Link href={editar} className="shrink-0" aria-label={`Editar ${m.title}`}>
                     {m.poster_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.poster_thumb_url || m.poster_url} alt="" width={40} height={60} loading="lazy" decoding="async" className="h-[60px] w-10 rounded-md object-cover ring-1 ring-white/10" />
+                      <img src={m.poster_thumb_url || m.poster_url} alt="" width={40} height={60} loading="lazy" decoding="async" className="h-[60px] w-10 rounded-md object-cover ring-1 ring-ink/10" />
                     ) : (
-                      <span className="flex h-[60px] w-10 items-center justify-center rounded-md bg-offer/15 text-[9px] font-bold text-red-300 ring-1 ring-offer/30">Sin póster</span>
+                      <span className="flex h-[60px] w-10 items-center justify-center rounded-md bg-offer/15 text-[9px] font-bold text-red-700 dark:text-red-300 ring-1 ring-offer/30">Sin póster</span>
                     )}
                   </Link>
                   <div className="min-w-0 flex-1">
-                    <Link href={editar} className="block truncate text-sm font-bold text-white hover:text-primary">
+                    <Link href={editar} className="block truncate text-sm font-bold text-ink hover:text-primary">
                       {m.title}
                     </Link>
                     <p className="truncate text-xs text-accent">
@@ -105,10 +105,10 @@ export default async function CatalogoAdminPage({ searchParams }: { searchParams
                   </div>
                   <EstrenoSwitch id={m.id} titulo={m.title} estreno={!!m.estreno} />
                   <div className="flex shrink-0 items-center">
-                    <Link href={`/admin/portada?recomendar=${m.id}`} aria-label={`Recomendar ${m.title} esta semana`} title="Recomendar esta semana" className="hidden h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-primary/15 hover:text-primary sm:flex">
+                    <Link href={`/admin/portada?recomendar=${m.id}`} aria-label={`Recomendar ${m.title} esta semana`} title="Recomendar esta semana" className="hidden h-9 w-9 items-center justify-center rounded-lg text-ink/60 hover:bg-primary/15 hover:text-primary sm:flex">
                       <Sparkles className="h-4 w-4" aria-hidden="true" />
                     </Link>
-                    <Link href={editar} aria-label={`Editar ${m.title}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white">
+                    <Link href={editar} aria-label={`Editar ${m.title}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-ink/60 hover:bg-ink/10 hover:text-ink">
                       <Pencil className="h-4 w-4" aria-hidden="true" />
                     </Link>
                     <BorrarTitulo id={m.id} titulo={m.title} />

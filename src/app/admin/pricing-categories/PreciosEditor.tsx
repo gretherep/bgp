@@ -184,14 +184,14 @@ function FilaPrecio({ precio: p, onAlternar, onBorrar }: { precio: PrecioFila; o
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`rounded-xl border bg-white/[0.03] p-3 sm:p-4 ${isDragging ? "relative z-10 border-primary/60 shadow-2xl" : cambiado ? "border-primary/40" : "border-white/10"}`}
+      className={`rounded-xl border bg-ink/[0.03] p-3 sm:p-4 ${isDragging ? "relative z-10 border-primary/60 shadow-2xl" : cambiado ? "border-primary/40" : "border-ink/10"}`}
     >
       <div className="flex items-start gap-2 sm:gap-3">
         <button
           ref={setActivatorNodeRef}
           type="button"
           aria-label={`Mover "${p.category}"`}
-          className="-ml-1 flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-white/40 hover:bg-white/10 hover:text-white active:cursor-grabbing"
+          className="-ml-1 flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-ink/40 hover:bg-ink/10 hover:text-ink active:cursor-grabbing"
           {...attributes}
           {...listeners}
         >
@@ -200,18 +200,18 @@ function FilaPrecio({ precio: p, onAlternar, onBorrar }: { precio: PrecioFila; o
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-black text-white">{p.category}</h3>
+            <h3 className="text-base font-black text-ink">{p.category}</h3>
             {!p.is_active && <Badge tono="neutro">Oculta</Badge>}
             {cambiado && <Badge tono="aviso">Sin guardar</Badge>}
           </div>
           {t && t.cubre.length > 1 && <p className="mt-0.5 text-xs text-accent">También cobra: {t.cubre.filter((c) => c !== p.category).join(", ")}</p>}
         </div>
 
-        <label className="flex shrink-0 items-center gap-2 pt-1.5 text-xs font-bold text-white/70">
+        <label className="flex shrink-0 items-center gap-2 pt-1.5 text-xs font-bold text-ink/70">
           <span className="hidden sm:inline">Visible</span>
           <Switch activo={p.is_active} onChange={onAlternar} label={p.is_active ? `Ocultar ${p.category}` : `Mostrar ${p.category}`} />
         </label>
-        <button type="button" onClick={onBorrar} aria-label={`Borrar la tarifa de ${p.category}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/50 hover:bg-offer/15 hover:text-red-300">
+        <button type="button" onClick={onBorrar} aria-label={`Borrar la tarifa de ${p.category}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/50 hover:bg-offer/15 hover:text-red-700 dark:hover:text-red-300">
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
@@ -240,7 +240,7 @@ function FilaPrecio({ precio: p, onAlternar, onBorrar }: { precio: PrecioFila; o
               ))}
             </Select>
           </div>
-          {t && <span className="whitespace-nowrap text-sm font-semibold text-white/70">{t.unidad}</span>}
+          {t && <span className="whitespace-nowrap text-sm font-semibold text-ink/70">{t.unidad}</span>}
         </div>
         <p className="min-w-0 pb-2.5 text-xs text-accent">
           {valido ? (
@@ -248,7 +248,7 @@ function FilaPrecio({ precio: p, onAlternar, onBorrar }: { precio: PrecioFila; o
               El cliente ve: <span className="font-bold text-primary">{comoLoVe ?? `${precioNum} ${borrador.currency}`}</span>
             </>
           ) : (
-            <span className="font-semibold text-red-300">Escribe un precio mayor que 0.</span>
+            <span className="font-semibold text-red-700 dark:text-red-300">Escribe un precio mayor que 0.</span>
           )}
         </p>
       </div>
@@ -259,14 +259,14 @@ function FilaPrecio({ precio: p, onAlternar, onBorrar }: { precio: PrecioFila; o
           onClick={() => setVerDetalle((v) => !v)}
           aria-expanded={verDetalle}
           aria-controls={`${idBase}-detalle`}
-          className="inline-flex items-center gap-1 rounded-lg py-1 text-xs font-bold text-white/70 hover:text-white"
+          className="inline-flex items-center gap-1 rounded-lg py-1 text-xs font-bold text-ink/70 hover:text-ink"
         >
           <ChevronDown className={`h-4 w-4 transition-transform ${verDetalle ? "rotate-180" : ""}`} aria-hidden="true" />
           Texto de la página de Precios
           {!verDetalle && !borrador.description && <span className="font-semibold text-accent">· vacío</span>}
         </button>
         {textoViejo && (
-          <p className="mt-1 text-xs font-semibold text-amber-300">
+          <p className="mt-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
             El texto todavía dice {p.price}. Revísalo antes de guardar.
           </p>
         )}
@@ -284,7 +284,7 @@ function FilaPrecio({ precio: p, onAlternar, onBorrar }: { precio: PrecioFila; o
       </div>
 
       {cambiado && (
-        <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-white/10 pt-3">
+        <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-ink/10 pt-3">
           <Button variante="fantasma" tamano="sm" onClick={() => setBorrador(inicial)} disabled={guardando}>
             Deshacer
           </Button>
@@ -317,7 +317,7 @@ function NuevaTarifa({ opciones, onCerrado }: { opciones: string[]; onCerrado: (
 
   return (
     <div className="rounded-xl border border-primary/40 bg-primary/[0.04] p-4">
-      <p className="text-sm font-black text-white">Nueva tarifa</p>
+      <p className="text-sm font-black text-ink">Nueva tarifa</p>
       <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
         <Field label="Tarifa" htmlFor="nueva-tarifa" hint={t && t.cubre.length > 1 ? `Cobra: ${t.cubre.join(", ")}` : undefined}>
           <Select id="nueva-tarifa" value={categoria} onChange={(e) => setCategoria(e.target.value)}>

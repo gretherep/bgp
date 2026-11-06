@@ -79,7 +79,7 @@ Reglas:
 - Zona: Pueblo Nuevo, San Luis, Calle Medio, Parque Maceo, Jaiba, Reparto Camilo, Playa y alrededores.
 - Canal: **solo un grupo de WhatsApp**. Telegram no se usa (`telegram_url` hoy es un placeholder): ocultarlo.
 - La **recomendada de la semana la elige el admin**.
-- Paleta sin cambios (`#F9C3A4`, `#161616`, `#DCDAD9`, `#95999E`). Se añaden solo el verde WhatsApp `#25D366` en los CTA de pedido y el rojo ya usado en "Estreno" para las ofertas.
+- Paleta (desde 2026-11-06, con el logo nuevo): `#960000`, `#000000`, `#D9D9D9`. Tema claro por defecto con fondo `#D9D9D9` y ✅ modo oscuro (fondo negro) con interruptor sol/luna en el menú; `brand` = relleno rojo con texto blanco, `primary` = rojo para texto y bordes. Reglas en `memoria/tema-y-colores.md`. *(Antes: `#F9C3A4`, `#161616`, `#DCDAD9`, `#95999E`.)* Se añaden solo el verde WhatsApp `#25D366` en los CTA de pedido y el rojo ya usado en "Estreno" para las ofertas.
 
 ### 0.1 Base de datos ✅ *(`docs/sql/001_fase0_inicio.sql`, ejecutado en Supabase el 2026-10-01)*
 - ✅ `media.rating_avg` + `media.rating_count` con trigger sobre `ratings` y backfill *(adelanta 1.1)*.

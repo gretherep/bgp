@@ -24,9 +24,9 @@ export default async function OpengraphImage() {
           alignItems: "center",
           justifyContent: "center",
           gap: 22,
-          backgroundColor: "#161616",
-          backgroundImage: "radial-gradient(circle at 50% 30%, rgba(249,195,164,0.25), transparent 60%)",
-          color: "#DCDAD9",
+          backgroundColor: "#D9D9D9",
+          backgroundImage: "radial-gradient(circle at 50% 30%, rgba(150,0,0,0.14), transparent 60%)",
+          color: "#000000",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -36,17 +36,17 @@ export default async function OpengraphImage() {
             display: "flex",
             padding: "8px 22px",
             borderRadius: 999,
-            backgroundColor: "rgba(249,195,164,0.16)",
-            color: "#F9C3A4",
+            backgroundColor: "#960000",
+            color: "#ffffff",
             fontSize: 28,
           }}
         >
           {`PAQUETE SEMANAL · ${SITE.paqueteTamano}`}
         </div>
-        <div style={{ display: "flex", fontSize: 64, color: "#ffffff" }}>
+        <div style={{ display: "flex", fontSize: 64, color: "#000000" }}>
           Estrenos y promos
         </div>
-        <div style={{ display: "flex", fontSize: 28, color: "#95999E" }}>
+        <div style={{ display: "flex", fontSize: 28, color: "#4D4D4D" }}>
           Películas · Series · Anime · Novelas · Realities
         </div>
         <div

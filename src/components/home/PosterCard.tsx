@@ -13,7 +13,7 @@ export default function PosterCard({ media, eager = false }: { media: HomeMedia;
   return (
     <div className="group relative">
       <OpenMedia media={media} label={`Ver ficha de ${media.title}`} className="block w-full text-left">
-        <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/10 bg-surface-2 transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-[0_18px_40px_-18px_rgba(249,195,164,0.35)]">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-ink/10 bg-surface-2 transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-[0_18px_40px_-18px_rgba(150,0,0,0.6)]">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -26,7 +26,7 @@ export default function PosterCard({ media, eager = false }: { media: HomeMedia;
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center p-3 text-center text-xs font-bold text-white/40">{media.title}</div>
+            <div className="flex h-full items-center justify-center p-3 text-center text-xs font-bold text-ink/40">{media.title}</div>
           )}
 
           {media.estreno && (
@@ -46,12 +46,12 @@ export default function PosterCard({ media, eager = false }: { media: HomeMedia;
           </span>
         </div>
 
-        <h3 className="mt-2 line-clamp-2 text-[13px] font-bold leading-snug text-white/90 transition-colors group-hover:text-primary">
+        <h3 className="mt-2 line-clamp-2 text-[13px] font-bold leading-snug text-ink/90 transition-colors group-hover:text-primary">
           {media.title.trim()}
         </h3>
         {votos > 0 && (
-          <p className="mt-0.5 text-[11px] font-semibold text-amber-300/90">
-            ⭐ {Number(media.rating_avg).toFixed(1)} <span className="text-white/40">· {votos} {votos === 1 ? "voto" : "votos"}</span>
+          <p className="mt-0.5 text-[11px] font-semibold text-amber-700/90 dark:text-amber-300/90">
+            ⭐ {Number(media.rating_avg).toFixed(1)} <span className="text-ink/40">· {votos} {votos === 1 ? "voto" : "votos"}</span>
           </p>
         )}
       </OpenMedia>

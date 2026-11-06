@@ -162,7 +162,7 @@ function Resumen({
         {/* ── Lo que ve hoy el cliente ── (min-w-0: los títulos largos no ensanchan la columna) */}
         <Card className="min-w-0">
           <CardHeader titulo="Lo que ve hoy el cliente" descripcion="El Inicio tal como está publicado ahora." />
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-ink/5">
             <FilaPortada
               icono={<Sparkles className="h-4 w-4" aria-hidden="true" />}
               titulo="Recomendada de la semana"
@@ -190,7 +190,7 @@ function Resumen({
               estado={programadas ? <Badge tono="aviso">{programadas} programada{programadas === 1 ? "" : "s"}</Badge> : null}
             />
           </div>
-          <div className="border-t border-white/10 px-5 py-3">
+          <div className="border-t border-ink/10 px-5 py-3">
             <Link href="/admin/portada" className="text-sm font-bold text-primary underline-offset-4 hover:underline">
               Editar portada →
             </Link>
@@ -201,16 +201,16 @@ function Resumen({
         <Card className="min-w-0">
           <CardHeader titulo="Para revisar" descripcion={avisos.length ? `${avisos.length} ${avisos.length === 1 ? "cosa" : "cosas"}` : undefined} />
           {avisos.length === 0 ? (
-            <p className="flex items-center gap-2 px-5 py-6 text-sm font-semibold text-whatsapp">
+            <p className="flex items-center gap-2 px-5 py-6 text-sm font-semibold text-green-700 dark:text-whatsapp">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" /> Todo en orden. No hay nada pendiente.
             </p>
           ) : (
-            <ul className="divide-y divide-white/5">
+            <ul className="divide-y divide-ink/5">
               {avisos.map((a, i) => (
                 <li key={i} className="flex items-start gap-3 px-5 py-3.5">
-                  <a.Icono className={`mt-0.5 h-5 w-5 shrink-0 ${a.tono === "peligro" ? "text-red-300" : "text-amber-300"}`} aria-hidden="true" />
+                  <a.Icono className={`mt-0.5 h-5 w-5 shrink-0 ${a.tono === "peligro" ? "text-red-700 dark:text-red-300" : "text-amber-700 dark:text-amber-300"}`} aria-hidden="true" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white/85">{a.texto}</p>
+                    <p className="text-sm text-ink/85">{a.texto}</p>
                     <Link href={a.href} className="mt-1 inline-block text-xs font-bold text-primary underline-offset-4 hover:underline">
                       {a.accion} →
                     </Link>
@@ -225,10 +225,10 @@ function Resumen({
       {/* ── Indicadores ── */}
       <section aria-label="Indicadores" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {indicadores.map((k) => (
-          <div key={k.label} className="rounded-2xl border border-white/10 bg-surface p-4">
+          <div key={k.label} className="rounded-2xl border border-ink/10 bg-surface p-4">
             <p className="text-xs font-bold text-accent">{k.label}</p>
-            <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-white">{k.valor.toLocaleString("es")}</p>
-            <p className="mt-1 text-xs text-white/50">{k.detalle}</p>
+            <p className="mt-1 text-3xl font-black tabular-nums tracking-tight text-ink">{k.valor.toLocaleString("es")}</p>
+            <p className="mt-1 text-xs text-ink/50">{k.detalle}</p>
           </div>
         ))}
       </section>
@@ -261,8 +261,8 @@ function FilaPortada({
       )}
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-black uppercase tracking-[0.14em] text-accent">{titulo}</p>
-        <p className="truncate text-sm font-bold text-white">{valor}</p>
-        <p className="truncate text-xs text-white/50">{detalle}</p>
+        <p className="truncate text-sm font-bold text-ink">{valor}</p>
+        <p className="truncate text-xs text-ink/50">{detalle}</p>
       </div>
       {estado && <div className="shrink-0">{estado}</div>}
     </div>

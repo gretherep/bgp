@@ -24,7 +24,7 @@ const MessagePopup: React.FC<MessagePopupProps> = ({ message, onClose, duration 
         exit={{ opacity: 0, scale: 0.8 }}
         // CAMBIO: fixed en lugar de absolute y z-index muy alto (z-[100])
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                   bg-[var(--color-primary)] text-black px-8 py-4 rounded-2xl 
+                   bg-brand text-white px-8 py-4 rounded-2xl 
                    shadow-2xl z-[100] font-bold text-lg min-w-[300px] text-center"
       >
         {message}

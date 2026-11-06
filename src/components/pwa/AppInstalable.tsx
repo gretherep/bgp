@@ -97,28 +97,28 @@ export default function AppInstalable() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icons/icon-192.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-black text-white">Instala BGP en tu teléfono</p>
+          <p className="text-sm font-black text-ink">Instala BGP en tu teléfono</p>
           {evento ? (
             <p className="text-xs text-accent">Abre más rápido y gasta menos datos.</p>
           ) : (
-            <p className="text-xs leading-relaxed text-white/75">
+            <p className="text-xs leading-relaxed text-ink/75">
               Toca{" "}
-              <span className="inline-flex items-center gap-0.5 font-bold text-white">
+              <span className="inline-flex items-center gap-0.5 font-bold text-ink">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="inline h-3.5 w-3.5 text-[#0a84ff]" aria-hidden="true">
                   <path d="M12 3v12M8 7l4-4 4 4M5 11v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
                 </svg>
                 Compartir
               </span>{" "}
-              y luego <span className="font-bold text-white">«Agregar a inicio»</span>.
+              y luego <span className="font-bold text-ink">«Agregar a inicio»</span>.
             </p>
           )}
         </div>
         {evento && (
-          <button type="button" onClick={instalar} className="shrink-0 rounded-xl bg-primary px-3 py-2 text-xs font-black text-black active:scale-95">
+          <button type="button" onClick={instalar} className="shrink-0 rounded-xl bg-brand px-3 py-2 text-xs font-black text-white active:scale-95">
             Instalar
           </button>
         )}
-        <button type="button" onClick={descartar} aria-label="Ahora no" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/50 hover:bg-white/10 hover:text-white">
+        <button type="button" onClick={descartar} aria-label="Ahora no" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink/50 hover:bg-ink/10 hover:text-ink">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-4 w-4" aria-hidden="true">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>

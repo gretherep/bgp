@@ -2,23 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Paleta de marca: #960000, #000000, #D9D9D9 (logo). Tema claro por defecto; .dark en <html> = oscuro.
+   --c-* son canales RGB para Tailwind (permiten bg-primary/20); --color-* son los mismos en hex para estilos en línea.
+   ink = color de primer plano (negro en claro, blanco en oscuro): bordes, velos y textos neutros. */
 :root {
-  /* Paleta de marca (sin cambios respecto al diseño original) */
-  --color-primary: #F9C3A4;
-  --color-secondary: #DCDAD9;
-  --color-accent: #95999E;
-  --color-background: #161616;
+  --c-primary: 150 0 0;
+  --c-secondary: 0 0 0;
+  --c-accent: 77 77 77;
+  --c-background: 217 217 217;
+  --c-surface: 232 232 232;
+  --c-surface-2: 242 242 242;
+  --c-ink: 0 0 0;
 
-  /* Superficies y acentos funcionales */
-  --color-surface: #1d1d1d;
-  --color-surface-2: #252525;
+  --color-brand: #960000;
+  --color-primary: #960000;
+  --color-secondary: #000000;
+  --color-accent: #4D4D4D;
+  --color-background: #D9D9D9;
+  --color-surface: #E8E8E8;
+  --color-surface-2: #F2F2F2;
   --color-whatsapp: #25D366;
   --color-offer: #dc2626;
+
+  /* Brillos de fondo (hero, tarjetas destacadas) */
+  --glow: rgba(150, 0, 0, 0.12);
+  --glow-fuerte: rgba(150, 0, 0, 0.14);
+  --glow-neutro: rgba(255, 255, 255, 0.45);
+}
+
+/* Oscuro: fondo negro. El rojo de texto se aclara (#960000 sobre negro no se lee); los rellenos siguen en #960000. */
+.dark {
+  --c-primary: 224 72 72;
+  --c-secondary: 217 217 217;
+  --c-accent: 140 140 140;
+  --c-background: 0 0 0;
+  --c-surface: 18 18 18;
+  --c-surface-2: 28 28 28;
+  --c-ink: 255 255 255;
+
+  --color-primary: #E04848;
+  --color-secondary: #D9D9D9;
+  --color-accent: #8C8C8C;
+  --color-background: #000000;
+  --color-surface: #121212;
+  --color-surface-2: #1C1C1C;
+
+  --glow: rgba(150, 0, 0, 0.3);
+  --glow-fuerte: rgba(150, 0, 0, 0.38);
+  --glow-neutro: rgba(217, 217, 217, 0.06);
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   -webkit-tap-highlight-color: transparent;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Al cambiar de tema, todo cambia de golpe (sin transiciones a destiempo); el interruptor sí se anima. */
+html[data-cambiando-tema] *:not(.tema-switch):not(.tema-switch *) {
+  transition: none !important;
 }
 
 body {

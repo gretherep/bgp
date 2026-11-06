@@ -15,8 +15,8 @@ export default function Chip({
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition active:scale-[0.97] ${
         activo
-          ? "border-primary bg-primary text-black"
-          : "border-white/10 bg-white/[0.04] text-white/80 hover:border-white/25 hover:text-white"
+          ? "border-brand bg-brand text-white"
+          : "border-ink/10 bg-ink/[0.04] text-ink/80 hover:border-ink/25 hover:text-ink"
       }`}
     >
       {children}

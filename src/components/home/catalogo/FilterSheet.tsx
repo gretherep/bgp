@@ -58,17 +58,17 @@ export default function FilterSheet({
   const toggleGenero = (slug: string) =>
     setF((p) => ({ ...p, generos: p.generos.includes(slug) ? p.generos.filter((g) => g !== slug) : [...p.generos, slug] }));
 
-  const seccion = "border-b border-white/10 px-5 py-4";
+  const seccion = "border-b border-ink/10 px-5 py-4";
   const titulo = "mb-2.5 text-[11px] font-black uppercase tracking-[0.16em] text-accent";
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Filtros del catálogo">
       <button type="button" aria-label="Cerrar filtros" onClick={() => cerrar(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      <div className="relative flex max-h-[85vh] w-full max-w-xl animate-fade-up flex-col rounded-t-3xl border border-b-0 border-white/10 bg-surface [animation-duration:220ms]">
-        <span className="mx-auto mb-2 mt-3 block h-1 w-10 rounded-full bg-white/20" aria-hidden="true" />
+      <div className="relative flex max-h-[85vh] w-full max-w-xl animate-fade-up flex-col rounded-t-3xl border border-b-0 border-ink/10 bg-surface [animation-duration:220ms]">
+        <span className="mx-auto mb-2 mt-3 block h-1 w-10 rounded-full bg-ink/20" aria-hidden="true" />
         <div className="flex items-center justify-between px-5 pb-3">
-          <h2 className="text-lg font-black text-white">Filtros</h2>
+          <h2 className="text-lg font-black text-ink">Filtros</h2>
           <button type="button" onClick={() => setF({ ...FILTROS_VACIOS, cat: catFija ? inicial.cat : null })} className="text-sm font-bold text-primary">
             Limpiar
           </button>
@@ -124,11 +124,11 @@ export default function FilterSheet({
           </div>
         </div>
 
-        <div className="border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="border-t border-ink/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => cerrar(f)}
-            className="w-full rounded-2xl bg-primary py-3.5 text-sm font-black text-black transition active:scale-[0.98]"
+            className="w-full rounded-2xl bg-brand py-3.5 text-sm font-black text-white transition active:scale-[0.98]"
           >
             {total === null ? "Ver títulos" : total === 0 ? "Sin resultados con estos filtros" : `Ver ${total} ${total === 1 ? "título" : "títulos"}`}
           </button>

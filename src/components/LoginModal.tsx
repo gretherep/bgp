@@ -92,15 +92,15 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
         className="text-[var(--color-secondary)] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         style={{ 
-          backgroundColor: 'rgba(22, 18, 20, 0.95)',
-          border: '1px solid rgba(149, 153, 158, 0.3)',
+          backgroundColor: 'rgb(var(--c-surface) / 0.97)',
+          border: '1px solid rgba(140, 140, 140, 0.3)',
           backdropFilter: 'blur(12px)'
         }}
       >
         {/* Header */}
         <div 
           className="px-6 py-5"
-          style={{ borderBottom: '1px solid rgba(149, 153, 158, 0.2)' }}
+          style={{ borderBottom: '1px solid rgba(140, 140, 140, 0.2)' }}
         >
           <h2 className="text-xl font-bold"> 
             {isRegister ? "Crear cuenta" : "Iniciar sesión"}
@@ -126,8 +126,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                     onChange={(e) => setFirstName(e.target.value)} 
                     required
                     style={{
-                      backgroundColor: 'rgba(149, 153, 158, 0.15)',
-                      border: '1px solid rgba(149, 153, 158, 0.3)',
+                      backgroundColor: 'rgba(140, 140, 140, 0.15)',
+                      border: '1px solid rgba(140, 140, 140, 0.3)',
                       color: 'var(--color-secondary)',
                     
                     }}
@@ -147,8 +147,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                     onChange={(e) => setLastName(e.target.value)}
                     required
                     style={{
-                      backgroundColor: 'rgba(149, 153, 158, 0.15)',
-                      border: '1px solid rgba(149, 153, 158, 0.3)',
+                      backgroundColor: 'rgba(140, 140, 140, 0.15)',
+                      border: '1px solid rgba(140, 140, 140, 0.3)',
                       color: 'var(--color-secondary)',
                       
                     }}
@@ -172,8 +172,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
               onChange={(e) => setEmail(e.target.value)}
               required
               style={{
-                backgroundColor: 'rgba(149, 153, 158, 0.15)',
-                border: '1px solid rgba(149, 153, 158, 0.3)',
+                backgroundColor: 'rgba(140, 140, 140, 0.15)',
+                border: '1px solid rgba(140, 140, 140, 0.3)',
                 color: 'var(--color-secondary)',
                 
               }}
@@ -195,8 +195,8 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 style={{
-                  backgroundColor: 'rgba(149, 153, 158, 0.15)',
-                  border: '1px solid rgba(149, 153, 158, 0.3)',
+                  backgroundColor: 'rgba(140, 140, 140, 0.15)',
+                  border: '1px solid rgba(140, 140, 140, 0.3)',
                   color: 'var(--color-secondary)',
                   
                 }}
@@ -206,9 +206,9 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
                 className="absolute inset-y-0 right-0 flex items-center pr-3 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                style={{ color: 'rgba(149, 153, 158, 0.8)' }}
+                style={{ color: 'rgba(140, 140, 140, 0.8)' }}
                 onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(149, 153, 158, 0.8)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(140, 140, 140, 0.8)'}
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,15 +229,15 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
             disabled={loading}
             className="w-full py-2.5 px-4 font-medium rounded-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: loading ? 'rgba(249, 195, 164, 0.7)' : 'var(--color-primary)',
-              color: 'var(--color-background)',
+              backgroundColor: loading ? 'rgba(150, 0, 0, 0.7)' : 'var(--color-brand)',
+              color: '#ffffff',
               border: 'none'
             }}
             onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = '#e8b293';
+              if (!loading) e.currentTarget.style.backgroundColor = '#b00000';
             }}
             onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+              if (!loading) e.currentTarget.style.backgroundColor = 'var(--color-brand)';
             }}
           >
             {loading ? "Procesando..." : isRegister ? "Crear cuenta" : "Iniciar sesión"}
@@ -255,7 +255,7 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
               backgroundColor: 'transparent',
               border: 'none'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#e8b293'}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-secondary)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
           >
             {isRegister

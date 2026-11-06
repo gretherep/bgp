@@ -40,11 +40,11 @@ export default function AdminShell({ nombre, children }: { nombre: string; child
   return (
     <div className="min-h-screen bg-background text-secondary">
       {/* ── Sidebar (PC) ── */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/10 bg-surface lg:flex">
-        <Link href="/admin/dashboard" className="flex h-16 items-center gap-2.5 border-b border-white/10 px-5">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-ink/10 bg-surface lg:flex">
+        <Link href="/admin/dashboard" className="flex h-16 items-center gap-2.5 border-b border-ink/10 px-5">
           <Image src="/images/Logo.png" alt="" width={36} height={36} sizes="36px" className="h-9 w-9 rounded-full" />
           <span className="leading-tight">
-            <span className="block text-sm font-black text-white">
+            <span className="block text-sm font-black text-ink">
               BGP <span className="text-primary">Paquete</span>
             </span>
             <span className="block text-[11px] font-semibold text-accent">Panel de administración</span>
@@ -58,7 +58,7 @@ export default function AdminShell({ nombre, children }: { nombre: string; child
               href={href}
               aria-current={activo(href) ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
-                activo(href) ? "bg-primary/15 text-primary" : "text-white/75 hover:bg-white/[0.05] hover:text-white"
+                activo(href) ? "bg-primary/15 text-primary" : "text-ink/75 hover:bg-ink/[0.05] hover:text-ink"
               }`}
             >
               <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -67,11 +67,11 @@ export default function AdminShell({ nombre, children }: { nombre: string; child
           ))}
         </nav>
 
-        <div className="space-y-1 border-t border-white/10 p-3">
-          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-white/75 hover:bg-white/[0.05] hover:text-white">
+        <div className="space-y-1 border-t border-ink/10 p-3">
+          <a href="/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-ink/75 hover:bg-ink/[0.05] hover:text-ink">
             <ExternalLink className="h-[18px] w-[18px]" aria-hidden="true" /> Ver sitio
           </a>
-          <button type="button" onClick={salir} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-white/75 hover:bg-offer/10 hover:text-red-200">
+          <button type="button" onClick={salir} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-white/75 hover:bg-offer/10 hover:text-red-800 dark:hover:text-red-200">
             <LogOut className="h-[18px] w-[18px]" aria-hidden="true" /> Cerrar sesión
           </button>
           <p className="truncate px-3 pt-1 text-[11px] text-accent">Sesión: {nombre}</p>
@@ -79,10 +79,10 @@ export default function AdminShell({ nombre, children }: { nombre: string; child
       </aside>
 
       {/* ── Cabecera (móvil/tablet) ── */}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-white/10 bg-background/90 px-4 backdrop-blur-md lg:hidden">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-ink/10 bg-background/90 px-4 backdrop-blur-md lg:hidden">
         <Image src="/images/Logo.png" alt="" width={32} height={32} sizes="32px" className="h-8 w-8 rounded-full" />
-        <span className="flex-1 truncate text-base font-black text-white">{actual?.name ?? "Panel"}</span>
-        <a href="/" target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-white/15 px-3 text-xs font-bold text-white/80">
+        <span className="flex-1 truncate text-base font-black text-ink">{actual?.name ?? "Panel"}</span>
+        <a href="/" target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-ink/15 px-3 text-xs font-bold text-ink/80">
           <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /> Ver sitio
         </a>
       </header>
@@ -92,14 +92,14 @@ export default function AdminShell({ nombre, children }: { nombre: string; child
       </main>
 
       {/* ── Barra inferior (móvil/tablet) ── */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden" aria-label="Secciones del panel">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden" aria-label="Secciones del panel">
         <ul className="grid grid-cols-5">
           {EN_BARRA.map(({ name, href, Icon }) => (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={activo(href) ? "page" : undefined}
-                className={`flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-bold ${activo(href) ? "text-primary" : "text-white/60"}`}
+                className={`flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-bold ${activo(href) ? "text-primary" : "text-ink/60"}`}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
                 {name}
@@ -110,7 +110,7 @@ export default function AdminShell({ nombre, children }: { nombre: string; child
             <button
               type="button"
               onClick={() => setMas(true)}
-              className={`flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-bold ${EN_MAS.some((s) => activo(s.href)) ? "text-primary" : "text-white/60"}`}
+              className={`flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-bold ${EN_MAS.some((s) => activo(s.href)) ? "text-primary" : "text-ink/60"}`}
             >
               <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
               Más
@@ -143,8 +143,8 @@ function HojaMas({
   return (
     <div className="fixed inset-0 z-[110] flex items-end lg:hidden" role="dialog" aria-modal="true" aria-label="Más secciones">
       <button type="button" aria-label="Cerrar" onClick={cerrar} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div className="relative w-full animate-fade-up rounded-t-3xl border border-b-0 border-white/10 bg-surface p-3 pb-[max(1rem,env(safe-area-inset-bottom))] [animation-duration:200ms]">
-        <span className="mx-auto mb-2 block h-1 w-10 rounded-full bg-white/20" aria-hidden="true" />
+      <div className="relative w-full animate-fade-up rounded-t-3xl border border-b-0 border-ink/10 bg-surface p-3 pb-[max(1rem,env(safe-area-inset-bottom))] [animation-duration:200ms]">
+        <span className="mx-auto mb-2 block h-1 w-10 rounded-full bg-ink/20" aria-hidden="true" />
         {EN_MAS.map(({ name, href, Icon }) => (
           <button
             key={href}
@@ -153,7 +153,7 @@ function HojaMas({
               destino.current = activo(href) ? null : href;
               cerrar();
             }}
-            className={`flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-[15px] font-bold ${activo(href) ? "bg-primary/15 text-primary" : "text-white/85"}`}
+            className={`flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-[15px] font-bold ${activo(href) ? "bg-primary/15 text-primary" : "text-ink/85"}`}
           >
             <Icon className="h-5 w-5" aria-hidden="true" /> {name}
           </button>
@@ -164,7 +164,7 @@ function HojaMas({
             salir.current = true;
             cerrar();
           }}
-          className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-[15px] font-bold text-red-200"
+          className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-[15px] font-bold text-red-800 dark:text-red-200"
         >
           <LogOut className="h-5 w-5" aria-hidden="true" /> Cerrar sesión
         </button>

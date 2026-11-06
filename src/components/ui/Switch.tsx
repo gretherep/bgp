@@ -20,7 +20,7 @@ export function Switch({
       disabled={disabled}
       onClick={() => onChange(!activo)}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition disabled:opacity-50 ${
-        activo ? "border-whatsapp/60 bg-whatsapp/80" : "border-white/15 bg-white/10"
+        activo ? "border-whatsapp/60 bg-whatsapp/80" : "border-ink/15 bg-ink/10"
       }`}
     >
       <span className={`inline-block h-[18px] w-[18px] rounded-full bg-white shadow transition-transform ${activo ? "translate-x-[22px]" : "translate-x-[3px]"}`} />

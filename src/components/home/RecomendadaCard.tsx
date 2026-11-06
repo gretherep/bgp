@@ -15,9 +15,9 @@ function Calificacion({ reco }: { reco: Recomendada }) {
   const { media } = reco;
   if (media.rating_count > 0) {
     return (
-      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] font-black text-amber-300">
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[11px] font-black text-amber-700 dark:text-amber-300">
         ⭐ {Number(media.rating_avg).toFixed(1)} / 5
-        <span className="font-semibold text-amber-300/60">
+        <span className="font-semibold text-amber-700/60 dark:text-amber-300/60">
           · {media.rating_count} {media.rating_count === 1 ? "voto" : "votos"}
         </span>
       </span>
@@ -26,7 +26,7 @@ function Calificacion({ reco }: { reco: Recomendada }) {
   // Un estreno ya lleva la cinta ESTRENO en el póster: no se repite aquí.
   if (media.estreno) return null;
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-offer/40 bg-offer/15 px-2.5 py-1 text-[11px] font-black text-red-300">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-offer/40 bg-offer/15 px-2.5 py-1 text-[11px] font-black text-red-700 dark:text-red-300">
       ✨ Nuevo en el catálogo
     </span>
   );
@@ -66,13 +66,13 @@ export default function RecomendadaCard({
   const fraseSoloMovil = !reco.elegida && !!sinopsis;
 
   const check = (
-    <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-whatsapp" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-green-700 dark:text-whatsapp" fill="currentColor" aria-hidden="true">
       <path fillRule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-7.5 7.5a1 1 0 0 1-1.4 0L3.3 9.7a1 1 0 1 1 1.4-1.4l3.8 3.8 6.8-6.8a1 1 0 0 1 1.4 0Z" clipRule="evenodd" />
     </svg>
   );
 
   return (
-    <article className="relative isolate flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-surface shadow-[0_30px_80px_-30px_rgba(0,0,0,0.8)] xl:flex-row">
+    <article className="relative isolate flex h-full flex-col overflow-hidden rounded-3xl border border-ink/10 bg-surface shadow-[0_30px_80px_-30px_rgba(0,0,0,0.3)] xl:flex-row">
       {/* Fondo: el mismo póster ya descargado, desenfocado. Solo desde sm para no cargar GPU en móviles modestos. */}
       {media.poster_url && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -123,7 +123,7 @@ export default function RecomendadaCard({
           <OpenMedia
             media={media}
             label={`Ver ficha de ${media.title}`}
-            className="group relative w-[118px] shrink-0 self-start overflow-hidden rounded-2xl shadow-2xl shadow-black/60 ring-1 ring-white/15 transition-transform duration-300 hover:-translate-y-1 sm:w-[176px] sm:self-center lg:w-[150px] lg:self-start xl:hidden"
+            className="group relative w-[118px] shrink-0 self-start overflow-hidden rounded-2xl shadow-2xl shadow-black/30 ring-1 ring-ink/15 transition-transform duration-300 hover:-translate-y-1 sm:w-[176px] sm:self-center lg:w-[150px] lg:self-start xl:hidden"
           >
             <div className="aspect-[2/3] bg-surface-2">
               {media.poster_url && (
@@ -144,27 +144,27 @@ export default function RecomendadaCard({
           </OpenMedia>
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <h2 className="line-clamp-3 text-xl font-black leading-tight tracking-tight text-white sm:text-2xl xl:text-[1.9rem]">
+            <h2 className="line-clamp-3 text-xl font-black leading-tight tracking-tight text-ink sm:text-2xl xl:text-[1.9rem]">
               {media.title}
             </h2>
 
             <ul className="mt-2.5 flex flex-wrap gap-1.5">
               {chips.map((c) => (
-                <li key={c} className="rounded-md border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[11px] font-semibold text-white/75">
+                <li key={c} className="rounded-md border border-ink/10 bg-ink/[0.05] px-2 py-0.5 text-[11px] font-semibold text-ink/75">
                   {c}
                 </li>
               ))}
             </ul>
 
             {reco.frase && (
-              <p className={`mt-3 line-clamp-3 text-sm leading-relaxed text-white/80 sm:line-clamp-4 xl:line-clamp-5 ${fraseSoloMovil ? "lg:hidden" : ""}`}>
+              <p className={`mt-3 line-clamp-3 text-sm leading-relaxed text-ink/80 sm:line-clamp-4 xl:line-clamp-5 ${fraseSoloMovil ? "lg:hidden" : ""}`}>
                 “{reco.frase}”
               </p>
             )}
 
             <ul className="mt-4 hidden space-y-2 sm:block">
               {razones.map((r) => (
-                <li key={r} className="flex items-start gap-2 text-[13px] font-medium text-white/80">
+                <li key={r} className="flex items-start gap-2 text-[13px] font-medium text-ink/80">
                   {check}
                   {r}
                 </li>
@@ -176,7 +176,7 @@ export default function RecomendadaCard({
             {sinopsis && (
               <div className="relative mt-4 hidden min-h-0 flex-1 basis-0 overflow-hidden lg:block [mask-image:linear-gradient(to_bottom,black_calc(100%-2.5rem),transparent)]">
                 <p className="text-[11px] font-black uppercase tracking-wider text-accent">De qué trata</p>
-                <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-white/65">{sinopsis}</p>
+                <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-ink/65">{sinopsis}</p>
               </div>
             )}
 
@@ -199,7 +199,7 @@ export default function RecomendadaCard({
               <PedidoToggle media={media} variante="boton" />
               <OpenMedia
                 media={media}
-                className="inline-flex items-center whitespace-nowrap rounded-xl px-2 py-2.5 text-sm font-bold text-white/70 underline-offset-4 transition hover:text-white hover:underline"
+                className="inline-flex items-center whitespace-nowrap rounded-xl px-2 py-2.5 text-sm font-bold text-ink/70 underline-offset-4 transition hover:text-ink hover:underline"
               >
                 Ver ficha
               </OpenMedia>
@@ -208,16 +208,16 @@ export default function RecomendadaCard({
         </div>
 
         {/* Pie (sm+): cierra la tarjeta con información útil en lugar de dejar espacio vacío */}
-        <div className="hidden flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-white/10 px-6 py-3 text-xs text-accent sm:flex">
+        <div className="hidden flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-ink/10 px-6 py-3 text-xs text-accent sm:flex">
           <span>📦 Incluida en el paquete semanal de {SITE.paqueteTamano}</span>
           <span>💬 Te respondemos por WhatsApp</span>
         </div>
 
         {/* Móvil: razones, precio y CTA a todo el ancho debajo del póster */}
-        <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:hidden">
+        <div className="border-t border-ink/10 px-4 pb-4 pt-3 sm:hidden">
           <ul className="space-y-1.5">
             {razones.map((r) => (
-              <li key={r} className="flex items-start gap-2 text-[13px] text-white/80">
+              <li key={r} className="flex items-start gap-2 text-[13px] text-ink/80">
                 {check}
                 {r}
               </li>
@@ -236,7 +236,7 @@ export default function RecomendadaCard({
             </a>
             <PedidoToggle media={media} variante="boton" className="text-[13px]" />
           </div>
-          <OpenMedia media={media} className="mt-2 w-full py-1.5 text-center text-xs font-bold text-white/60 underline-offset-4 hover:underline">
+          <OpenMedia media={media} className="mt-2 w-full py-1.5 text-center text-xs font-bold text-ink/60 underline-offset-4 hover:underline">
             Ver ficha completa
           </OpenMedia>
         </div>

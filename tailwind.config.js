@@ -5,6 +5,7 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   future: {
     // hover: solo en dispositivos con puntero real; en táctil no quedan estados "pegados"
     hoverOnlyWhenSupported: true,
@@ -23,13 +24,18 @@ module.exports = {
       },
       // Hex literales (no var()) para que funcionen los modificadores de opacidad (bg-primary/20).
       // Mantener sincronizado con :root en src/styles/globals.css.
+      // Colores por tema: los valores viven en src/styles/globals.css (:root = claro, .dark = oscuro).
+      // brand = relleno rojo fijo (texto blanco encima); primary = rojo de texto, bordes y tintes (se aclara en oscuro).
+      // ink = primer plano neutro (negro en claro, blanco en oscuro): usar ink en vez de black/white para bordes y textos.
       colors: {
-        primary: "#F9C3A4",
-        secondary: "#DCDAD9",
-        accent: "#95999E",
-        background: "#161616",
-        surface: "#1d1d1d",
-        "surface-2": "#252525",
+        brand: "#960000",
+        primary: "rgb(var(--c-primary) / <alpha-value>)",
+        secondary: "rgb(var(--c-secondary) / <alpha-value>)",
+        accent: "rgb(var(--c-accent) / <alpha-value>)",
+        background: "rgb(var(--c-background) / <alpha-value>)",
+        surface: "rgb(var(--c-surface) / <alpha-value>)",
+        "surface-2": "rgb(var(--c-surface-2) / <alpha-value>)",
+        ink: "rgb(var(--c-ink) / <alpha-value>)",
         whatsapp: "#25D366",
         offer: "#dc2626",
       },
