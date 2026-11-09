@@ -21,7 +21,8 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image" },
   // Ícono y barra al guardar el sitio en la pantalla de inicio (iPhone; Android usa manifest.ts).
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  // icon: al declarar `icons` aquí, Next ya no añade src/app/icon.png; sin él no había favicon declarado.
+  icons: { icon: "/icons/icon-192.png?v=2", apple: "/icons/apple-touch-icon.png?v=2" },
   appleWebApp: { capable: true, title: "BGP Paquete", statusBarStyle: "black" },
 };
 

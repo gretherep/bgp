@@ -9,7 +9,7 @@
  *
  * Al cambiar la lógica de este archivo, subir VERSION: el activate borra las cachés de la versión anterior.
  */
-const VERSION = "v2"; // v2: pedido-config por red primero (la v1 mostraba promos viejas)
+const VERSION = "v3"; // v3: iconos nuevos con ?v=2 (la v2 servía los viejos desde caché). v2: pedido-config por red primero
 const C = {
   paginas: `bgp-paginas-${VERSION}`,
   estaticos: `bgp-estaticos-${VERSION}`,
@@ -24,7 +24,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(C.paginas)
-      .then((c) => c.addAll([OFFLINE, "/icons/icon-192.png"]))
+      .then((c) => c.addAll([OFFLINE, "/icons/icon-192.png?v=2"]))
       .then(() => self.skipWaiting()),
   );
 });

@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserMediaRating } from "@/hooks/useUserMediaRating";
 import { useToast } from "@/app/context/ToastContext";
 import { EVENTO_ABRIR_LOGIN } from "@/lib/eventos";
+import { supabase } from "@/utils/supabaseClient";
 
 /**
  * Estrellas para votar. Se carga aparte (next/dynamic) porque arrastra Supabase:
@@ -19,7 +20,8 @@ export default function Votar({ mediaId, titulo }: { mediaId: string; titulo: st
   const [enviando, setEnviando] = useState(false);
 
   const votar = async (valor: number) => {
-    if (!user) {
+    // useAuth puede no haber terminado de leer la sesión (recién montada la ficha): se mira la guardada.
+    if (!user && !(await supabase.auth.getSession()).data.session) {
       showToast("Inicia sesión para calificar", true);
       window.dispatchEvent(new Event(EVENTO_ABRIR_LOGIN));
       return;

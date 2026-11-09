@@ -17,6 +17,10 @@ export const useAuth = () => {
     let mounted = true;
 
     const fetchProfile = async (sessionUser: User) => {
+      // Con sesión ya hay usuario: no se espera al perfil (con red lenta o caída tardaba segundos o
+      // no llegaba, y mientras tanto la ficha pedía iniciar sesión otra vez para votar).
+      // El rol llega con el perfil; `loading` sigue en true hasta entonces.
+      if (mounted) setUser((prev) => (prev?.id === sessionUser.id ? { ...prev, ...sessionUser } : sessionUser));
       try {
         const response = await fetch("/api/users", {
           method: "POST",
@@ -25,6 +29,7 @@ export const useAuth = () => {
             "Content-Type": "application/json"
           }
         });
+        if (!response.ok) throw new Error(`Perfil: HTTP ${response.status}`);
         const profile = await response.json();
 
         if (mounted) {

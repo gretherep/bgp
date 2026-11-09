@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/app/context/ToastContext";
 
 export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -14,8 +13,6 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -66,10 +63,10 @@ export default function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClo
   // middleware detecte la nueva cookie de sesión
   onClose();
   window.location.href = "/admin/dashboard";
-      } else {
-        router.push("/");
+        return;
       }
 
+      // Usuario normal: se queda donde estaba (p. ej. en la ficha que iba a calificar).
       onClose();
     } catch (err: any) {
       console.error(err);

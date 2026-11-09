@@ -10,6 +10,7 @@ import { waLink } from "@/lib/whatsapp";
 import { useHojaModal } from "@/hooks/useHojaModal";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import InterruptorTema from "@/components/ui/InterruptorTema";
+import { EVENTO_ABRIR_LOGIN } from "@/lib/eventos";
 
 const NAV = [
   { name: "Inicio", href: "/", emoji: "🏠" },
@@ -73,7 +74,12 @@ export default function Navbar({ onOpenLogin, onConfirmLogout }: NavbarProps) {
 
   useEffect(() => {
     if (haySesionGuardada()) conectarAuth();
-    return () => conectado.current?.();
+    // El login también se abre desde otras partes (p. ej. las estrellas de la ficha): la barra debe enterarse.
+    window.addEventListener(EVENTO_ABRIR_LOGIN, conectarAuth);
+    return () => {
+      window.removeEventListener(EVENTO_ABRIR_LOGIN, conectarAuth);
+      conectado.current?.();
+    };
   }, [conectarAuth]);
 
   const abrirLogin = () => {

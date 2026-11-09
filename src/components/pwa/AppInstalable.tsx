@@ -95,7 +95,7 @@ export default function AppInstalable() {
     <div role="region" aria-label="Instalar la app" className="fixed inset-x-0 top-16 z-[60] animate-fade-up px-3 pt-2 [animation-duration:250ms] sm:left-auto sm:right-4 sm:w-[360px] sm:px-0">
       <div className="flex items-center gap-3 rounded-2xl border border-primary/40 bg-surface/95 p-3 shadow-2xl backdrop-blur-md">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/icon-192.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl" />
+        <img src="/icons/icon-192.png?v=2" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-black text-ink">Instala BGP en tu teléfono</p>
           {evento ? (

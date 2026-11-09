@@ -15,15 +15,15 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#D9D9D9",
     theme_color: "#D9D9D9",
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icons/icon-192.png?v=2", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png?v=2", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/maskable-512.png?v=2", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
     // Mantener pulsado el ícono de la app muestra estos atajos.
     shortcuts: [
-      { name: "Lo nuevo", url: "/?orden=recientes#catalogo", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "Buscar", url: "/search", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "Precios", url: "/descripcion", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Lo nuevo", url: "/?orden=recientes#catalogo", icons: [{ src: "/icons/icon-192.png?v=2", sizes: "192x192" }] },
+      { name: "Buscar", url: "/search", icons: [{ src: "/icons/icon-192.png?v=2", sizes: "192x192" }] },
+      { name: "Precios", url: "/descripcion", icons: [{ src: "/icons/icon-192.png?v=2", sizes: "192x192" }] },
     ],
   };
 }
