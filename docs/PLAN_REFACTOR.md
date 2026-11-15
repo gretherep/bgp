@@ -70,7 +70,7 @@ Reglas:
 
 ## FASE 0 — Inicio que convierte *(prioridad del negocio)* ✅ *(la edición desde el admin se completó con la Fase A)*
 
-**Objetivo:** que el Inicio sea el destino de los enlaces del **grupo de WhatsApp** y convierta la visita en un mensaje al **50623401** (`wa.me/5350623401`). Toma de las Fases 1, 2 y 5 solo lo que necesita el Inicio, de punta a punta: datos, diseño responsive y enganche.
+**Objetivo:** que el Inicio sea el destino de los enlaces del **grupo de WhatsApp** y convierta la visita en un mensaje al **54715508** (`wa.me/5354715508`). Toma de las Fases 1, 2 y 5 solo lo que necesita el Inicio, de punta a punta: datos, diseño responsive y enganche.
 **Estimación:** 6–8 días. **Depende de:** nada.
 
 **Contexto del negocio (de `business_info` y `pricing_categories`):**
@@ -98,7 +98,7 @@ Reglas:
 - 🔄 `src/lib/catalog.ts` (`server-only`): `getHomeData()` → ✅ nuevos de la semana (`created_at` de los últimos 7 días; si hay menos de 4, los últimos agregados), ✅ recomendada activa (si no hay, respaldo con el estreno más reciente y razones sacadas de los datos), ✅ promos activas, ✅ WhatsApp y horario del negocio · ✅ precios activos (`src/lib/precios.ts` relaciona la categoría del título con su tarifa) · ✅ top 10 y primera página del catálogo, en `src/lib/catalogQuery.ts` (`getTopValorados`, `getCatalogo`) *(adelanta 1.2)*.
 - ✅ `src/lib/categories.ts` (compartido entre cliente y servidor): categorías navegables (Series incluye MiniSeries; Animados, películas y series animadas; Anime, también Películas Anime), **12 grupos de géneros** que buscan por fragmento (`media.genre` es texto libre con más de 300 combinaciones, como "Terror-Misterio" o "CienciaFicción"), años por década, órdenes, y lectura/escritura de filtros en la URL validando valores.
 - ✅ `idiomaLegible()`: convierte el texto libre de `media.idioma` ("Dual-Audio", "Inglés-Subtitulado", "Latino"…) en frases como "Audio en español latino" o "Subtitulada al español".
-- ✅ `src/lib/whatsapp.ts`: `waLink(base, texto)` a partir de `business_info.whatsapp_url`, con respaldo a `wa.me/5350623401` y espacios codificados como `%20`.
+- ✅ `src/lib/whatsapp.ts`: `waLink(base, texto)` a partir de `business_info.whatsapp_url`, con respaldo a `wa.me/5354715508` y espacios codificados como `%20`.
 - ✅ `src/lib/format.ts`: cuenta regresiva, rango de la semana (hora de Cuba), resumen por categoría.
 - ✅ Promos de ejemplo **solo en desarrollo** cuando la tabla `promos` está vacía, marcadas con la etiqueta "Ejemplo".
 - ✅ `/api/catalog?cat=&anio=&g=&orden=&page=` (y `solo=total` para el conteo en vivo, sin traer pósters), paginado de 24 en 24 con `range()` y cacheado en la CDN (`s-maxage=300, stale-while-revalidate=86400`). Los estrenos van primero por defecto, con desempate por `id` para que la paginación no repita títulos *(adelanta 1.2 / 1.4)*.
