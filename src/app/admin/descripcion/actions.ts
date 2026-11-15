@@ -43,7 +43,7 @@ export type NegocioInput = {
   horario: string | null; // null: la columna no existe todavía
 };
 
-/** "54715508", "+53 5062 3401" o "5354715508" → "5354715508"; null si no es un móvil cubano. */
+/** "54716608", "+53 5062 3401" o "5354716608" → "5354716608"; null si no es un móvil cubano. */
 function normalizarTelefono(v: string): string | null {
   const d = v.replace(/\D/g, "");
   const local = d.length === 10 && d.startsWith("53") ? d.slice(2) : d;
@@ -59,7 +59,7 @@ export async function guardarNegocio(input: NegocioInput): Promise<Resultado> {
     if (!titulo) return { ok: false, error: "Escribe el título." };
     if (titulo.length > LIMITES_NEGOCIO.titulo) return { ok: false, error: `El título es demasiado largo (máx. ${LIMITES_NEGOCIO.titulo}).` };
     if (descripcion.length > LIMITES_NEGOCIO.descripcion) return { ok: false, error: `La descripción es demasiado larga (máx. ${LIMITES_NEGOCIO.descripcion}).` };
-    if (!telefono) return { ok: false, error: "El WhatsApp debe ser un móvil cubano de 8 dígitos, por ejemplo 54715508." };
+    if (!telefono) return { ok: false, error: "El WhatsApp debe ser un móvil cubano de 8 dígitos, por ejemplo 54716608." };
     if (input.image_url && !/^https:\/\//.test(input.image_url)) return { ok: false, error: "El logo no es válido." };
 
     const fila: Record<string, string | null> = {

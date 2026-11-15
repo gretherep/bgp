@@ -22,7 +22,7 @@ export type NegocioEditable = {
 
 type Borrador = { title: string; description: string; image_url: string | null; telefono: string; horario: string };
 
-/** "https://wa.me/5354715508" → "54715508" */
+/** "https://wa.me/5354716608" → "54716608" */
 function telefonoDe(url: string | null): string {
   const d = (url ?? "").replace(/\D/g, "");
   return d.length === 10 && d.startsWith("53") ? d.slice(2) : d;
@@ -129,7 +129,7 @@ export default function NegocioForm({ inicial }: { inicial: NegocioEditable }) {
             >
               <div className="relative">
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-ink/50">+53</span>
-                <Input id="neg-tel" type="tel" inputMode="numeric" autoComplete="off" value={b.telefono} onChange={(e) => set("telefono", e.target.value)} className="pl-12 font-bold tabular-nums tracking-wide" placeholder="54715508" />
+                <Input id="neg-tel" type="tel" inputMode="numeric" autoComplete="off" value={b.telefono} onChange={(e) => set("telefono", e.target.value)} className="pl-12 font-bold tabular-nums tracking-wide" placeholder="54716608" />
               </div>
             </Field>
 
