@@ -7,7 +7,7 @@ import { aplicarTema, suscribirTema, temaOscuroActivo } from "@/lib/tema";
 // Cápsula con sol y luna; la perilla se desliza al lado del tema activo y muestra su ícono.
 // La posición sale de la clase "dark" (CSS), así se ve bien desde el primer pintado, sin esperar a React.
 export default function InterruptorTema({ className = "" }: { className?: string }) {
-  const oscuro = useSyncExternalStore(suscribirTema, temaOscuroActivo, () => false);
+  const oscuro = useSyncExternalStore(suscribirTema, temaOscuroActivo, () => true);
 
   return (
     <button

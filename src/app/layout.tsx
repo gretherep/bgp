@@ -27,14 +27,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#D9D9D9",
-  colorScheme: "light dark",
+  themeColor: "#000000",
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // suppressHydrationWarning: SCRIPT_TEMA añade la clase "dark" antes de que React hidrate
-    <html lang="es" suppressHydrationWarning>
+    // Oscuro por defecto. suppressHydrationWarning: SCRIPT_TEMA quita "dark" antes de hidratar si el usuario eligió claro
+    <html lang="es" className="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
       </head>

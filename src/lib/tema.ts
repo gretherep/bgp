@@ -1,11 +1,11 @@
-// Tema claro por defecto; la clase "dark" en <html> activa el oscuro (colores en src/styles/globals.css).
-// La elección se guarda en este teléfono/PC (localStorage).
+// Tema oscuro por defecto: el servidor ya envía <html class="dark"> (layout.tsx) y el claro se activa
+// quitando esa clase (colores en src/styles/globals.css). La elección se guarda en este teléfono/PC (localStorage).
 
 export const CLAVE_TEMA = "bgp-tema";
 const COLOR_BARRA = { claro: "#D9D9D9", oscuro: "#000000" };
 
-/** Va en <head> y corre antes de pintar: si el usuario eligió oscuro, la página no parpadea en claro. */
-export const SCRIPT_TEMA = `try{if(localStorage.getItem("${CLAVE_TEMA}")==="oscuro"){document.documentElement.classList.add("dark");document.addEventListener("DOMContentLoaded",function(){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","${COLOR_BARRA.oscuro}")})}}catch(e){}`;
+/** Va en <head> y corre antes de pintar: si el usuario eligió claro, la página no parpadea en oscuro. */
+export const SCRIPT_TEMA = `try{if(localStorage.getItem("${CLAVE_TEMA}")==="claro"){document.documentElement.classList.remove("dark");document.addEventListener("DOMContentLoaded",function(){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","${COLOR_BARRA.claro}")})}}catch(e){}`;
 
 export function temaOscuroActivo(): boolean {
   return document.documentElement.classList.contains("dark");
